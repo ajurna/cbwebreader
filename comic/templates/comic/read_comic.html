@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<center>
+<br/>
+    <a href="/comic/file/{{ nav.next }}/{{ file_name }}/">
+        <img src="/comic/file/{{ nav.cur }}/{{ file_name }}/img" height="900"></img>
+    </a>
+<br/>
+
+<a href="/comic/file/{{ nav.prev }}/{{ file_name }}/">Prev</a>
+{% if pages %}
+    <select>
+    {% for file in pages %}
+        <option value="{{ file.index }}" {% if nav.cur == file.index%}selected="True"{% endif %}>{{ file.name }}</option>
+    {% endfor %}
+    </select>
+{% else %}
+    <p>No comics.</p>
+{% endif %}
+<a href="/comic/file/{{ nav.next }}/{{ file_name }}/">Next</a>
+</center>
+{% endblock %}

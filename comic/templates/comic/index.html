@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}My amazing blog{% endblock %}
+{% block content %}
+    <h2 class="center">Comics</h2>
+    <div class="list-group">
+    {% if file_list %}
+        {% for file in file_list %}
+            <a href="/comic/file/0/{{ file }}/" class="list-group-item">{{ file }}</a>
+        {% endfor %}
+    {% else %}
+        <p class="list-group-item">No comics.</p>
+    {% endif %}
+    </div>
+{% endblock %}
