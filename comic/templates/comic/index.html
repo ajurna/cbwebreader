@@ -1,11 +1,22 @@
 {% extends "base.html" %}
 {% block title %}My amazing blog{% endblock %}
+
+{% block breadcrumb %}
+    {% for crumb in breadcrumbs %}
+        <li><a href="{{ crumb.url }}"{% if forloop.last %} class="active"{% endif %}>{{ crumb.name }}</a></li>
+    {% endfor %}
+{% endblock %}
 {% block content %}
     <h2 class="center">Comics</h2>
     <div class="list-group">
     {% if file_list %}
         {% for file in file_list %}
-            <a href="/comic/file/0/{{ file }}/" class="list-group-item">{{ file }}</a>
+            {% if file.isdir %}
+                <a href="/comic/{{ file.location }}/" class="glyphicon {{ file.icon }} list-group-item"> {{ file }}</a>
+            {% endif %}
+            {% if file.iscb %}
+                <a href="/comic/read/{{ file.location }}/0/" class="glyphicon {{ file.icon }} list-group-item"> {{ file }}</a>
+            {% endif %}
         {% endfor %}
     {% else %}
         <p class="list-group-item">No comics.</p>

@@ -50,7 +50,13 @@
         </div><!--/.nav-collapse -->
       </div>
     </nav>
-
+    <ol class="breadcrumb">
+        {% block breadcrumb %}
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Library</a></li>
+            <li class="active">Data</li>
+        {% endblock %}
+    </ol>
     <div class="container">
         {% block content %}{% endblock %}
     </div>

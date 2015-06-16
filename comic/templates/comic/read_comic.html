@@ -2,12 +2,12 @@
 {% block content %}
 <center>
 <br/>
-    <a href="/comic/file/{{ nav.next }}/{{ file_name }}/">
-        <img src="/comic/file/{{ nav.cur }}/{{ file_name }}/img" height="900"></img>
+    <a href="/comic/read/{{ file_name }}/{{ nav.next }}/">
+        <img src="/comic/read/{{ file_name }}/{{ nav.cur }}/img" height="900" class="img-rounded"></img>
     </a>
 <br/>
 
-<a href="/comic/file/{{ nav.prev }}/{{ file_name }}/">Prev</a>
+<a href="/comic/read/{{ file_name }}/{{ nav.prev }}/">Prev</a>
 {% if pages %}
     <select>
     {% for file in pages %}
@@ -17,6 +17,6 @@
 {% else %}
     <p>No comics.</p>
 {% endif %}
-<a href="/comic/file/{{ nav.next }}/{{ file_name }}/">Next</a>
+<a href="/comic/read/{{ file_name }}/{{ nav.next }}/">Next</a>
 </center>
 {% endblock %}
