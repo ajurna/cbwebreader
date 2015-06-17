@@ -1,12 +1,13 @@
 from django.http import HttpResponse
 from django.template import RequestContext, loader
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.http import urlsafe_base64_decode
+from django.shortcuts import render
 
 from comic.models import Setting
+from util import generate_breadcrumbs, generate_directory
 
 from unrar import rarfile
 from zipfile import ZipFile
-import os
 from os import path
 
 class Comic:
@@ -18,52 +19,24 @@ class Navigation:
         self.next = 0
         self.prev = 0
         self.cur = 0
-class DirFile:
-    def __init__(self):
-        self.name = ''
-        self.isdir = False
-        self.icon = ''
-        self.iscb = False
-        self.location = ''
 
-    def __str__(self):
-        return self.name
-
-
-# Create your views here.
 def index(request, comic_path=''):
     base_dir = Setting.objects.get(name='BASE_DIR')
     comic_path = urlsafe_base64_decode(comic_path)
     breadcrumbs = generate_breadcrumbs(comic_path)
-
-
-    #list and classify files
-    files = []
-    for fn in os.listdir(path.join(base_dir.value, comic_path)):
-        df = DirFile()
-        df.name = fn
-        if path.isdir(path.join(base_dir.value, comic_path, fn)):
-            df.isdir = True
-            df.icon = 'glyphicon-folder-open'
-            df.location = urlsafe_base64_encode(path.join(comic_path, fn))
-        elif fn.lower().endswith('cbz') or fn.lower().endswith('cbr'):
-            df.iscb = True
-            df.icon = 'glyphicon-book'
-            df.location = urlsafe_base64_encode(path.join(comic_path, fn))
-        files.append(df)
-    template = loader.get_template('comic/index.html')
+    files = generate_directory(base_dir, comic_path)
     context = RequestContext(request, {
         'file_list': files,
         'breadcrumbs': breadcrumbs,
     })
-    return HttpResponse(template.render(context))
+    return render(request, 'comic/index.html', context)
 
 
 def read_comic(request, comic_path, page):
     encoded = comic_path
     comic_path = urlsafe_base64_decode(comic_path)
+    breadcrumbs = generate_breadcrumbs(comic_path)
     base_dir = Setting.objects.get(name='BASE_DIR')
-    template = loader.get_template('comic/read_comic.html')
     if comic_path.lower().endswith('cbr'):
         cbx = rarfile.RarFile(path.join(base_dir.value, comic_path))
     elif comic_path.lower().endswith('cbz'):
@@ -79,13 +52,15 @@ def read_comic(request, comic_path, page):
         comic.name = name
         comic.index = idx
         pages.append(comic)
-
     context = RequestContext(request, {
         'pages': pages,
         'file_name': encoded,
+        'orig_file_name': pages[nav.cur].name,
         'nav': nav,
+        'breadcrumbs': breadcrumbs,
     })
-    return HttpResponse(template.render(context))
+    return render(request, 'comic/read_comic.html', context)
+
 
 def get_image(request, comic_path, page):
     base_dir = Setting.objects.get(name='BASE_DIR')
@@ -113,25 +88,4 @@ def get_image(request, comic_path, page):
         img = cbx.open(page_file)
     return HttpResponse(img.read(), content_type=content)
 
-class Breadcrumb:
-    def __init__(self):
-        self.name = 'Home'
-        self.url = '/comic/'
 
-    def __str__(self):
-        return self.name
-def generate_breadcrumbs(comic_path):
-    output = [Breadcrumb()]
-    prefix = '/comic/'
-    last = ''
-    comic_path = path.normpath(comic_path)
-    folders = comic_path.split(os.sep)
-    for item in folders:
-        if item == '.':
-            continue
-        bc = Breadcrumb()
-        bc.name = item
-        bc.url = prefix + urlsafe_base64_encode(item)
-        output.append(bc)
-        last = path.join(last, item)
-    return output

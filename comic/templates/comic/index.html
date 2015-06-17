@@ -1,9 +1,13 @@
 {% extends "base.html" %}
-{% block title %}My amazing blog{% endblock %}
+{% block title %}CBreader{% endblock %}
 
 {% block breadcrumb %}
     {% for crumb in breadcrumbs %}
-        <li><a href="{{ crumb.url }}"{% if forloop.last %} class="active"{% endif %}>{{ crumb.name }}</a></li>
+        {% if not forloop.last %}
+            <li><a href="{{ crumb.url }}">{{ crumb.name }}</a></li>
+        {% else %}
+            <li class="active">{{ crumb.name }}</li>
+        {% endif %}
     {% endfor %}
 {% endblock %}
 {% block content %}

@@ -5,3 +5,4 @@ from comic.models import Setting
 @admin.register(Setting)
 class SettingAdmin(admin.ModelAdmin):
     list_display = ('name', 'value')
+

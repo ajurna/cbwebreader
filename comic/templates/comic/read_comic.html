@@ -1,22 +1,35 @@
 {% extends "base.html" %}
+{% block breadcrumb %}
+    {% for crumb in breadcrumbs %}
+        {% if not forloop.last %}
+            <li><a href="{{ crumb.url }}">{{ crumb.name }}</a></li>
+        {% else %}
+            <li class="active">{{ crumb.name }}</li>
+        {% endif %}
+    {% endfor %}
+{% endblock %}
 {% block content %}
 <center>
 <br/>
     <a href="/comic/read/{{ file_name }}/{{ nav.next }}/">
-        <img src="/comic/read/{{ file_name }}/{{ nav.cur }}/img" height="900" class="img-rounded"></img>
+        <img src="/comic/read/{{ file_name }}/{{ nav.cur }}/img" height="900" class="img-rounded">
     </a>
 <br/>
-
-<a href="/comic/read/{{ file_name }}/{{ nav.prev }}/">Prev</a>
-{% if pages %}
-    <select>
-    {% for file in pages %}
-        <option value="{{ file.index }}" {% if nav.cur == file.index%}selected="True"{% endif %}>{{ file.name }}</option>
-    {% endfor %}
-    </select>
-{% else %}
-    <p>No comics.</p>
-{% endif %}
-<a href="/comic/read/{{ file_name }}/{{ nav.next }}/">Next</a>
+<div class="btn-group">
+    <a href="/comic/read/{{ file_name }}/{{ nav.prev }}/" class="btn btn-default">Prev</a>
+    {% if pages %}
+        <div class="btn-group dropup">
+            <button type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle ">{{ orig_file_name}}<span class="caret"></span></button>
+            <ul class="dropdown-menu" id="dropdown-list">
+                {% for file in pages %}
+                    <li><a href="/comic/read/{{ file_name }}/{{ file.index }}/">{{ file.name }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <p>No comics.</p>
+    {% endif %}
+    <a href="/comic/read/{{ file_name }}/{{ nav.next }}/" class="btn btn-default">Next</a>
+</div>
 </center>
 {% endblock %}
