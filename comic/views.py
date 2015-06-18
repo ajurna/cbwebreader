@@ -8,8 +8,8 @@ from util import generate_breadcrumbs, generate_directory
 
 from os import path
 
-def index(request, comic_path=''):
-    base_dir = Setting.objects.get(name='BASE_DIR')
+def comic_list(request, comic_path=''):
+    base_dir = Setting.objects.get(name='BASE_DIR').value
     comic_path = urlsafe_base64_decode(comic_path)
     breadcrumbs = generate_breadcrumbs(comic_path)
     files = generate_directory(base_dir, comic_path)
@@ -17,11 +17,11 @@ def index(request, comic_path=''):
         'file_list': files,
         'breadcrumbs': breadcrumbs,
     })
-    return render(request, 'comic/index.html', context)
+    return render(request, 'comic/comic_list.html', context)
 
 
 def read_comic(request, comic_path, page):
-    base_dir = Setting.objects.get(name='BASE_DIR')
+    base_dir = Setting.objects.get(name='BASE_DIR').value
     page = int(page)
     decoded_path = urlsafe_base64_decode(comic_path)
     breadcrumbs = generate_breadcrumbs(decoded_path)
@@ -42,7 +42,7 @@ def read_comic(request, comic_path, page):
 
 
 def get_image(request, comic_path, page):
-    base_dir = Setting.objects.get(name='BASE_DIR')
+    base_dir = Setting.objects.get(name='BASE_DIR').value
     page = int(page)
     decoded_path = urlsafe_base64_decode(comic_path)
     _, comic_file_name = path.split(decoded_path)
@@ -50,6 +50,6 @@ def get_image(request, comic_path, page):
         book = ComicBook.objects.get(file_name=comic_file_name)
     except ComicBook.DoesNotExist:
         book = process_comic_book(base_dir, decoded_path, comic_file_name)
-    full_path = path.join(base_dir.value, decoded_path)
+    full_path = path.join(base_dir, decoded_path)
     img, content = book.get_image(full_path, page)
     return HttpResponse(img.read(), content_type=content)

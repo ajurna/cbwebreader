@@ -43,10 +43,10 @@ def generate_breadcrumbs(comic_path):
 
 def generate_directory(base_dir, comic_path):
     files = []
-    for fn in os.listdir(path.join(base_dir.value, comic_path)):
+    for fn in os.listdir(path.join(base_dir, comic_path)):
         df = DirFile()
         df.name = fn
-        if path.isdir(path.join(base_dir.value, comic_path, fn)):
+        if path.isdir(path.join(base_dir, comic_path, fn)):
             df.isdir = True
             df.icon = 'glyphicon-folder-open'
             df.location = urlsafe_base64_encode(path.join(comic_path, fn))

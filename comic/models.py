@@ -133,9 +133,9 @@ class ComicBook(models.Model):
         return out
 def process_comic_book(base_dir, comic_path, comic_file_name):
     try:
-        cbx = rarfile.RarFile(path.join(base_dir.value, comic_path))
+        cbx = rarfile.RarFile(path.join(base_dir, comic_path))
     except rarfile.BadRarFile:
-        cbx = zipfile.ZipFile(path.join(base_dir.value, comic_path))
+        cbx = zipfile.ZipFile(path.join(base_dir, comic_path))
     except zipfile.BadZipfile:
         return False
 
