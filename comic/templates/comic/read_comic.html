@@ -11,12 +11,20 @@
 {% block content %}
 <center>
 <br/>
-    <a href="/comic/read/{{ nav.next_path }}/{{ nav.next_index }}/">
+    {% if nav.q_next_to_directory %}
+        <a href="/comic/{{ nav.next_path }}/">
+    {% else %}
+        <a href="/comic/read/{{ nav.next_path }}/{{ nav.next_index }}/">
+    {% endif %}
         <img src="/comic/read/{{ nav.cur_path }}/{{ nav.cur_index }}/img" class="img-responsive">
     </a>
 <br/>
 <div class="btn-group">
-    <a href="/comic/read/{{ nav.prev_path }}/{{ nav.prev_index }}/" class="btn btn-default">Prev</a>
+    {% if nav.q_prev_to_directory %}
+        <a href="/comic/{{ nav.prev_path }}/" class="btn btn-default">Next</a>
+    {% else %}
+        <a href="/comic/read/{{ nav.prev_path }}/{{ nav.prev_index }}/" class="btn btn-default">Prev</a>
+    {% endif %}
     {% if book.pages %}
         <div class="btn-group dropup">
             <button type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle ">{{ orig_file_name }}<span class="caret"></span></button>
@@ -29,7 +37,11 @@
     {% else %}
         <button class="btn btn-default">No Pages</button>
     {% endif %}
-    <a href="/comic/read/{{ nav.next_path }}/{{ nav.next_index }}/" class="btn btn-default">Next</a>
+    {% if nav.q_next_to_directory %}
+        <a href="/comic/{{ nav.next_path }}/" class="btn btn-default">Next</a>
+    {% else %}
+        <a href="/comic/read/{{ nav.next_path }}/{{ nav.next_index }}/" class="btn btn-default">Next</a>
+    {% endif %}
 </div>
 </center>
 {% endblock %}

@@ -3,8 +3,8 @@ from django.template import RequestContext
 from django.utils.http import urlsafe_base64_decode
 from django.shortcuts import render
 
-from comic.models import Setting, ComicBook
-from util import generate_breadcrumbs, generate_directory, process_comic_book
+from comic.models import Setting, ComicBook, process_comic_book
+from util import generate_breadcrumbs, generate_directory
 
 from os import path
 

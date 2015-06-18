@@ -14,3 +14,4 @@ class ComicBookAdmin(admin.ModelAdmin):
 @admin.register(ComicPage)
 class ComicPageAdmin(admin.ModelAdmin):
     list_display = ('Comic', 'index', 'page_file_name', 'content_type')
+    list_filter = ['Comic']
