@@ -143,7 +143,7 @@ def process_comic_book(base_dir, comic_path, comic_file_name):
                      last_read_page=0)
     book.save()
     i = 0
-    for f in cbx.namelist():
+    for f in sorted(cbx.namelist()):
         ext = f.lower()[-3:]
         if ext in ['jpg', 'jpeg']:
             page = ComicPage(Comic=book,
