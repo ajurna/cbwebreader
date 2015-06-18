@@ -11,25 +11,25 @@
 {% block content %}
 <center>
 <br/>
-    <a href="/comic/read/{{ file_name }}/{{ nav.next }}/">
-        <img src="/comic/read/{{ file_name }}/{{ nav.cur }}/img" class="img-responsive">
+    <a href="/comic/read/{{ nav.next_path }}/{{ nav.next_index }}/">
+        <img src="/comic/read/{{ nav.cur_path }}/{{ nav.cur_index }}/img" class="img-responsive">
     </a>
 <br/>
 <div class="btn-group">
-    <a href="/comic/read/{{ file_name }}/{{ nav.prev }}/" class="btn btn-default">Prev</a>
-    {% if pages %}
+    <a href="/comic/read/{{ nav.prev_path }}/{{ nav.prev_index }}/" class="btn btn-default">Prev</a>
+    {% if book.pages %}
         <div class="btn-group dropup">
-            <button type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle ">{{ orig_file_name}}<span class="caret"></span></button>
+            <button type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle ">{{ orig_file_name }}<span class="caret"></span></button>
             <ul class="dropdown-menu" id="dropdown-list">
-                {% for file in pages %}
-                    <li><a href="/comic/read/{{ file_name }}/{{ file.index }}/">{{ file.name }}</a></li>
+                {% for file in book.pages %}
+                    <li><a href="/comic/read/{{ nav.cur_path }}/{{ file.index }}/">{{ file.name }}</a></li>
                 {% endfor %}
             </ul>
         </div>
     {% else %}
-        <p>No comics.</p>
+        <button class="btn btn-default">No Pages</button>
     {% endif %}
-    <a href="/comic/read/{{ file_name }}/{{ nav.next }}/" class="btn btn-default">Next</a>
+    <a href="/comic/read/{{ nav.next_path }}/{{ nav.next_index }}/" class="btn btn-default">Next</a>
 </div>
 </center>
 {% endblock %}

@@ -1,4 +1,7 @@
 from django.utils.http import urlsafe_base64_encode
+from comic.models import ComicBook, ComicPage
+from unrar import rarfile
+import zipfile
 from os import path
 import os
 
@@ -11,6 +14,7 @@ class Breadcrumb:
     def __str__(self):
         return self.name
 
+
 class DirFile:
     def __init__(self):
         self.name = ''
@@ -21,6 +25,54 @@ class DirFile:
 
     def __str__(self):
         return self.name
+
+
+
+def process_comic_book(base_dir, comic_path, comic_file_name):
+    try:
+        cbx = rarfile.RarFile(path.join(base_dir.value, comic_path))
+    except rarfile.BadRarFile:
+        cbx = zipfile.ZipFile(path.join(base_dir.value, comic_path))
+    except zipfile.BadZipfile:
+        return False
+
+    book = ComicBook(file_name=comic_file_name,
+                     last_read_page=0)
+    book.save()
+    i = 0
+    for f in cbx.namelist():
+        ext = f.lower()[-3:]
+        if ext in ['jpg', 'jpeg']:
+            page = ComicPage(Comic=book,
+                             index=i,
+                             page_file_name=f,
+                             content_type='image/jpeg')
+            page.save()
+            i += 1
+        elif ext == 'png':
+            page = ComicPage(Comic=book,
+                             index=i,
+                             page_file_name=f,
+                             content_type='image/png')
+            page.save()
+            i += 1
+        elif ext == 'bmp':
+            page = ComicPage(Comic=book,
+                             index=i,
+                             page_file_name=f,
+                             content_type='image/bmp')
+            page.save()
+            i += 1
+        elif ext == 'gif':
+            page = ComicPage(Comic=book,
+                             index=i,
+                             page_file_name=f,
+                             content_type='image/gif')
+            page.save()
+            i += 1
+
+    return book
+
 
 def generate_breadcrumbs(comic_path):
     output = [Breadcrumb()]
@@ -33,10 +85,11 @@ def generate_breadcrumbs(comic_path):
             continue
         bc = Breadcrumb()
         bc.name = item
-        bc.url = prefix + urlsafe_base64_encode(item)
-        output.append(bc)
         last = path.join(last, item)
+        bc.url = prefix + urlsafe_base64_encode(last)
+        output.append(bc)
     return output
+
 
 def generate_directory(base_dir, comic_path):
     files = []
