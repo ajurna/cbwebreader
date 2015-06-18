@@ -1,7 +1,4 @@
 from django.utils.http import urlsafe_base64_encode
-from comic.models import ComicBook, ComicPage
-from unrar import rarfile
-import zipfile
 from os import path
 import os
 
@@ -13,7 +10,8 @@ class Breadcrumb:
 
     def __str__(self):
         return self.name
-
+    def __unicode__(self):
+        return self.name
 
 class DirFile:
     def __init__(self):

@@ -79,10 +79,10 @@ class ComicBook(models.Model):
 
         return out
     def nav_get_prev_comic(self, comic_path):
-        base_dir = Setting.objects.get(name='BASE_DIR')
+        base_dir = Setting.objects.get(name='BASE_DIR').value
         comic_path = urlsafe_base64_decode(comic_path)
         directory, comic = path.split(comic_path)
-        dir_list = os.listdir(path.join(base_dir.value, directory))
+        dir_list = os.listdir(path.join(base_dir, directory))
         comic_index = dir_list.index(comic)
         if comic_index == 0:
             comic_path = urlsafe_base64_encode(directory)
@@ -90,13 +90,18 @@ class ComicBook(models.Model):
         else:
             prev_comic = dir_list[comic_index - 1]
             comic_path = path.join(directory, prev_comic)
-            try:
-                book = ComicBook.objects.get(file_name=prev_comic)
-            except ComicBook.DoesNotExist:
-                book = process_comic_book(base_dir, comic_path, prev_comic)
-            index = ComicPage.objects.filter(Comic=book).count() - 1
-            print index
-            comic_path = urlsafe_base64_encode(comic_path)
+            if not path.isdir(path.join(base_dir, prev_comic)):
+                print path.join(base_dir, prev_comic)
+                print path.join(base_dir, prev_comic)
+                try:
+                    book = ComicBook.objects.get(file_name=prev_comic)
+                except ComicBook.DoesNotExist:
+                    book = process_comic_book(base_dir, comic_path, prev_comic)
+                index = ComicPage.objects.filter(Comic=book).count() - 1
+                comic_path = urlsafe_base64_encode(comic_path)
+            else:
+                comic_path = urlsafe_base64_encode(directory)
+                index = -1
         return comic_path, index
     def nav_get_next_comic(self, comic_path):
         base_dir = Setting.objects.get(name='BASE_DIR')

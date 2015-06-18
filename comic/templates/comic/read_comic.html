@@ -21,7 +21,11 @@
 <br/>
 <div class="btn-group">
     {% if nav.q_prev_to_directory %}
-        <a href="/comic/{{ nav.prev_path }}/" class="btn btn-default">Next</a>
+        {% if nav.prev_path %}
+            <a href="/comic/{{ nav.prev_path }}/" class="btn btn-default">Next</a>
+        {% else %}
+            <a href="/comic/" class="btn btn-default">Next</a>
+        {% endif %}
     {% else %}
         <a href="/comic/read/{{ nav.prev_path }}/{{ nav.prev_index }}/" class="btn btn-default">Prev</a>
     {% endif %}
@@ -38,7 +42,11 @@
         <button class="btn btn-default">No Pages</button>
     {% endif %}
     {% if nav.q_next_to_directory %}
-        <a href="/comic/{{ nav.next_path }}/" class="btn btn-default">Next</a>
+        {% if nav.next_path %}
+            <a href="/comic/{{ nav.next_path }}/" class="btn btn-default">Next</a>
+        {% else %}
+            <a href="/comic/" class="btn btn-default">Next</a>
+        {% endif %}
     {% else %}
         <a href="/comic/read/{{ nav.next_path }}/{{ nav.next_index }}/" class="btn btn-default">Next</a>
     {% endif %}
