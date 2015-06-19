@@ -78,7 +78,9 @@ class ComicBook(models.Model):
             out.next_path = comic_path
 
         return out
-    def nav_get_prev_comic(self, comic_path):
+
+    @staticmethod
+    def nav_get_prev_comic(comic_path):
         base_dir = Setting.objects.get(name='BASE_DIR').value
         comic_path = urlsafe_base64_decode(comic_path)
         directory, comic = path.split(comic_path)
@@ -96,14 +98,16 @@ class ComicBook(models.Model):
                 try:
                     book = ComicBook.objects.get(file_name=prev_comic)
                 except ComicBook.DoesNotExist:
-                    book = process_comic_book(base_dir, comic_path, prev_comic)
+                    book = ComicBook.process_comic_book(base_dir, comic_path, prev_comic)
                 index = ComicPage.objects.filter(Comic=book).count() - 1
                 comic_path = urlsafe_base64_encode(comic_path)
             else:
                 comic_path = urlsafe_base64_encode(directory)
                 index = -1
         return comic_path, index
-    def nav_get_next_comic(self, comic_path):
+
+    @staticmethod
+    def nav_get_next_comic(comic_path):
         base_dir = Setting.objects.get(name='BASE_DIR')
         comic_path = urlsafe_base64_decode(comic_path)
         directory, comic = path.split(comic_path)
@@ -118,6 +122,53 @@ class ComicBook(models.Model):
             comic_path = urlsafe_base64_encode(directory)
             index = -1
         return comic_path, index
+
+    @staticmethod
+    def process_comic_book(base_dir, comic_path, comic_file_name):
+        try:
+            cbx = rarfile.RarFile(path.join(base_dir, comic_path))
+        except rarfile.BadRarFile:
+            cbx = zipfile.ZipFile(path.join(base_dir, comic_path))
+        except zipfile.BadZipfile:
+            return False
+
+        book = ComicBook(file_name=comic_file_name,
+                         last_read_page=0)
+        book.save()
+        i = 0
+        for f in sorted([str(x) for x in cbx.namelist()], key=str.lower):
+            ext = f.lower()[-3:]
+            if ext in ['jpg', 'jpeg']:
+                page = ComicPage(Comic=book,
+                                 index=i,
+                                 page_file_name=f,
+                                 content_type='image/jpeg')
+                page.save()
+                i += 1
+            elif ext == 'png':
+                page = ComicPage(Comic=book,
+                                 index=i,
+                                 page_file_name=f,
+                                 content_type='image/png')
+                page.save()
+                i += 1
+            elif ext == 'bmp':
+                page = ComicPage(Comic=book,
+                                 index=i,
+                                 page_file_name=f,
+                                 content_type='image/bmp')
+                page.save()
+                i += 1
+            elif ext == 'gif':
+                page = ComicPage(Comic=book,
+                                 index=i,
+                                 page_file_name=f,
+                                 content_type='image/gif')
+                page.save()
+                i += 1
+
+        return book
+
     class Comic:
         def __init__(self):
             self.name = ''
@@ -131,56 +182,10 @@ class ComicBook(models.Model):
             i.index = item.index
             out.append(i)
         return out
-def process_comic_book(base_dir, comic_path, comic_file_name):
-    try:
-        cbx = rarfile.RarFile(path.join(base_dir, comic_path))
-    except rarfile.BadRarFile:
-        cbx = zipfile.ZipFile(path.join(base_dir, comic_path))
-    except zipfile.BadZipfile:
-        return False
 
-    book = ComicBook(file_name=comic_file_name,
-                     last_read_page=0)
-    book.save()
-    i = 0
-    for f in sorted([str(x) for x in cbx.namelist()], key=str.lower):
-        ext = f.lower()[-3:]
-        if ext in ['jpg', 'jpeg']:
-            page = ComicPage(Comic=book,
-                             index=i,
-                             page_file_name=f,
-                             content_type='image/jpeg')
-            page.save()
-            i += 1
-        elif ext == 'png':
-            page = ComicPage(Comic=book,
-                             index=i,
-                             page_file_name=f,
-                             content_type='image/png')
-            page.save()
-            i += 1
-        elif ext == 'bmp':
-            page = ComicPage(Comic=book,
-                             index=i,
-                             page_file_name=f,
-                             content_type='image/bmp')
-            page.save()
-            i += 1
-        elif ext == 'gif':
-            page = ComicPage(Comic=book,
-                             index=i,
-                             page_file_name=f,
-                             content_type='image/gif')
-            page.save()
-            i += 1
-
-    return book
 
 class ComicPage(models.Model):
     Comic = models.ForeignKey(ComicBook)
     index = models.IntegerField()
     page_file_name = models.CharField(max_length=100, unique=False)
     content_type = models.CharField(max_length=30)
-
-
-

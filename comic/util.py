@@ -10,19 +10,10 @@ class Breadcrumb:
 
     def __str__(self):
         return self.name
+
     def __unicode__(self):
         return self.name
 
-class DirFile:
-    def __init__(self):
-        self.name = ''
-        self.isdir = False
-        self.icon = ''
-        self.iscb = False
-        self.location = ''
-
-    def __str__(self):
-        return self.name
 
 def generate_breadcrumbs(comic_path):
     output = [Breadcrumb()]
@@ -39,6 +30,18 @@ def generate_breadcrumbs(comic_path):
         bc.url = prefix + urlsafe_base64_encode(last)
         output.append(bc)
     return output
+
+
+class DirFile:
+    def __init__(self):
+        self.name = ''
+        self.isdir = False
+        self.icon = ''
+        self.iscb = False
+        self.location = ''
+
+    def __str__(self):
+        return self.name
 
 
 def generate_directory(base_dir, comic_path):
