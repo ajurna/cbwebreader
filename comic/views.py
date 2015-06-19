@@ -2,13 +2,14 @@ from django.http import HttpResponse
 from django.template import RequestContext
 from django.utils.http import urlsafe_base64_decode
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 
 from comic.models import Setting, ComicBook
 from util import generate_breadcrumbs, generate_directory
 
 from os import path
 
-
+@login_required
 def comic_list(request, comic_path=''):
     base_dir = Setting.objects.get(name='BASE_DIR').value
     comic_path = urlsafe_base64_decode(comic_path)
@@ -20,7 +21,7 @@ def comic_list(request, comic_path=''):
     })
     return render(request, 'comic/comic_list.html', context)
 
-
+@login_required
 def read_comic(request, comic_path, page):
     base_dir = Setting.objects.get(name='BASE_DIR').value
     page = int(page)
@@ -42,7 +43,7 @@ def read_comic(request, comic_path, page):
     })
     return render(request, 'comic/read_comic.html', context)
 
-
+@login_required
 def get_image(_, comic_path, page):
     base_dir = Setting.objects.get(name='BASE_DIR').value
     page = int(page)
