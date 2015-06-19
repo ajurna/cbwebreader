@@ -16,10 +16,10 @@
     {% if file_list %}
         {% for file in file_list %}
             {% if file.isdir %}
-                <a href="/comic/{{ file.location }}/" class="glyphicon {{ file.icon }} list-group-item"> {{ file }}</a>
+                <a href="/comic/{{ file.location }}/" class="glyphicon {{ file.icon }} list-group-item"> {{ file }}{{ file.label | safe }}</a>
             {% endif %}
             {% if file.iscb %}
-                <a href="/comic/read/{{ file.location }}/0/" class="glyphicon {{ file.icon }} list-group-item"> {{ file }}</a>
+                <a href="/comic/read/{{ file.location }}/{{ file.cur_page }}/" class="glyphicon {{ file.icon }} list-group-item"> {{ file }}{{ file.label | safe }}</a>
             {% endif %}
         {% endfor %}
     {% else %}

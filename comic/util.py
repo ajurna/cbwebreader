@@ -1,4 +1,7 @@
 from django.utils.http import urlsafe_base64_encode
+
+from comic.models import ComicBook
+
 from os import path
 import os
 
@@ -39,6 +42,8 @@ class DirFile:
         self.icon = ''
         self.iscb = False
         self.location = ''
+        self.label = ''
+        self.cur_page = 0
 
     def __str__(self):
         return self.name
@@ -57,5 +62,17 @@ def generate_directory(base_dir, comic_path):
             df.iscb = True
             df.icon = 'glyphicon-book'
             df.location = urlsafe_base64_encode(path.join(comic_path, fn))
+            try:
+                book = ComicBook.objects.get(file_name=fn)
+                if book.unread:
+                    df.label = '<span class="label label-default pull-right">Unread</span>'
+                else:
+                    last_page = book.last_read_page
+                    label_text = '<span class="label label-primary pull-right">%s/%s</span>' % \
+                                 (last_page, book.page_count)
+                    df.label = label_text
+                    df.cur_page = last_page
+            except ComicBook.DoesNotExist:
+                df.label = '<span class="label label-danger pull-right">Unprocessed</span>'
         files.append(df)
     return files

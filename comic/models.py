@@ -1,8 +1,5 @@
 from django.db import models
-from django.db.models import Max
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-
-
 
 from unrar import rarfile
 import zipfile
@@ -24,6 +21,7 @@ class Setting(models.Model):
 class ComicBook(models.Model):
     file_name = models.CharField(max_length=100, unique=True)
     last_read_page = models.IntegerField()
+    unread = models.BooleanField()
 
     def __str__(self):
         return self.file_name
@@ -40,10 +38,14 @@ class ComicBook(models.Model):
         return out
 
     def is_last_page(self, page):
-        page_count = ComicPage.objects.filter(Comic=self).count()
-        if (page_count - 1) == page:
+        if (self.page_count - 1) == page:
             return True
         return False
+
+    @property
+    def page_count(self):
+        page_count = ComicPage.objects.filter(Comic=self).count()
+        return page_count
 
     class Navigation:
         def __init__(self):
@@ -93,8 +95,6 @@ class ComicBook(models.Model):
             prev_comic = dir_list[comic_index - 1]
             comic_path = path.join(directory, prev_comic)
             if not path.isdir(path.join(base_dir, prev_comic)):
-                print path.join(base_dir, prev_comic)
-                print path.join(base_dir, prev_comic)
                 try:
                     book = ComicBook.objects.get(file_name=prev_comic)
                 except ComicBook.DoesNotExist:
@@ -133,7 +133,8 @@ class ComicBook(models.Model):
             return False
 
         book = ComicBook(file_name=comic_file_name,
-                         last_read_page=0)
+                         last_read_page=0,
+                         unread=True)
         book.save()
         i = 0
         for f in sorted([str(x) for x in cbx.namelist()], key=str.lower):

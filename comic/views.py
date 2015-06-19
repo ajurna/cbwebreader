@@ -31,6 +31,7 @@ def read_comic(request, comic_path, page):
         book = ComicBook.objects.get(file_name=comic_file_name)
     except ComicBook.DoesNotExist:
         book = ComicBook.process_comic_book(base_dir, decoded_path, comic_file_name)
+    book.unread = False
     book.last_read_page = page
     book.save()
     context = RequestContext(request, {
