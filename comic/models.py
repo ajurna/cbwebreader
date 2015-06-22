@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
-from unrar import rarfile
+from comic import rarfile
 import zipfile
 from os import path
 import os
