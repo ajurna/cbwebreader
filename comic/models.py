@@ -29,7 +29,7 @@ class ComicBook(models.Model):
     def get_image(self, archive_path, page):
         try:
             archive = rarfile.RarFile(archive_path)
-        except rarfile.BadRarFile:
+        except rarfile.NotRarFile:
             archive = zipfile.ZipFile(archive_path)
         except zipfile.BadZipfile:
             return False
@@ -127,7 +127,7 @@ class ComicBook(models.Model):
     def process_comic_book(base_dir, comic_path, comic_file_name):
         try:
             cbx = rarfile.RarFile(path.join(base_dir, comic_path))
-        except rarfile.BadRarFile:
+        except rarfile.NotRarFile:
             cbx = zipfile.ZipFile(path.join(base_dir, comic_path))
         except zipfile.BadZipfile:
             return False
