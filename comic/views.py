@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 
 from comic.models import Setting, ComicBook
-from util import generate_breadcrumbs, generate_directory
+from util import generate_breadcrumbs
 
 from os import path
 
@@ -14,7 +14,7 @@ def comic_list(request, comic_path=''):
     base_dir = Setting.objects.get(name='BASE_DIR').value
     comic_path = urlsafe_base64_decode(comic_path)
     breadcrumbs = generate_breadcrumbs(comic_path)
-    files = generate_directory(base_dir, comic_path)
+    files = ComicBook.generate_directory(base_dir, comic_path)
     context = RequestContext(request, {
         'file_list': files,
         'breadcrumbs': breadcrumbs,

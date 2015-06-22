@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
 from comic import rarfile
+from comic.util import get_ordered_dir_list
 import zipfile
 from os import path
 import os
@@ -86,7 +87,7 @@ class ComicBook(models.Model):
         base_dir = Setting.objects.get(name='BASE_DIR').value
         comic_path = urlsafe_base64_decode(comic_path)
         directory, comic = path.split(comic_path)
-        dir_list = os.listdir(path.join(base_dir, directory))
+        dir_list = get_ordered_dir_list(path.join(base_dir, directory))
         comic_index = dir_list.index(comic)
         if comic_index == 0:
             comic_path = urlsafe_base64_encode(directory)
@@ -111,7 +112,7 @@ class ComicBook(models.Model):
         base_dir = Setting.objects.get(name='BASE_DIR')
         comic_path = urlsafe_base64_decode(comic_path)
         directory, comic = path.split(comic_path)
-        dir_list = os.listdir(path.join(base_dir.value, directory))
+        dir_list = get_ordered_dir_list(path.join(base_dir.value, directory))
         comic_index = dir_list.index(comic)
         try:
             next_comic = dir_list[comic_index + 1]
@@ -167,9 +168,52 @@ class ComicBook(models.Model):
                                  content_type='image/gif')
                 page.save()
                 i += 1
-
         return book
 
+    class DirFile:
+        def __init__(self):
+            self.name = ''
+            self.isdir = False
+            self.icon = ''
+            self.iscb = False
+            self.location = ''
+            self.label = ''
+            self.cur_page = 0
+
+        def __str__(self):
+            return self.name
+
+    @staticmethod
+    def generate_directory(base_dir, comic_path):
+        files = []
+        for fn in get_ordered_dir_list(path.join(base_dir, comic_path)):
+            df = ComicBook.DirFile()
+            df.name = fn
+            if path.isdir(path.join(base_dir, comic_path, fn)):
+                df.isdir = True
+                df.icon = 'glyphicon-folder-open'
+                df.location = urlsafe_base64_encode(path.join(comic_path, fn))
+            elif fn.lower().endswith('cbz') or fn.lower().endswith('cbr'):
+                df.iscb = True
+                df.icon = 'glyphicon-book'
+                df.location = urlsafe_base64_encode(path.join(comic_path, fn))
+                try:
+                    book = ComicBook.objects.get(file_name=fn)
+                    last_page = book.last_read_page
+                    if book.unread:
+                        df.label = '<span class="label label-default pull-right">Unread</span>'
+                    elif (last_page + 1) == book.page_count:
+                        df.label = '<span class="label label-success pull-right">Read</span>'
+                        df.cur_page = last_page
+                    else:
+                        label_text = '<span class="label label-primary pull-right">%s/%s</span>' % \
+                                     (last_page + 1, book.page_count)
+                        df.label = label_text
+                        df.cur_page = last_page
+                except ComicBook.DoesNotExist:
+                    df.label = '<span class="label label-danger pull-right">Unprocessed</span>'
+            files.append(df)
+        return files
     class Comic:
         def __init__(self):
             self.name = ''
