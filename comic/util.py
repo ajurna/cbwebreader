@@ -48,10 +48,21 @@ class DirFile:
     def __str__(self):
         return self.name
 
+def get_ordered_dir_list(folder):
+    directories = []
+    files = []
+    print(folder)
+    for item in os.listdir(folder):
+        if path.isdir(path.join(folder, item)):
+            directories.append(item)
+        else:
+            files.append(item)
+    print(directories)
+    return sorted(directories) + sorted(files)
 
 def generate_directory(base_dir, comic_path):
     files = []
-    for fn in os.listdir(path.join(base_dir, comic_path)):
+    for fn in get_ordered_dir_list(path.join(base_dir, comic_path)):
         df = DirFile()
         df.name = fn
         if path.isdir(path.join(base_dir, comic_path, fn)):
