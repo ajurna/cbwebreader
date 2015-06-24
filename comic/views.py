@@ -38,6 +38,8 @@ def settings_page(request):
             error_message = 'This is not a valid Directory'
     elif obj.value == '':
         error_message = 'Base Directory cannot be blank'
+    elif not path.isdir(obj.value):
+        error_message = 'Base Directory does not exist'
     context = RequestContext(request, {
         'base_dir': obj,
         'error_message': error_message,
