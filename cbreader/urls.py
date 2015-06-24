@@ -17,6 +17,7 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 urlpatterns = [
+    url(r'^$',  'comic.views.comic_redirect'),
     url(r'^login/',  'comic_auth.views.comic_login'),
     url(r'^logout/', 'comic_auth.views.comic_logout'),
     url(r'^comic/',  include('comic.urls')),

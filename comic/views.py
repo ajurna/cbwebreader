@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.template import RequestContext
 from django.utils.http import urlsafe_base64_decode
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 
 from comic.models import Setting, ComicBook
@@ -56,3 +56,6 @@ def get_image(_, comic_path, page):
     full_path = path.join(base_dir, decoded_path)
     img, content = book.get_image(full_path, page)
     return HttpResponse(img.read(), content_type=content)
+
+def comic_redirect(request):
+    return redirect('/comic/')

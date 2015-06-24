@@ -1,5 +1,4 @@
-from django.shortcuts import render, redirect
-from django.shortcuts import RequestContext
+from django.shortcuts import render, redirect, RequestContext
 from django.contrib.auth import authenticate, login, logout
 
 
