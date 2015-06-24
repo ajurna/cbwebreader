@@ -5,7 +5,6 @@ from comic import rarfile
 from comic.util import get_ordered_dir_list
 import zipfile
 from os import path
-import os
 
 
 class Setting(models.Model):

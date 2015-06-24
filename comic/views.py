@@ -11,7 +11,12 @@ from os import path
 
 @login_required
 def comic_list(request, comic_path=''):
-    base_dir = Setting.objects.get(name='BASE_DIR').value
+    try:
+        base_dir = Setting.objects.get(name='BASE_DIR').value
+    except Setting.DoesNotExist:
+        return redirect('/comic/settings/')
+    if not path.isdir(base_dir):
+        return redirect('/comic/settings/')
     comic_path = urlsafe_base64_decode(comic_path)
     breadcrumbs = generate_breadcrumbs(comic_path)
     files = ComicBook.generate_directory(base_dir, comic_path)
@@ -20,6 +25,24 @@ def comic_list(request, comic_path=''):
         'breadcrumbs': breadcrumbs,
     })
     return render(request, 'comic/comic_list.html', context)
+
+@login_required
+def settings_page(request):
+    obj, created = Setting.objects.get_or_create(name='BASE_DIR')
+    error_message = ''
+    if request.POST:
+        if path.isdir(request.POST['base_directory']):
+            obj.value = request.POST['base_directory']
+            obj.save()
+        else:
+            error_message = 'This is not a valid Directory'
+    elif obj.value == '':
+        error_message = 'Base Directory cannot be blank'
+    context = RequestContext(request, {
+        'base_dir': obj,
+        'error_message': error_message,
+    })
+    return render(request, 'comic/settings_page.html', context)
 
 @login_required
 def read_comic(request, comic_path, page):
@@ -57,5 +80,6 @@ def get_image(_, comic_path, page):
     img, content = book.get_image(full_path, page)
     return HttpResponse(img.read(), content_type=content)
 
-def comic_redirect(request):
+
+def comic_redirect(_):
     return redirect('/comic/')
