@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.models import User
 
 from comic import rarfile
 from comic.util import get_ordered_dir_list
@@ -17,11 +18,8 @@ class Setting(models.Model):
     def __unicode__(self):
         return self.__str__()
 
-
 class ComicBook(models.Model):
     file_name = models.CharField(max_length=100, unique=True)
-    last_read_page = models.IntegerField()
-    unread = models.BooleanField()
 
     def __str__(self):
         return self.file_name
@@ -132,9 +130,7 @@ class ComicBook(models.Model):
         except zipfile.BadZipfile:
             return False
 
-        book = ComicBook(file_name=comic_file_name,
-                         last_read_page=0,
-                         unread=True)
+        book = ComicBook(file_name=comic_file_name)
         book.save()
         i = 0
         for f in sorted([str(x) for x in cbx.namelist()], key=str.lower):
@@ -183,7 +179,7 @@ class ComicBook(models.Model):
             return self.name
 
     @staticmethod
-    def generate_directory(base_dir, comic_path):
+    def generate_directory(user, base_dir, comic_path):
         files = []
         for fn in get_ordered_dir_list(path.join(base_dir, comic_path)):
             df = ComicBook.DirFile()
@@ -198,8 +194,9 @@ class ComicBook(models.Model):
                 df.location = urlsafe_base64_encode(path.join(comic_path, fn))
                 try:
                     book = ComicBook.objects.get(file_name=fn)
-                    last_page = book.last_read_page
-                    if book.unread:
+                    status, _ = ComicStatus.objects.get_or_create(comic=book, user=user)
+                    last_page = status.last_read_page
+                    if status.unread:
                         df.label = '<span class="label label-default pull-right">Unread</span>'
                     elif (last_page + 1) == book.page_count:
                         df.label = '<span class="label label-success pull-right">Read</span>'
@@ -229,3 +226,9 @@ class ComicPage(models.Model):
     index = models.IntegerField()
     page_file_name = models.CharField(max_length=100, unique=False)
     content_type = models.CharField(max_length=30)
+
+class ComicStatus(models.Model):
+    user = models.ForeignKey(User, unique=False, null=False)
+    comic = models.ForeignKey(ComicBook, unique=False, null=False)
+    last_read_page = models.IntegerField(default=0)
+    unread = models.BooleanField(default=True)

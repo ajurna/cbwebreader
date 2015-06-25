@@ -4,7 +4,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 
-from comic.models import Setting, ComicBook
+from comic.models import Setting, ComicBook, ComicStatus
 from util import generate_breadcrumbs
 
 from os import path
@@ -17,9 +17,10 @@ def comic_list(request, comic_path=''):
         return redirect('/comic/settings/')
     if not path.isdir(base_dir):
         return redirect('/comic/settings/')
+
     comic_path = urlsafe_base64_decode(comic_path)
     breadcrumbs = generate_breadcrumbs(comic_path)
-    files = ComicBook.generate_directory(base_dir, comic_path)
+    files = ComicBook.generate_directory(request.user, base_dir, comic_path)
     context = RequestContext(request, {
         'file_list': files,
         'breadcrumbs': breadcrumbs,
@@ -57,9 +58,10 @@ def read_comic(request, comic_path, page):
         book = ComicBook.objects.get(file_name=comic_file_name)
     except ComicBook.DoesNotExist:
         book = ComicBook.process_comic_book(base_dir, decoded_path, comic_file_name)
-    book.unread = False
-    book.last_read_page = page
-    book.save()
+    status, _ = ComicStatus.objects.get_or_create(comic=book, user=request.user)
+    status.unread = False
+    status.last_read_page = page
+    status.save()
     context = RequestContext(request, {
         'book': book,
         'orig_file_name': book.page_name(page),
