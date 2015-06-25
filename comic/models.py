@@ -55,7 +55,7 @@ class ComicBook(models.Model):
             self.prev_path = ''
             self.cur_index = 0
             self.cur_path = ''
-            self.q_prev_comic = False
+            self.q_prev_to_directory = False
             self.q_next_to_directory = False
 
     def nav(self, comic_path, page):
@@ -94,7 +94,7 @@ class ComicBook(models.Model):
         else:
             prev_comic = dir_list[comic_index - 1]
             comic_path = path.join(directory, prev_comic)
-            if not path.isdir(path.join(base_dir, prev_comic)):
+            if not path.isdir(path.join(base_dir, directory, prev_comic)):
                 try:
                     book = ComicBook.objects.get(file_name=prev_comic)
                 except ComicBook.DoesNotExist:
@@ -192,7 +192,7 @@ class ComicBook(models.Model):
                 df.isdir = True
                 df.icon = 'glyphicon-folder-open'
                 df.location = urlsafe_base64_encode(path.join(comic_path, fn))
-            elif fn.lower().endswith('cbz') or fn.lower().endswith('cbr'):
+            elif fn.lower()[-4:] in ['.rar', '.zip', '.cbr', '.cbz']:
                 df.iscb = True
                 df.icon = 'glyphicon-book'
                 df.location = urlsafe_base64_encode(path.join(comic_path, fn))
@@ -213,20 +213,16 @@ class ComicBook(models.Model):
                     df.label = '<span class="label label-danger pull-right">Unprocessed</span>'
             files.append(df)
         return files
-    class Comic:
-        def __init__(self):
-            self.name = ''
-            self.index = 0
 
+    @property
     def pages(self):
         out = []
         for item in ComicPage.objects.filter(Comic=self).order_by('index'):
-            i = self.Comic()
-            i.name = item.page_file_name
-            i.index = item.index
-            out.append(i)
+            out.append(item)
         return out
 
+    def page_name(self, index):
+        return ComicPage.objects.get(Comic=self, index=index).page_file_name
 
 class ComicPage(models.Model):
     Comic = models.ForeignKey(ComicBook)

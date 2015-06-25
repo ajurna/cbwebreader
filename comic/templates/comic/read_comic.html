@@ -34,7 +34,7 @@
             <button type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle ">{{ orig_file_name }}<span class="caret"></span></button>
             <ul class="dropdown-menu" id="dropdown-list">
                 {% for file in book.pages %}
-                    <li><a href="/comic/read/{{ nav.cur_path }}/{{ file.index }}/">{{ file.name }}</a></li>
+                    <li><a href="/comic/read/{{ nav.cur_path }}/{{ file.index }}/">{{ file.page_file_name }}</a></li>
                 {% endfor %}
             </ul>
         </div>

@@ -33,18 +33,12 @@ def generate_breadcrumbs(comic_path):
     return output
 
 
-
-
 def get_ordered_dir_list(folder):
     directories = []
     files = []
-    print(folder)
     for item in os.listdir(folder):
         if path.isdir(path.join(folder, item)):
             directories.append(item)
         else:
             files.append(item)
-    print(directories)
     return sorted(directories) + sorted(files)
-
-

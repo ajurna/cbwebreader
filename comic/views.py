@@ -62,7 +62,7 @@ def read_comic(request, comic_path, page):
     book.save()
     context = RequestContext(request, {
         'book': book,
-        'orig_file_name': book.pages()[page].name,
+        'orig_file_name': book.page_name(page),
         'nav': book.nav(comic_path, page),
         'breadcrumbs': breadcrumbs,
     })
