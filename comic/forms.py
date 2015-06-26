@@ -36,8 +36,8 @@ class SettingsForm(forms.Form):
         base_dir, created = Setting.objects.get_or_create(name='BASE_DIR')
         recaptcha_public_key, created = Setting.objects.get_or_create(name='RECAPTCHA_PUBLIC_KEY')
         recaptcha_private_key, created = Setting.objects.get_or_create(name='RECAPTCHA_PRIVATE_KEY')
-        recaptcha, created = Setting.objects.get_or_create(name='RECAPTCHA_PRIVATE_KEY')
-        if recaptcha == '1':
+        recaptcha, created = Setting.objects.get_or_create(name='RECAPTCHA')
+        if recaptcha.value == '1':
             recaptcha = True
         else:
             recaptcha = False
