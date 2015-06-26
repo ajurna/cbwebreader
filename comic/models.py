@@ -9,7 +9,7 @@ from os import path
 
 
 class Setting(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=100, unique=True)
     value = models.TextField()
 
     def __str__(self):
@@ -134,13 +134,19 @@ class ComicBook(models.Model):
         book.save()
         i = 0
         for f in sorted([str(x) for x in cbx.namelist()], key=str.lower):
-            ext = f.lower()[-3:]
+            try:
+                dot_index = f.rindex('.') + 1
+            except ValueError:
+                continue
+            ext = f.lower()[dot_index:]
+            print ext
             if ext in ['jpg', 'jpeg']:
                 page = ComicPage(Comic=book,
                                  index=i,
                                  page_file_name=f,
                                  content_type='image/jpeg')
                 page.save()
+
                 i += 1
             elif ext == 'png':
                 page = ComicPage(Comic=book,
