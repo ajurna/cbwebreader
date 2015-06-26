@@ -139,7 +139,6 @@ class ComicBook(models.Model):
             except ValueError:
                 continue
             ext = f.lower()[dot_index:]
-            print ext
             if ext in ['jpg', 'jpeg']:
                 page = ComicPage(Comic=book,
                                  index=i,
