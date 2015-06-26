@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 
 from comic.models import Setting, ComicBook, ComicStatus
 from util import generate_breadcrumbs
+from forms import SettingsForm
 
 from os import path
 
@@ -27,25 +28,39 @@ def comic_list(request, comic_path=''):
     })
     return render(request, 'comic/comic_list.html', context)
 
+
 @login_required
 def settings_page(request):
-    obj, created = Setting.objects.get_or_create(name='BASE_DIR')
     error_message = ''
+
     if request.POST:
-        if path.isdir(request.POST['base_directory']):
-            obj.value = request.POST['base_directory']
-            obj.save()
-        else:
-            error_message = 'This is not a valid Directory'
-    elif obj.value == '':
-        error_message = 'Base Directory cannot be blank'
-    elif not path.isdir(obj.value):
-        error_message = 'Base Directory does not exist'
+        form = SettingsForm(request.POST)
+        if form.is_valid():
+            if path.isdir(form.cleaned_data['base_dir']):
+                base_dir = Setting.objects.get(name='BASE_DIR')
+                base_dir.value = form.cleaned_data['base_dir']
+                base_dir.save()
+            else:
+                error_message = 'This is not a valid Directory'
+            recap = Setting.objects.get(name='RECAPTCHA')
+            if form.cleaned_data['recaptcha']:
+                recap.value = '1'
+            else:
+                recap.value = '0'
+            recap.save()
+            rprik = Setting.objects.get(name='RECAPTCHA_PRIVATE_KEY')
+            rprik.value = form.cleaned_data['recaptcha_private_key']
+            rprik.save()
+            rpubk = Setting.objects.get(name='RECAPTCHA_PUBLIC_KEY')
+            rpubk.value = form.cleaned_data['recaptcha_public_key']
+            rpubk.save()
+    form = SettingsForm(initial=SettingsForm.get_initial_values())
     context = RequestContext(request, {
-        'base_dir': obj,
         'error_message': error_message,
+        'form': form,
     })
     return render(request, 'comic/settings_page.html', context)
+
 
 @login_required
 def read_comic(request, comic_path, page):

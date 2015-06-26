@@ -8,6 +8,7 @@ This is for if you have a collection of comics on a media server and want to rea
 - [python 2.7](https://www.python.org/)
 - [rarfile python library by Marko Kreen](https://github.com/markokr/rarfile) (included)
 - [Unrar by winrar](http://rarlabs.com)
+- [django-recaptcha bt praekelt](https://github.com/praekelt/django-recaptcha)
 
 # Installation
 Pull from git and use like any django project.

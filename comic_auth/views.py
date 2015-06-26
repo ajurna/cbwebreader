@@ -1,25 +1,38 @@
 from django.shortcuts import render, redirect, RequestContext
 from django.contrib.auth import authenticate, login, logout
 
+from comic_auth.forms import LoginForm
 
 def comic_login(request):
     if request.POST:
-        user = authenticate(username=request.POST['user'],
-                            password=request.POST['password'])
-        if user is not None:
-            if user.is_active:
-                login(request, user)
-                if request.GET.has_key('next'):
-                    return redirect(request.GET['next'])
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            user = authenticate(username=form.cleaned_data['username'],
+                                password=form.cleaned_data['password'])
+            if user is not None:
+                if user.is_active:
+                    login(request, user)
+                    if request.GET.has_key('next'):
+                        return redirect(request.GET['next'])
+                    else:
+                        return redirect('/comic/')
                 else:
-                    return redirect('/comic/')
-            else:
-                context = RequestContext(request, {
-                    'error': True
-                })
-                return render(request, 'comic_auth/login.html', context)
+                    context = RequestContext(request, {
+                        'error': True,
+
+                    })
+                    return render(request, 'comic_auth/login.html', context)
+        else:
+            context = RequestContext(request, {
+                'error': True,
+                'form': form
+            })
+            return render(request, 'comic_auth/login.html', context)
     else:
-        context = RequestContext(request, {})
+        form = LoginForm()
+        context = RequestContext(request, {
+            'form': form
+        })
         return render(request, 'comic_auth/login.html', context)
 
 def comic_logout(request):
