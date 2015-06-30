@@ -7,11 +7,16 @@ import os
 
 class Menu:
     def __init__(self, page=''):
+        """
+
+        :type page: str
+        """
         self.menu_items = OrderedDict()
         self.menu_items['Browse'] = '/comic/'
         self.menu_items['Settings'] = '/comic/settings/'
         self.menu_items['Logout'] = '/logout/'
         self.current_page = page
+
 
 class Breadcrumb:
     def __init__(self):
@@ -23,6 +28,7 @@ class Breadcrumb:
 
     def __unicode__(self):
         return self.name
+
 
 def generate_breadcrumbs(comic_path):
     output = [Breadcrumb()]
@@ -39,6 +45,7 @@ def generate_breadcrumbs(comic_path):
         bc.url = prefix + urlsafe_base64_encode(last)
         output.append(bc)
     return output
+
 
 def get_ordered_dir_list(folder):
     directories = []
