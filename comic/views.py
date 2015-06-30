@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from comic.models import Setting, ComicBook, ComicStatus
 from util import generate_breadcrumbs
 from forms import SettingsForm
-
+from util import Menu
 from os import path
 
 @login_required
@@ -25,6 +25,7 @@ def comic_list(request, comic_path=''):
     context = RequestContext(request, {
         'file_list': files,
         'breadcrumbs': breadcrumbs,
+        'menu': Menu('Browse'),
     })
     return render(request, 'comic/comic_list.html', context)
 
@@ -58,6 +59,7 @@ def settings_page(request):
     context = RequestContext(request, {
         'error_message': error_message,
         'form': form,
+        'menu': Menu('Settings')
     })
     return render(request, 'comic/settings_page.html', context)
 
@@ -82,6 +84,7 @@ def read_comic(request, comic_path, page):
         'orig_file_name': book.page_name(page),
         'nav': book.nav(comic_path, page),
         'breadcrumbs': breadcrumbs,
+        'menu': Menu()
     })
     return render(request, 'comic/read_comic.html', context)
 

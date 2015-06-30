@@ -36,15 +36,13 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="/comic/">CBReader</a>
+          <a class="navbar-brand" href="/comic/">CBWebReader</a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-              {% block navbar %}
-            <li class="active"><a href="/comic/">Home</a></li>
-            <li><a href="settings/">Settings</a></li>
-            <li><a href="/logout/">Logout</a></li>
-              {% endblock %}
+            {% for page, link in menu.menu_items.items %}
+              <li{% if menu.current_page = page %} class="active"{% endif %}><a href="{{ link }}">{{ page }}</a></li>
+            {% endfor %}
           </ul>
         </div><!--/.nav-collapse -->
       </div>
