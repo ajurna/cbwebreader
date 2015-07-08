@@ -13,6 +13,7 @@ class Menu:
         """
         self.menu_items = OrderedDict()
         self.menu_items['Browse'] = '/comic/'
+        self.menu_items['Account'] = '/comic/account/'
         self.menu_items['Settings'] = '/comic/settings/'
         self.menu_items['Logout'] = '/logout/'
         self.current_page = page

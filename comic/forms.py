@@ -1,6 +1,36 @@
 from django import forms
 from comic.models import Setting
 
+class AccountForm(forms.Form):
+    username = forms.CharField(help_text='Username',
+                               required=False,
+                               widget=forms.TextInput(
+                                   attrs={
+                                       'class': 'form-control disabled',
+                                       'readonly': True,
+                                   }
+                               ))
+    email = forms.CharField(help_text='Email Address',
+                            widget=forms.TextInput(
+                                attrs={
+                                    'class': 'form-control'
+                                }
+                            ))
+    password1 = forms.CharField(help_text='New Password',
+                                required=False,
+                                widget=forms.PasswordInput(
+                                    attrs={
+                                        'class': 'form-control',
+                                    }
+                                ))
+    password2 = forms.CharField(help_text='New Password Confirmation',
+                                required=False,
+                                widget=forms.PasswordInput(
+                                    attrs={
+                                        'class': 'form-control',
+                                    }
+                                ))
+
 
 class SettingsForm(forms.Form):
     base_dir = forms.CharField(help_text='Base Directory',

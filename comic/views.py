@@ -3,10 +3,12 @@ from django.template import RequestContext
 from django.utils.http import urlsafe_base64_decode
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 from comic.models import Setting, ComicBook, ComicStatus
 from util import generate_breadcrumbs
-from forms import SettingsForm
+from forms import SettingsForm, AccountForm
 from util import Menu
 from os import path
 
@@ -29,6 +31,42 @@ def comic_list(request, comic_path=''):
     })
     return render(request, 'comic/comic_list.html', context)
 
+@login_required
+def account_page(request):
+    error_message = []
+    success_message = []
+    if request.POST:
+        form = AccountForm(request.POST)
+        if form.is_valid():
+            if form.cleaned_data['password1'] != '':
+                if form.cleaned_data['password1'] == form.cleaned_data['password2']:
+                    if len(form.cleaned_data['password1']) < 8:
+                        error_message.append('Password is too short')
+                    else:
+                        success_message.append('password changed')
+                        request.user.set_password(form.cleaned_data['password1'])
+                else:
+                    error_message.append("Passwords don't match")
+            if form.cleaned_data['email'] != request.user.email:
+                try:
+                    validate_email(form.cleaned_data['email'])
+                    success_message.append('Email Address updated')
+                    request.user.email = form.cleaned_data['email']
+                except ValidationError:
+                    error_message.append('Invalid E-mail.')
+            request.user.save()
+    else:
+        form = AccountForm(initial={
+            'username': request.user.username,
+            'email': request.user.email,
+        })
+    context = RequestContext(request, {
+        'form': form,
+        'menu': Menu('Account'),
+        'error_message': '</br>'.join(error_message),
+        'success_message': '</br>'.join(success_message),
+    })
+    return render(request, 'comic/settings_page.html', context)
 
 @login_required
 def settings_page(request):
