@@ -6,7 +6,7 @@ import os
 
 
 class Menu:
-    def __init__(self, page=''):
+    def __init__(self, user, page=''):
         """
 
         :type page: str
@@ -14,7 +14,8 @@ class Menu:
         self.menu_items = OrderedDict()
         self.menu_items['Browse'] = '/comic/'
         self.menu_items['Account'] = '/comic/account/'
-        self.menu_items['Settings'] = '/comic/settings/'
+        if user.is_superuser:
+            self.menu_items['Settings'] = '/comic/settings/'
         self.menu_items['Logout'] = '/logout/'
         self.current_page = page
 

@@ -27,7 +27,7 @@ def comic_list(request, comic_path=''):
     context = RequestContext(request, {
         'file_list': files,
         'breadcrumbs': breadcrumbs,
-        'menu': Menu('Browse'),
+        'menu': Menu(request.user, 'Browse'),
     })
     return render(request, 'comic/comic_list.html', context)
 
@@ -62,7 +62,7 @@ def account_page(request):
         })
     context = RequestContext(request, {
         'form': form,
-        'menu': Menu('Account'),
+        'menu': Menu(request.user, 'Account'),
         'error_message': '</br>'.join(error_message),
         'success_message': '</br>'.join(success_message),
     })
@@ -97,7 +97,7 @@ def settings_page(request):
     context = RequestContext(request, {
         'error_message': error_message,
         'form': form,
-        'menu': Menu('Settings')
+        'menu': Menu(request.user, 'Settings')
     })
     return render(request, 'comic/settings_page.html', context)
 
@@ -122,7 +122,7 @@ def read_comic(request, comic_path, page):
         'orig_file_name': book.page_name(page),
         'nav': book.nav(comic_path, page),
         'breadcrumbs': breadcrumbs,
-        'menu': Menu()
+        'menu': Menu(request.user)
     })
     return render(request, 'comic/read_comic.html', context)
 
