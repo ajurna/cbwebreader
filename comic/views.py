@@ -2,9 +2,10 @@ from django.http import HttpResponse
 from django.template import RequestContext
 from django.utils.http import urlsafe_base64_decode
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 
 from comic.models import Setting, ComicBook, ComicStatus
 from util import generate_breadcrumbs
@@ -68,10 +69,21 @@ def account_page(request):
     })
     return render(request, 'comic/settings_page.html', context)
 
-@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def users_page(request):
+    users = User.objects.all()
+    context = RequestContext(request, {
+        #'form': form,
+        'users': users,
+        'menu': Menu(request.user, 'Account'),
+        #'error_message': '</br>'.join(error_message),
+        #'success_message': '</br>'.join(success_message),
+    })
+    return render(request, 'comic/users_page.html', context)
+
+@user_passes_test(lambda u: u.is_superuser)
 def settings_page(request):
     error_message = ''
-
     if request.POST:
         form = SettingsForm(request.POST)
         if form.is_valid():
