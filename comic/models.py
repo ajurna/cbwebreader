@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.transaction import atomic
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.models import User
 
@@ -17,6 +18,7 @@ class Setting(models.Model):
 
     def __unicode__(self):
         return self.__str__()
+
 
 class ComicBook(models.Model):
     file_name = models.CharField(max_length=100, unique=True)
@@ -129,45 +131,45 @@ class ComicBook(models.Model):
             cbx = zipfile.ZipFile(path.join(base_dir, comic_path))
         except zipfile.BadZipfile:
             return False
+        with atomic():
+            book = ComicBook(file_name=comic_file_name)
+            book.save()
+            i = 0
+            for f in sorted([str(x) for x in cbx.namelist()], key=str.lower):
+                try:
+                    dot_index = f.rindex('.') + 1
+                except ValueError:
+                    continue
+                ext = f.lower()[dot_index:]
+                if ext in ['jpg', 'jpeg']:
+                    page = ComicPage(Comic=book,
+                                     index=i,
+                                     page_file_name=f,
+                                     content_type='image/jpeg')
+                    page.save()
 
-        book = ComicBook(file_name=comic_file_name)
-        book.save()
-        i = 0
-        for f in sorted([str(x) for x in cbx.namelist()], key=str.lower):
-            try:
-                dot_index = f.rindex('.') + 1
-            except ValueError:
-                continue
-            ext = f.lower()[dot_index:]
-            if ext in ['jpg', 'jpeg']:
-                page = ComicPage(Comic=book,
-                                 index=i,
-                                 page_file_name=f,
-                                 content_type='image/jpeg')
-                page.save()
-
-                i += 1
-            elif ext == 'png':
-                page = ComicPage(Comic=book,
-                                 index=i,
-                                 page_file_name=f,
-                                 content_type='image/png')
-                page.save()
-                i += 1
-            elif ext == 'bmp':
-                page = ComicPage(Comic=book,
-                                 index=i,
-                                 page_file_name=f,
-                                 content_type='image/bmp')
-                page.save()
-                i += 1
-            elif ext == 'gif':
-                page = ComicPage(Comic=book,
-                                 index=i,
-                                 page_file_name=f,
-                                 content_type='image/gif')
-                page.save()
-                i += 1
+                    i += 1
+                elif ext == 'png':
+                    page = ComicPage(Comic=book,
+                                     index=i,
+                                     page_file_name=f,
+                                     content_type='image/png')
+                    page.save()
+                    i += 1
+                elif ext == 'bmp':
+                    page = ComicPage(Comic=book,
+                                     index=i,
+                                     page_file_name=f,
+                                     content_type='image/bmp')
+                    page.save()
+                    i += 1
+                elif ext == 'gif':
+                    page = ComicPage(Comic=book,
+                                     index=i,
+                                     page_file_name=f,
+                                     content_type='image/gif')
+                    page.save()
+                    i += 1
         return book
 
     class DirFile:
