@@ -51,11 +51,15 @@ def account_page(request):
             'username': request.user.username,
             'email': request.user.email,
         })
+    crumbs = [
+        ('Account', '/comic/account/'),
+    ]
     context = RequestContext(request, {
         'form': form,
         'menu': Menu(request.user, 'Account'),
         'error_message': form.errors,
         'success_message': '</br>'.join(success_message),
+        'breadcrumbs': generate_breadcrumbs_from_menu(crumbs),
     })
     return render(request, 'comic/settings_page.html', context)
 
