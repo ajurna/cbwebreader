@@ -2,6 +2,7 @@ from django import forms
 from captcha.fields import ReCaptchaField
 from comic.models import Setting
 
+
 class LoginForm(forms.Form):
 
     username = forms.CharField(max_length=50,

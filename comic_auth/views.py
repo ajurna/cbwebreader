@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 
 from comic_auth.forms import LoginForm
 
+
 def comic_login(request):
     if request.POST:
         form = LoginForm(request.POST)
@@ -34,6 +35,7 @@ def comic_login(request):
             'form': form
         })
         return render(request, 'comic_auth/login.html', context)
+
 
 def comic_logout(request):
     logout(request)
