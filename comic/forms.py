@@ -6,6 +6,53 @@ from os import path
 from comic.models import Setting
 
 
+class InitialSetupForm(forms.Form):
+    username = forms.CharField(help_text='Username',
+                               widget=forms.TextInput(
+                                   attrs={
+                                       'class': 'form-control',
+                                   }
+                               ))
+    email = forms.CharField(help_text='Email Address',
+                            widget=forms.TextInput(
+                                attrs={
+                                    'class': 'form-control'
+                                }
+                            ))
+    password = forms.CharField(help_text='New Password',
+                               widget=forms.PasswordInput(
+                                   attrs={
+                                       'class': 'form-control',
+                                   }
+                               ))
+    password_confirm = forms.CharField(help_text='New Password Confirmation',
+                                       widget=forms.PasswordInput(
+                                           attrs={
+                                               'class': 'form-control',
+                                           }
+                                       ))
+    base_dir = forms.CharField(help_text='Base Directory',
+                               widget=forms.TextInput(
+                                   attrs={
+                                       'class': 'form-control'
+                                   }
+                               ))
+
+    def clean_base_dir(self):
+        data = self.cleaned_data['base_dir']
+        if not path.isdir(data):
+            raise forms.ValidationError('This is not a valid Directory')
+        return data
+
+    def clean(self):
+        form_data = self.cleaned_data
+        if form_data['password'] != form_data['password_confirm']:
+            raise forms.ValidationError('Passwords do not match.')
+        if len(form_data['password']) < 8:
+            raise forms.ValidationError('Password is too short')
+        return form_data
+
+
 class AccountForm(forms.Form):
     username = forms.CharField(help_text='Username',
                                required=False,

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block breadcrumb %}
+    {% for crumb in breadcrumbs %}
+        {% if not forloop.last %}
+            <li><a href="{{ crumb.url }}">{{ crumb.name }}</a></li>
+        {% else %}
+            <li class="active">{{ crumb.name }}</li>
+        {% endif %}
+    {% endfor %}
+{% endblock %}
+
+{% block content %}
+{% if error_message %}
+<div class="alert alert-danger" role="alert">{{ error_message|safe }}</div>
+{% endif %}
+{% if success_message %}
+<div class="alert alert-success" role="alert">{{ success_message|safe }}</div>
+{% endif %}
+<form method="POST">
+    {% csrf_token %}
+    {% for item in form %}
+        <div class="form-group">
+            <label for="{{ item.id_for_label }}">{{ item.help_text }}</label>
+            {{ item }}
+        </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-default">Submit</button>
+</form>
+{% endblock %}
+
+{% block content2 %}
+{% if error_message %}
+<div class="alert alert-danger" role="alert">{{ error_message }}</div>
+{% endif %}
+<form method="POST">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="base_directory">Base Directory</label>
+        <input type="text" class="form-control" id="base_directory" name="base_directory" placeholder="Base Directory" value="{{ base_dir.value }}">
+    </div>
+    <button type="submit" class="btn btn-default">Submit</button>
+</form>
+{% endblock %}

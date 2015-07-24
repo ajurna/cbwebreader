@@ -4,10 +4,11 @@ from django.utils.http import urlsafe_base64_decode
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
+from django.contrib.auth import login, authenticate
 
 from comic.models import Setting, ComicBook, ComicStatus
 from util import generate_breadcrumbs_from_path, generate_breadcrumbs_from_menu, generate_title_from_path
-from forms import SettingsForm, AccountForm, EditUserForm, AddUserForm
+from forms import SettingsForm, AccountForm, EditUserForm, AddUserForm, InitialSetupForm
 from util import Menu
 from os import path
 
@@ -218,6 +219,37 @@ def get_image(_, comic_path, page):
     full_path = path.join(base_dir, decoded_path)
     img, content = book.get_image(full_path, page)
     return HttpResponse(img.read(), content_type=content)
+
+
+def initial_setup(request):
+    if User.objects.all().exists():
+        return redirect('/comic/')
+    if request.POST:
+        form = InitialSetupForm(request.POST)
+        if form.is_valid():
+            user = User(
+                username=form.cleaned_data['username'],
+                email=form.cleaned_data['email'],
+                is_staff=True,
+                is_superuser=True,
+            )
+            user.set_password(form.cleaned_data['password'])
+            user.save()
+            base_dir, _ = Setting.objects.get_or_create(name='BASE_DIR')
+            base_dir.value = form.cleaned_data['base_dir']
+            base_dir.save()
+            user = authenticate(username=form.cleaned_data['username'],
+                                password=form.cleaned_data['password'])
+            login(request, user)
+            return redirect('/comic/')
+    else:
+        form = InitialSetupForm()
+    context = {
+        'form': form,
+        'title': 'CBWebReader - Setup',
+        'error_message': form.errors,
+    }
+    return render(request, 'comic/settings_page.html', context)
 
 
 def comic_redirect(_):

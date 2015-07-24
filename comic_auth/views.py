@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, RequestContext
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 
 from comic_auth.forms import LoginForm
 
@@ -30,6 +31,8 @@ def comic_login(request):
             })
             return render(request, 'comic_auth/login.html', context)
     else:
+        if not User.objects.all().exists():
+            return redirect('/setup/')
         form = LoginForm()
         context = RequestContext(request, {
             'form': form
