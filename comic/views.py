@@ -60,6 +60,7 @@ def account_page(request):
         'error_message': form.errors,
         'success_message': '</br>'.join(success_message),
         'breadcrumbs': generate_breadcrumbs_from_menu(crumbs),
+        'title': 'CBWebReader - Account',
     })
     return render(request, 'comic/settings_page.html', context)
 
@@ -108,6 +109,7 @@ def user_config_page(request, user_id):
         'error_message': form.errors,
         'breadcrumbs': generate_breadcrumbs_from_menu(crumbs),
         'success_message': '</br>'.join(success_message),
+        'title': 'CBWebReader - Edit User - ' + user.username,
     })
     return render(request, 'comic/settings_page.html', context)
 
@@ -138,6 +140,7 @@ def user_add_page(request):
         'breadcrumbs': generate_breadcrumbs_from_menu(crumbs),
         'error_message': form.errors,
         'success_message': success_message,
+        'title': 'CBWebReader - Add User',
     })
     return render(request, 'comic/settings_page.html', context)
 
@@ -170,6 +173,7 @@ def settings_page(request):
         'success_message': '</br>'.join(success_message),
         'form': form,
         'menu': Menu(request.user, 'Settings'),
+        'title': 'CBWebReader - Settings',
     })
     return render(request, 'comic/settings_page.html', context)
 
