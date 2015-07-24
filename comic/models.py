@@ -228,14 +228,19 @@ class ComicBook(models.Model):
     def page_name(self, index):
         return ComicPage.objects.get(Comic=self, index=index).page_file_name
 
+
 class ComicPage(models.Model):
     Comic = models.ForeignKey(ComicBook)
     index = models.IntegerField()
     page_file_name = models.CharField(max_length=100, unique=False)
     content_type = models.CharField(max_length=30)
 
+
 class ComicStatus(models.Model):
     user = models.ForeignKey(User, unique=False, null=False)
     comic = models.ForeignKey(ComicBook, unique=False, null=False)
     last_read_page = models.IntegerField(default=0)
     unread = models.BooleanField(default=True)
+
+
+# TODO: add support to reference items last being read

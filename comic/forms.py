@@ -123,6 +123,7 @@ class EditUserForm(forms.Form):
                                        'class': 'form-control',
                                    }
                                ))
+    # TODO: allow setting superuser on users
 
     @staticmethod
     def get_initial_values(user):
