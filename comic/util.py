@@ -33,7 +33,7 @@ class Breadcrumb:
         return self.name
 
 
-def generate_breadcrumbs(comic_path):
+def generate_breadcrumbs_from_path(comic_path):
     output = [Breadcrumb()]
     prefix = '/comic/'
     last = ''
@@ -49,6 +49,15 @@ def generate_breadcrumbs(comic_path):
         output.append(bc)
     return output
 
+
+def generate_breadcrumbs_from_menu(paths):
+    output = [Breadcrumb()]
+    for item in paths:
+        bc = Breadcrumb()
+        bc.name = item[0]
+        bc.url = item[1]
+        output.append(bc)
+    return output
 
 def get_ordered_dir_list(folder):
     directories = []

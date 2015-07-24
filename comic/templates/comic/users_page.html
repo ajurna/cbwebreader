@@ -2,6 +2,16 @@
 
 {% block title %}CBreader - Users{% endblock %}
 
+{% block breadcrumb %}
+    {% for crumb in breadcrumbs %}
+        {% if not forloop.last %}
+            <li><a href="{{ crumb.url }}">{{ crumb.name }}</a></li>
+        {% else %}
+            <li class="active">{{ crumb.name }}</li>
+        {% endif %}
+    {% endfor %}
+{% endblock %}
+
 {% block content %}
 <table class="table table-striped table-bordered table-hover">
     <thead>
@@ -23,8 +33,9 @@
         {% endfor %}
     </tbody>
 
-</table>
 
+</table>
+<a class="btn btn-default" href="/comic/settings/users/add/" role="button">Add User</a>
 {% endblock %}
 {% block script %}
 

@@ -1,17 +1,18 @@
 from django.http import HttpResponse
 from django.template import RequestContext
 from django.utils.http import urlsafe_base64_decode
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
 from comic.models import Setting, ComicBook, ComicStatus
-from util import generate_breadcrumbs
-from forms import SettingsForm, AccountForm
+from util import generate_breadcrumbs_from_path, generate_breadcrumbs_from_menu
+from forms import SettingsForm, AccountForm, EditUserForm, AddUserForm
 from util import Menu
 from os import path
+
 
 @login_required
 def comic_list(request, comic_path=''):
@@ -23,38 +24,27 @@ def comic_list(request, comic_path=''):
         return redirect('/comic/settings/')
 
     comic_path = urlsafe_base64_decode(comic_path)
-    breadcrumbs = generate_breadcrumbs(comic_path)
     files = ComicBook.generate_directory(request.user, base_dir, comic_path)
     context = RequestContext(request, {
         'file_list': files,
-        'breadcrumbs': breadcrumbs,
+        'breadcrumbs': generate_breadcrumbs_from_path(comic_path),
         'menu': Menu(request.user, 'Browse'),
     })
     return render(request, 'comic/comic_list.html', context)
 
+
 @login_required
 def account_page(request):
-    error_message = []
     success_message = []
     if request.POST:
         form = AccountForm(request.POST)
         if form.is_valid():
-            if form.cleaned_data['password1'] != '':
-                if form.cleaned_data['password1'] == form.cleaned_data['password2']:
-                    if len(form.cleaned_data['password1']) < 8:
-                        error_message.append('Password is too short')
-                    else:
-                        success_message.append('password changed')
-                        request.user.set_password(form.cleaned_data['password1'])
-                else:
-                    error_message.append("Passwords don't match")
             if form.cleaned_data['email'] != request.user.email:
-                try:
-                    validate_email(form.cleaned_data['email'])
-                    success_message.append('Email Address updated')
-                    request.user.email = form.cleaned_data['email']
-                except ValidationError:
-                    error_message.append('Invalid E-mail.')
+                request.user.email = form.cleaned_data['email']
+                success_message.append('Email Updated.')
+            if len(form.cleaned_data['password']) != 0:
+                request.user.set_password(form.cleaned_data['password'])
+                success_message.append('Password Updated.')
             request.user.save()
     else:
         form = AccountForm(initial={
@@ -64,22 +54,89 @@ def account_page(request):
     context = RequestContext(request, {
         'form': form,
         'menu': Menu(request.user, 'Account'),
-        'error_message': '</br>'.join(error_message),
+        'error_message': form.errors,
         'success_message': '</br>'.join(success_message),
     })
     return render(request, 'comic/settings_page.html', context)
 
+
 @user_passes_test(lambda u: u.is_superuser)
 def users_page(request):
     users = User.objects.all()
+    crumbs = [
+        ('Users', '/comic/settings/users/'),
+    ]
     context = RequestContext(request, {
-        #'form': form,
         'users': users,
-        'menu': Menu(request.user, 'Account'),
-        #'error_message': '</br>'.join(error_message),
-        #'success_message': '</br>'.join(success_message),
+        'menu': Menu(request.user, 'Users'),
+        'breadcrumbs': generate_breadcrumbs_from_menu(crumbs),
     })
     return render(request, 'comic/users_page.html', context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def user_config_page(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    success_message = []
+    if request.POST:
+        form = EditUserForm(request.POST)
+        if form.is_valid():
+            if 'password' in form.cleaned_data:
+                if len(form.cleaned_data['password']) != 0:
+                    user.set_password(form.cleaned_data['password'])
+                    success_message.append('Password Updated.')
+            if form.cleaned_data['email'] != user.email:
+                user.email = form.cleaned_data['email']
+                success_message.append('Email Updated.</br>')
+            user.save()
+    else:
+        form = EditUserForm(initial=EditUserForm.get_initial_values(user))
+
+    users = User.objects.all()
+    crumbs = [
+        ('Users', '/comic/settings/users/'),
+        (user.username, '/comic/settings/users/' + str(user.id)),
+    ]
+    context = RequestContext(request, {
+        'form': form,
+        'users': users,
+        'menu': Menu(request.user, 'Users'),
+        'error_message': form.errors,
+        'breadcrumbs': generate_breadcrumbs_from_menu(crumbs),
+        'success_message': '</br>'.join(success_message),
+    })
+    return render(request, 'comic/settings_page.html', context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def user_add_page(request):
+    success_message = ''
+    if request.POST:
+        form = AddUserForm(request.POST)
+        if form.is_valid():
+            user = User(
+                username=form.cleaned_data['username'],
+                email=form.cleaned_data['email'],
+            )
+            user.set_password(form.cleaned_data['password'])
+            user.save()
+            success_message = 'User {} created.'.format(user.username)
+
+    else:
+        form = AddUserForm()
+    crumbs = [
+        ('Users', '/comic/settings/users/'),
+        ('Add', '/comic/settings/users/add/'),
+    ]
+    context = RequestContext(request, {
+        'form': form,
+        'menu': Menu(request.user, 'Users'),
+        'breadcrumbs': generate_breadcrumbs_from_menu(crumbs),
+        'error_message': form.errors,
+        'success_message': success_message,
+    })
+    return render(request, 'comic/settings_page.html', context)
+
 
 @user_passes_test(lambda u: u.is_superuser)
 def settings_page(request):
@@ -119,7 +176,7 @@ def read_comic(request, comic_path, page):
     base_dir = Setting.objects.get(name='BASE_DIR').value
     page = int(page)
     decoded_path = urlsafe_base64_decode(comic_path)
-    breadcrumbs = generate_breadcrumbs(decoded_path)
+    breadcrumbs = generate_breadcrumbs_from_path(decoded_path)
     _, comic_file_name = path.split(decoded_path)
     try:
         book = ComicBook.objects.get(file_name=comic_file_name)
@@ -137,6 +194,7 @@ def read_comic(request, comic_path, page):
         'menu': Menu(request.user)
     })
     return render(request, 'comic/read_comic.html', context)
+
 
 @login_required
 def get_image(_, comic_path, page):
