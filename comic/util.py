@@ -5,6 +5,12 @@ from collections import OrderedDict
 import os
 
 
+def generate_title_from_path(path):
+    if path == '':
+        return 'CBWebReader'
+    return 'CBWebReader - ' + ' - '.join(path.split(os.sep))
+
+
 class Menu:
     def __init__(self, user, page=''):
         """
@@ -58,6 +64,7 @@ def generate_breadcrumbs_from_menu(paths):
         bc.url = item[1]
         output.append(bc)
     return output
+
 
 def get_ordered_dir_list(folder):
     directories = []

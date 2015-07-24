@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 
 from comic.models import Setting, ComicBook, ComicStatus
-from util import generate_breadcrumbs_from_path, generate_breadcrumbs_from_menu
+from util import generate_breadcrumbs_from_path, generate_breadcrumbs_from_menu, generate_title_from_path
 from forms import SettingsForm, AccountForm, EditUserForm, AddUserForm
 from util import Menu
 from os import path
@@ -22,11 +22,13 @@ def comic_list(request, comic_path=''):
         return redirect('/comic/settings/')
 
     comic_path = urlsafe_base64_decode(comic_path)
+    title = generate_title_from_path(comic_path)
     files = ComicBook.generate_directory(request.user, base_dir, comic_path)
     context = RequestContext(request, {
         'file_list': files,
         'breadcrumbs': generate_breadcrumbs_from_path(comic_path),
         'menu': Menu(request.user, 'Browse'),
+        'title': title,
     })
     return render(request, 'comic/comic_list.html', context)
 
