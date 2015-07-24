@@ -193,7 +193,7 @@ def read_comic(request, comic_path, page):
     status.unread = False
     status.last_read_page = page
     status.save()
-    title = 'CBWebReader - ' + book.file_name
+    title = 'CBWebReader - ' + book.file_name + ' - Page: ' + str(page)
     context = RequestContext(request, {
         'book': book,
         'orig_file_name': book.page_name(page),
