@@ -140,33 +140,32 @@ def user_add_page(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def settings_page(request):
-    error_message = ''
+    success_message = []
     if request.POST:
         form = SettingsForm(request.POST)
         if form.is_valid():
-            if path.isdir(form.cleaned_data['base_dir']):
-                base_dir = Setting.objects.get(name='BASE_DIR')
-                base_dir.value = form.cleaned_data['base_dir']
-                base_dir.save()
-            else:
-                error_message = 'This is not a valid Directory'
+            base_dir = Setting.objects.get(name='BASE_DIR')
+            base_dir.value = form.cleaned_data['base_dir']
+            base_dir.save()
             recap = Setting.objects.get(name='RECAPTCHA')
             if form.cleaned_data['recaptcha']:
                 recap.value = '1'
             else:
                 recap.value = '0'
             recap.save()
-            rprik = Setting.objects.get(name='RECAPTCHA_PRIVATE_KEY')
-            rprik.value = form.cleaned_data['recaptcha_private_key']
-            rprik.save()
-            rpubk = Setting.objects.get(name='RECAPTCHA_PUBLIC_KEY')
-            rpubk.value = form.cleaned_data['recaptcha_public_key']
-            rpubk.save()
+            recaptcha_private_key = Setting.objects.get(name='RECAPTCHA_PRIVATE_KEY')
+            recaptcha_private_key.value = form.cleaned_data['recaptcha_private_key']
+            recaptcha_private_key.save()
+            recaptcha_public_key = Setting.objects.get(name='RECAPTCHA_PUBLIC_KEY')
+            recaptcha_public_key.value = form.cleaned_data['recaptcha_public_key']
+            recaptcha_public_key.save()
+            success_message.append('Settings updated.')
     form = SettingsForm(initial=SettingsForm.get_initial_values())
     context = RequestContext(request, {
-        'error_message': error_message,
+        'error_message': form.errors,
+        'success_message': '</br>'.join(success_message),
         'form': form,
-        'menu': Menu(request.user, 'Settings')
+        'menu': Menu(request.user, 'Settings'),
     })
     return render(request, 'comic/settings_page.html', context)
 

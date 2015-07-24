@@ -1,5 +1,8 @@
 from django import forms
 from django.contrib.auth.models import User
+
+from os import path
+
 from comic.models import Setting
 
 
@@ -173,6 +176,12 @@ class SettingsForm(forms.Form):
                                                     'class': 'form-control'
                                                 }
                                             ))
+
+    def clean_base_dir(self):
+        data = self.cleaned_data['base_dir']
+        if not path.isdir(data):
+            raise forms.ValidationError('This is not a valid Directory')
+        return data
 
     @staticmethod
     def get_initial_values():
