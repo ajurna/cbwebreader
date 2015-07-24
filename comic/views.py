@@ -189,12 +189,14 @@ def read_comic(request, comic_path, page):
     status.unread = False
     status.last_read_page = page
     status.save()
+    title = 'CBWebReader - ' + book.file_name
     context = RequestContext(request, {
         'book': book,
         'orig_file_name': book.page_name(page),
         'nav': book.nav(comic_path, page),
         'breadcrumbs': breadcrumbs,
-        'menu': Menu(request.user)
+        'menu': Menu(request.user),
+        'title': title,
     })
     return render(request, 'comic/read_comic.html', context)
 
