@@ -23,7 +23,9 @@ body {
   height: 60px;
   background-color: #f5f5f5;
 }
-
+.comic_box {
+  width: auto;
+}
 
 #dropdown-list{
  max-height: 300px;
