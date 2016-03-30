@@ -107,3 +107,5 @@ STATIC_URL = '/static/'
 LOGIN_REDIRECT_URL  = '/comic/'
 
 LOGIN_URL = '/login/'
+
+UNRAR_TOOL = 'C:/Program Files/WinRAR/unrar'

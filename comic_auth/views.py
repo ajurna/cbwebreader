@@ -14,7 +14,7 @@ def comic_login(request):
             if user is not None:
                 if user.is_active:
                     login(request, user)
-                    if request.GET.has_key('next'):
+                    if 'next' in request.GET:
                         return redirect(request.GET['next'])
                     else:
                         return redirect('/comic/')

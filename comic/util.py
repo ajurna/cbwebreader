@@ -51,7 +51,7 @@ def generate_breadcrumbs_from_path(comic_path):
         bc = Breadcrumb()
         bc.name = item
         last = path.join(last, item)
-        bc.url = prefix + urlsafe_base64_encode(last)
+        bc.url = prefix + urlsafe_base64_encode(last.encode()).decode()
         output.append(bc)
     return output
 

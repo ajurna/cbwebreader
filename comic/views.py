@@ -6,10 +6,10 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate
 
-from comic.models import Setting, ComicBook, ComicStatus
-from util import generate_breadcrumbs_from_path, generate_breadcrumbs_from_menu, generate_title_from_path
-from forms import SettingsForm, AccountForm, EditUserForm, AddUserForm, InitialSetupForm
-from util import Menu
+from .models import Setting, ComicBook, ComicStatus
+from .util import generate_breadcrumbs_from_path, generate_breadcrumbs_from_menu, generate_title_from_path, Menu
+from .forms import SettingsForm, AccountForm, EditUserForm, AddUserForm, InitialSetupForm
+
 from os import path
 
 
@@ -22,7 +22,7 @@ def comic_list(request, comic_path=''):
     if not path.isdir(base_dir):
         return redirect('/comic/settings/')
 
-    comic_path = urlsafe_base64_decode(comic_path)
+    comic_path = urlsafe_base64_decode(comic_path).decode()
     title = generate_title_from_path(comic_path)
     files = ComicBook.generate_directory(request.user, base_dir, comic_path)
     context = RequestContext(request, {
@@ -183,7 +183,7 @@ def settings_page(request):
 def read_comic(request, comic_path, page):
     base_dir = Setting.objects.get(name='BASE_DIR').value
     page = int(page)
-    decoded_path = urlsafe_base64_decode(comic_path)
+    decoded_path = urlsafe_base64_decode(comic_path).decode()
     breadcrumbs = generate_breadcrumbs_from_path(decoded_path)
     _, comic_file_name = path.split(decoded_path)
     try:
@@ -210,7 +210,7 @@ def read_comic(request, comic_path, page):
 def get_image(_, comic_path, page):
     base_dir = Setting.objects.get(name='BASE_DIR').value
     page = int(page)
-    decoded_path = urlsafe_base64_decode(comic_path)
+    decoded_path = urlsafe_base64_decode(comic_path).decode()
     _, comic_file_name = path.split(decoded_path)
     try:
         book = ComicBook.objects.get(file_name=comic_file_name)

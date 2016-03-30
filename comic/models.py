@@ -7,7 +7,9 @@ from comic import rarfile
 from comic.util import get_ordered_dir_list
 import zipfile
 from os import path
+from cbreader.settings import UNRAR_TOOL
 
+rarfile.UNRAR_TOOL = UNRAR_TOOL
 
 class Setting(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -84,12 +86,12 @@ class ComicBook(models.Model):
     @staticmethod
     def nav_get_prev_comic(comic_path):
         base_dir = Setting.objects.get(name='BASE_DIR').value
-        comic_path = urlsafe_base64_decode(comic_path)
+        comic_path = urlsafe_base64_decode(comic_path).decode()
         directory, comic = path.split(comic_path)
         dir_list = get_ordered_dir_list(path.join(base_dir, directory))
         comic_index = dir_list.index(comic)
         if comic_index == 0:
-            comic_path = urlsafe_base64_encode(directory)
+            comic_path = urlsafe_base64_encode(directory.encode())
             index = -1
         else:
             prev_comic = dir_list[comic_index - 1]
@@ -100,16 +102,16 @@ class ComicBook(models.Model):
                 except ComicBook.DoesNotExist:
                     book = ComicBook.process_comic_book(base_dir, comic_path, prev_comic)
                 index = ComicPage.objects.filter(Comic=book).count() - 1
-                comic_path = urlsafe_base64_encode(comic_path)
+                comic_path = urlsafe_base64_encode(comic_path.encode())
             else:
-                comic_path = urlsafe_base64_encode(directory)
+                comic_path = urlsafe_base64_encode(directory.encode())
                 index = -1
         return comic_path, index
 
     @staticmethod
     def nav_get_next_comic(comic_path):
         base_dir = Setting.objects.get(name='BASE_DIR')
-        comic_path = urlsafe_base64_decode(comic_path)
+        comic_path = urlsafe_base64_decode(comic_path).decode()
         directory, comic = path.split(comic_path)
         dir_list = get_ordered_dir_list(path.join(base_dir.value, directory))
         comic_index = dir_list.index(comic)
@@ -194,11 +196,11 @@ class ComicBook(models.Model):
             if path.isdir(path.join(base_dir, comic_path, fn)):
                 df.isdir = True
                 df.icon = 'glyphicon-folder-open'
-                df.location = urlsafe_base64_encode(path.join(comic_path, fn))
+                df.location = urlsafe_base64_encode(path.join(comic_path.encode(), fn.encode()))
             elif fn.lower()[-4:] in ['.rar', '.zip', '.cbr', '.cbz']:
                 df.iscb = True
                 df.icon = 'glyphicon-book'
-                df.location = urlsafe_base64_encode(path.join(comic_path, fn))
+                df.location = urlsafe_base64_encode(path.join(comic_path.encode(), fn.encode()))
                 try:
                     book = ComicBook.objects.get(file_name=fn)
                     status, _ = ComicStatus.objects.get_or_create(comic=book, user=user)
