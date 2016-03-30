@@ -41,16 +41,18 @@
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
             {% for page, link in menu.menu_items.items %}
-              <li {% if menu.current_page = page %} class="active"{% endif %}><a href="{{ link }}">{{ page }}</a></li>
+              <li {% if menu.current_page == page %} class="active"{% endif %}><a href="{{ link }}">{{ page }}</a></li>
             {% endfor %}
           </ul>
         </div><!--/.nav-collapse -->
       </div>
     </nav>
     <ol class="breadcrumb">
-        {% block breadcrumb %}
+        {% if breadcrumbs %}
+          {% include "comic/breadcrumbs.html" %}
+        {% else %}
             <li><a href="/">Home</a></li>
-        {% endblock %}
+        {% endif %}
     </ol>
 
         {% block content %}{% endblock %}

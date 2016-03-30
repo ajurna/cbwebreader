@@ -2,16 +2,6 @@
 
 {% block title %}{{ title }}{% endblock %}
 
-{% block breadcrumb %}
-    {% for crumb in breadcrumbs %}
-        {% if not forloop.last %}
-            <li><a href="{{ crumb.url }}">{{ crumb.name }}</a></li>
-        {% else %}
-            <li class="active">{{ crumb.name }}</li>
-        {% endif %}
-    {% endfor %}
-{% endblock %}
-
 {% block content %}
 {% if error_message %}
 <div class="alert alert-danger" role="alert">{{ error_message|safe }}</div>

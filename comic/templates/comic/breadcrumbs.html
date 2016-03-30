@@ -1,0 +1,7 @@
+{% for crumb in breadcrumbs %}
+    {% if not forloop.last %}
+        <li><a href="{{ crumb.url }}">{{ crumb.name }}</a></li>
+    {% else %}
+        <li class="active">{{ crumb.name }}</li>
+    {% endif %}
+{% endfor %}
