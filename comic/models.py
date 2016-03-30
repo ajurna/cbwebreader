@@ -2,14 +2,16 @@ from django.db import models
 from django.db.transaction import atomic
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.models import User
+from django.conf import settings
 
 from comic import rarfile
 from comic.util import get_ordered_dir_list
 import zipfile
 from os import path
-from cbreader.settings import UNRAR_TOOL
 
-rarfile.UNRAR_TOOL = UNRAR_TOOL
+if settings.UNRAR_TOOL:
+    rarfile.UNRAR_TOOL = settings.UNRAR_TOOL
+
 
 class Setting(models.Model):
     name = models.CharField(max_length=100, unique=True)
