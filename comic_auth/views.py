@@ -34,9 +34,9 @@ def comic_login(request):
         if not User.objects.all().exists():
             return redirect('/setup/')
         form = LoginForm()
-        context = RequestContext(request, {
+        context = {
             'form': form
-        })
+        }
         return render(request, 'comic_auth/login.html', context)
 
 

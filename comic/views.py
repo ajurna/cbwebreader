@@ -25,12 +25,12 @@ def comic_list(request, comic_path=''):
     comic_path = urlsafe_base64_decode(comic_path).decode()
     title = generate_title_from_path(comic_path)
     files = ComicBook.generate_directory(request.user, base_dir, comic_path)
-    context = RequestContext(request, {
+    context = {
         'file_list': files,
         'breadcrumbs': generate_breadcrumbs_from_path(comic_path),
         'menu': Menu(request.user, 'Browse'),
         'title': title,
-    })
+    }
     return render(request, 'comic/comic_list.html', context)
 
 
@@ -55,14 +55,14 @@ def account_page(request):
     crumbs = [
         ('Account', '/comic/account/'),
     ]
-    context = RequestContext(request, {
+    context = {
         'form': form,
         'menu': Menu(request.user, 'Account'),
         'error_message': form.errors,
         'success_message': '</br>'.join(success_message),
         'breadcrumbs': generate_breadcrumbs_from_menu(crumbs),
         'title': 'CBWebReader - Account',
-    })
+    }
     return render(request, 'comic/settings_page.html', context)
 
 
@@ -72,11 +72,11 @@ def users_page(request):
     crumbs = [
         ('Users', '/comic/settings/users/'),
     ]
-    context = RequestContext(request, {
+    context = {
         'users': users,
         'menu': Menu(request.user, 'Users'),
         'breadcrumbs': generate_breadcrumbs_from_menu(crumbs),
-    })
+    }
     return render(request, 'comic/users_page.html', context)
 
 
@@ -103,7 +103,7 @@ def user_config_page(request, user_id):
         ('Users', '/comic/settings/users/'),
         (user.username, '/comic/settings/users/' + str(user.id)),
     ]
-    context = RequestContext(request, {
+    context = {
         'form': form,
         'users': users,
         'menu': Menu(request.user, 'Users'),
@@ -111,7 +111,7 @@ def user_config_page(request, user_id):
         'breadcrumbs': generate_breadcrumbs_from_menu(crumbs),
         'success_message': '</br>'.join(success_message),
         'title': 'CBWebReader - Edit User - ' + user.username,
-    })
+    }
     return render(request, 'comic/settings_page.html', context)
 
 
@@ -135,14 +135,14 @@ def user_add_page(request):
         ('Users', '/comic/settings/users/'),
         ('Add', '/comic/settings/users/add/'),
     ]
-    context = RequestContext(request, {
+    context = {
         'form': form,
         'menu': Menu(request.user, 'Users'),
         'breadcrumbs': generate_breadcrumbs_from_menu(crumbs),
         'error_message': form.errors,
         'success_message': success_message,
         'title': 'CBWebReader - Add User',
-    })
+    }
     return render(request, 'comic/settings_page.html', context)
 
 
@@ -199,14 +199,14 @@ def read_comic(request, comic_path, page):
     status.last_read_page = page
     status.save()
     title = 'CBWebReader - ' + book.file_name + ' - Page: ' + str(page)
-    context = RequestContext(request, {
+    context = {
         'book': book,
         'orig_file_name': book.page_name(page),
         'nav': book.nav(comic_path, page),
         'breadcrumbs': breadcrumbs,
         'menu': Menu(request.user),
         'title': title,
-    })
+    }
     return render(request, 'comic/read_comic.html', context)
 
 
