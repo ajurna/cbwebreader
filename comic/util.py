@@ -40,14 +40,13 @@ class Breadcrumb:
         return self.name
 
 
-def generate_breadcrumbs_from_path(directory=False):
+def generate_breadcrumbs_from_path(directory=False, book=False):
     """
 
     :type directory: Directory
+    :type book: ComicBook
     """
     output = [Breadcrumb()]
-    prefix = b'/comic/'
-    last = ''
     if directory:
         folders = directory.get_path_objects()
     else:
@@ -55,8 +54,14 @@ def generate_breadcrumbs_from_path(directory=False):
     for item in folders[::-1]:
         bc = Breadcrumb()
         bc.name = item.name
-        bc.url = prefix + urlsafe_base64_encode(item.selector.bytes)
+        bc.url = b'/comic/' + urlsafe_base64_encode(item.selector.bytes)
         output.append(bc)
+    if book:
+        bc = Breadcrumb()
+        bc.name = book.file_name
+        bc.url = b'/read/' + urlsafe_base64_encode(book.selector.bytes)
+        output.append(bc)
+
     return output
 
 

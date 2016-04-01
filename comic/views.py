@@ -203,13 +203,8 @@ def read_comic(request, comic_selector, page):
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
     book = get_object_or_404(ComicBook, selector=selector)
 
-    breadcrumbs = generate_breadcrumbs_from_path(book.directory)
-    #comic_file_path, comic_file_name = path.split(decoded_path)
-    #d = Directory.get_dir_from_path(comic_file_path)
-    #try:
-    #    book = ComicBook.objects.get(file_name=comic_file_name)
-    #except ComicBook.DoesNotExist:
-    #    book = ComicBook.process_comic_book(comic_file_name, d)
+    breadcrumbs = generate_breadcrumbs_from_path(book.directory, book)
+
     status, _ = ComicStatus.objects.get_or_create(comic=book, user=request.user)
     status.unread = False
     status.last_read_page = page
