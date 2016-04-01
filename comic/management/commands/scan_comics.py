@@ -25,7 +25,7 @@ class Command(BaseCommand):
         if not directory:
             comic_dir = self.base_dir
         else:
-            comic_dir = os.path.join(self.base_dir, directory.get_path())
+            comic_dir = os.path.join(self.base_dir, directory.path)
         for file in os.listdir(comic_dir):
             if isdir(os.path.join(comic_dir, file)):
                 if directory:
@@ -40,13 +40,18 @@ class Command(BaseCommand):
             else:
                 try:
                     if directory:
-                        ComicBook.objects.get(file_name=file,
-                                              directory=directory)
+                        book = ComicBook.objects.get(file_name=file,
+                                                     directory=directory)
+                        if book.version == 0:
+                            book.version = 1
+                            book.save()
                     else:
-                        ComicBook.objects.get(file_name=file,
-                                              directory__isnull=True)
+                        book = ComicBook.objects.get(file_name=file,
+                                                     directory__isnull=True)
+                        if book.version == 0:
+                            if directory:
+                                book.directory = directory
+                            book.version = 1
+                            book.save()
                 except ComicBook.DoesNotExist:
                     ComicBook.process_comic_book(file, directory)
-
-
-
