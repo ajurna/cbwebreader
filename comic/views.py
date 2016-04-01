@@ -1,20 +1,21 @@
-from django.http import HttpResponse
-from django.template import RequestContext
-from django.utils.http import urlsafe_base64_decode
-from django.shortcuts import render, redirect, get_object_or_404
+import uuid
+from os import path
+
+from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
-from django.contrib.auth import login, authenticate
+from django.http import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils.http import urlsafe_base64_decode
 
-from .models import Setting, ComicBook, ComicStatus
-from .util import generate_breadcrumbs_from_path, generate_breadcrumbs_from_menu, generate_title_from_path, Menu
 from .forms import SettingsForm, AccountForm, EditUserForm, AddUserForm, InitialSetupForm
-
-from os import path
+from .models import Setting, ComicBook, ComicStatus, Directory
+from .util import generate_breadcrumbs_from_path, generate_breadcrumbs_from_menu, \
+    generate_title_from_path, Menu, generate_directory, scan_directory
 
 
 @login_required
-def comic_list(request, comic_path=''):
+def comic_list(request, directory_selector=False):
     try:
         base_dir = Setting.objects.get(name='BASE_DIR').value
     except Setting.DoesNotExist:
@@ -22,16 +23,28 @@ def comic_list(request, comic_path=''):
     if not path.isdir(base_dir):
         return redirect('/comic/settings/')
 
-    comic_path = urlsafe_base64_decode(comic_path).decode()
-    title = generate_title_from_path(comic_path)
-    files = ComicBook.generate_directory(request.user, base_dir, comic_path)
-    context = {
+    if directory_selector:
+        directory_selector = uuid.UUID(bytes=urlsafe_base64_decode(directory_selector))
+        directory = Directory.objects.get(selector=directory_selector)
+    else:
+        directory = False
+
+    scan_directory(directory)
+
+    if directory:
+        title = generate_title_from_path(directory.path)
+        breadcrumbs = generate_breadcrumbs_from_path(directory)
+    else:
+        title = generate_title_from_path('Home')
+        breadcrumbs = generate_breadcrumbs_from_path()
+    files = generate_directory(request.user, directory)
+
+    return render(request, 'comic/comic_list.html', {
         'file_list': files,
-        'breadcrumbs': generate_breadcrumbs_from_path(comic_path),
+        'breadcrumbs': breadcrumbs,
         'menu': Menu(request.user, 'Browse'),
         'title': title,
-    }
-    return render(request, 'comic/comic_list.html', context)
+    })
 
 
 @login_required
@@ -184,16 +197,19 @@ def settings_page(request):
 
 
 @login_required
-def read_comic(request, comic_path, page):
+def read_comic(request, comic_selector, page):
     base_dir = Setting.objects.get(name='BASE_DIR').value
     page = int(page)
-    decoded_path = urlsafe_base64_decode(comic_path).decode()
-    breadcrumbs = generate_breadcrumbs_from_path(decoded_path)
-    _, comic_file_name = path.split(decoded_path)
-    try:
-        book = ComicBook.objects.get(file_name=comic_file_name)
-    except ComicBook.DoesNotExist:
-        book = ComicBook.process_comic_book(base_dir, decoded_path, comic_file_name)
+    selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
+    book = get_object_or_404(ComicBook, selector=selector)
+
+    breadcrumbs = generate_breadcrumbs_from_path(book.directory)
+    #comic_file_path, comic_file_name = path.split(decoded_path)
+    #d = Directory.get_dir_from_path(comic_file_path)
+    #try:
+    #    book = ComicBook.objects.get(file_name=comic_file_name)
+    #except ComicBook.DoesNotExist:
+    #    book = ComicBook.process_comic_book(comic_file_name, d)
     status, _ = ComicStatus.objects.get_or_create(comic=book, user=request.user)
     status.unread = False
     status.last_read_page = page
@@ -202,7 +218,7 @@ def read_comic(request, comic_path, page):
     context = {
         'book': book,
         'orig_file_name': book.page_name(page),
-        'nav': book.nav(comic_path, page),
+        'nav': book.nav(page, request.user),
         'breadcrumbs': breadcrumbs,
         'menu': Menu(request.user),
         'title': title,
@@ -211,17 +227,10 @@ def read_comic(request, comic_path, page):
 
 
 @login_required
-def get_image(_, comic_path, page):
-    base_dir = Setting.objects.get(name='BASE_DIR').value
-    page = int(page)
-    decoded_path = urlsafe_base64_decode(comic_path).decode()
-    _, comic_file_name = path.split(decoded_path)
-    try:
-        book = ComicBook.objects.get(file_name=comic_file_name)
-    except ComicBook.DoesNotExist:
-        book = ComicBook.process_comic_book(base_dir, decoded_path, comic_file_name)
-    full_path = path.join(base_dir, decoded_path)
-    img, content = book.get_image(full_path, page)
+def get_image(_, comic_selector, page):
+    selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
+    book = ComicBook.objects.get(selector=selector)
+    img, content = book.get_image(int(page))
     return HttpResponse(img.read(), content_type=content)
 
 

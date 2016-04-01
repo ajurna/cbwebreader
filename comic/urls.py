@@ -9,7 +9,7 @@ urlpatterns = [
     url(r'^settings/users/(?P<user_id>[0-9]+)/$', views.user_config_page, name='users'),
     url(r'^settings/users/add/$', views.user_add_page, name='users'),
     url(r'^account/$', views.account_page, name='account'),
-    url(r'^(?P<comic_path>[\w]+)/$', views.comic_list, name='comic_list'),
-    url(r'^read/(?P<comic_path>[\w]+)/(?P<page>[0-9]+)/$', views.read_comic, name='read_comic'),
-    url(r'^read/(?P<comic_path>[\w]+)/(?P<page>[0-9]+)/img$', views.get_image, name='get_image'),
+    url(r'^read/(?P<comic_selector>[\w-]+)/(?P<page>[0-9]+)/$', views.read_comic, name='read_comic'),
+    url(r'^read/(?P<comic_selector>[\w-]+)/(?P<page>[0-9]+)/img$', views.get_image, name='get_image'),
+    url(r'^(?P<directory_selector>[\w-]+)/$', views.comic_list, name='comic_list'),
 ]

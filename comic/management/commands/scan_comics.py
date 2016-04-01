@@ -1,0 +1,52 @@
+from django.core.management.base import BaseCommand
+
+from comic.models import Setting, Directory, ComicBook
+
+import os
+from os.path import isdir
+
+
+class Command(BaseCommand):
+    help = 'Scan directories to Update Comic DB'
+
+    def __init__(self):
+        super().__init__()
+        self.base_dir = Setting.objects.get(name='BASE_DIR').value
+
+    def handle(self, *args, **options):
+        self.scan_directory()
+
+    def scan_directory(self, directory=False):
+
+        """
+
+        :type directory: Directory
+        """
+        if not directory:
+            comic_dir = self.base_dir
+        else:
+            comic_dir = os.path.join(self.base_dir, directory.get_path())
+        for file in os.listdir(comic_dir):
+            if isdir(os.path.join(comic_dir, file)):
+                if directory:
+                    next_directory, created = Directory.objects.get_or_create(name=file,
+                                                                              parent=directory)
+                else:
+                    next_directory, created = Directory.objects.get_or_create(name=file,
+                                                                              parent__isnull=True)
+                if created:
+                    next_directory.save()
+                self.scan_directory(next_directory)
+            else:
+                try:
+                    if directory:
+                        ComicBook.objects.get(file_name=file,
+                                              directory=directory)
+                    else:
+                        ComicBook.objects.get(file_name=file,
+                                              directory__isnull=True)
+                except ComicBook.DoesNotExist:
+                    ComicBook.process_comic_book(file, directory)
+
+
+
