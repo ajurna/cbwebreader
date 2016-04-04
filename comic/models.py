@@ -353,5 +353,12 @@ class ComicStatus(models.Model):
     comic = models.ForeignKey(ComicBook, unique=False, null=False)
     last_read_page = models.IntegerField(default=0)
     unread = models.BooleanField(default=True)
+    finished = models.BooleanField(default=False)
 
+    @property
+    def read(self):
+        return self.last_read_page
+
+    def __str__(self):
+        return 'C:{0} P:{1}'.format(self.comic.file_name, self.last_read_page)
 # TODO: add support to reference items last being read

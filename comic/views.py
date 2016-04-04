@@ -1,5 +1,6 @@
 import uuid
 from os import path
+import json
 
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -7,13 +8,16 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.http import urlsafe_base64_decode
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.db.models import Max
 
 from .forms import SettingsForm, AccountForm, EditUserForm, AddUserForm, InitialSetupForm
-from .models import Setting, ComicBook, ComicStatus, Directory
+from .models import Setting, ComicBook, ComicStatus, Directory, ComicPage
 from .util import generate_breadcrumbs_from_path, generate_breadcrumbs_from_menu, \
     generate_title_from_path, Menu, generate_directory, scan_directory
 
 
+@ensure_csrf_cookie
 @login_required
 def comic_list(request, directory_selector=False):
     try:
@@ -24,8 +28,8 @@ def comic_list(request, directory_selector=False):
         return redirect('/comic/settings/')
 
     if directory_selector:
-        directory_selector = uuid.UUID(bytes=urlsafe_base64_decode(directory_selector))
-        directory = Directory.objects.get(selector=directory_selector)
+        selector = uuid.UUID(bytes=urlsafe_base64_decode(directory_selector))
+        directory = Directory.objects.get(selector=selector)
     else:
         directory = False
 
@@ -34,17 +38,44 @@ def comic_list(request, directory_selector=False):
     if directory:
         title = generate_title_from_path(directory.path)
         breadcrumbs = generate_breadcrumbs_from_path(directory)
+        json_url = '/comic/list_json/{0}/'.format(directory_selector)
     else:
         title = generate_title_from_path('Home')
         breadcrumbs = generate_breadcrumbs_from_path()
-    files = generate_directory(request.user, directory)
+        json_url = '/comic/list_json/'
+    files = generate_directory(request.user)
 
     return render(request, 'comic/comic_list.html', {
         'file_list': files,
         'breadcrumbs': breadcrumbs,
         'menu': Menu(request.user, 'Browse'),
         'title': title,
+        'json_url': json_url
     })
+
+
+@login_required
+def comic_list_json(request, directory_selector=False):
+    icon_str = '<span class="glyphicon {0}"></span>'
+    if directory_selector:
+        directory_selector = uuid.UUID(bytes=urlsafe_base64_decode(directory_selector))
+        directory = Directory.objects.get(selector=directory_selector)
+    else:
+        directory = False
+    files = generate_directory(request.user, directory)
+    response_data = dict()
+    response_data['data'] = []
+    for file in files:
+        response_data['data'].append({
+            'icon': icon_str.format(file.icon),
+            'name': file.name,
+            'label': file.label,
+            'url': file.location,
+        })
+    return HttpResponse(
+        json.dumps(response_data),
+        content_type="application/json"
+    )
 
 
 @login_required
@@ -208,6 +239,10 @@ def read_comic(request, comic_selector, page):
     status, _ = ComicStatus.objects.get_or_create(comic=book, user=request.user)
     status.unread = False
     status.last_read_page = page
+    if ComicPage.objects.filter(Comic=book).aggregate(Max('index'))['index__max'] == status.last_read_page:
+        status.finished = True
+    else:
+        status.finished = False
     status.save()
     title = 'CBWebReader - ' + book.file_name + ' - Page: ' + str(page)
     context = {

@@ -3,6 +3,24 @@
 
 {% block content %}
 <div class="container">
+    <table class="table table-bordered table-striped table-hover" id="comic_list">
+        <caption><h2>Comics</h2></caption>
+        <thead>
+        <tr>
+            <th><center><span class="glyphicon glyphicon-file"></span></center></th>
+            <th width="100%">File/Folder</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="clickable-row" data-href="/comic/">
+            <td><center><span class="glyphicon glyphicon-file"></span></center></td>
+            <td>loading data</td>
+            <td><span class="label label-primary pull-right">1/23</span></td>
+        </tr>
+        </tbody>
+    </table>
+<!--/.nav-collapse
     <h2 class="center">Comics</h2>
     <div class="list-group">
     {% if file_list %}
@@ -17,12 +35,42 @@
     {% else %}
         <p class="list-group-item">No comics.</p>
     {% endif %}
-    </div>
+    </div>-->
 </div>
 {% endblock %}
 
 {% block script %}
 <script>
+$(document).ready(function() {
+    $('#comic_list').DataTable({
+        "processing": true,
+        "ajax": {
+            "type": "POST",
+            "url": "{{ json_url }}",
+            "data": function ( d ) {
+                d.csrfmiddlewaretoken = Cookies.get('csrftoken');
+            },
+        },
+        "rowCallback": function( row, data, index ) {
+            var r = $(row)
+            r.attr('data-href', data['url']);
+            r.attr('style', 'cursor: pointer;')
+            r.click(function() {
+                window.document.location = $(this).data("href");
+            });
 
+        },
+        "columns": [
+            { "data" : "icon", "orderable": false },
+            { "data" : "name" },
+            { "data" : "label" },
+        ],
+
+        "order": [[ 1, 'asc' ]],
+    });
+    $(".clickable-row").click(function() {
+        window.document.location = $(this).data("href");
+    });
+} );
 </script>
 {% endblock %}

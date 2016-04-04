@@ -75,6 +75,20 @@ def generate_breadcrumbs_from_menu(paths):
     return output
 
 
+class DirFile:
+    def __init__(self):
+        self.name = ''
+        self.isdir = False
+        self.icon = ''
+        self.iscb = False
+        self.location = ''
+        self.label = ''
+        self.cur_page = 0
+
+    def __str__(self):
+        return self.name
+
+
 def generate_directory(user, directory=False):
     """
 
@@ -90,7 +104,7 @@ def generate_directory(user, directory=False):
         dir_path = ''
         ordered_dir_list = get_ordered_dir_list(base_dir)
     for file_name in ordered_dir_list:
-        df = ComicBook.DirFile()
+        df = DirFile()
         df.name = file_name
         if path.isdir(path.join(base_dir, dir_path, file_name)):
             if directory:
@@ -101,7 +115,8 @@ def generate_directory(user, directory=False):
                                           parent__isnull=True)
             df.isdir = True
             df.icon = 'glyphicon-folder-open'
-            df.location = urlsafe_base64_encode(d.selector.bytes)
+            df.location = '/comic/{0}/'.format(urlsafe_base64_encode(d.selector.bytes).decode())
+            df.label = generate_dir_status(user, d)
         elif file_name.lower()[-4:] in ['.rar', '.zip', '.cbr', '.cbz']:
             df.iscb = True
             df.icon = 'glyphicon-book'
@@ -114,16 +129,18 @@ def generate_directory(user, directory=False):
                                                  directory__isnull=True)
             except ComicBook.DoesNotExist:
                 book = ComicBook.process_comic_book(file_name, directory)
-            df.location = urlsafe_base64_encode(book.selector.bytes)
+
             status, _ = ComicStatus.objects.get_or_create(comic=book, user=user)
             last_page = status.last_read_page
+            df.location = '/comic/read/{0}/{1}/'.format(urlsafe_base64_encode(book.selector.bytes).decode(),
+                                                        last_page)
             if status.unread:
-                df.label = '<span class="label label-default pull-right">Unread</span>'
+                df.label = '<center><span class="label label-default">Unread</span></center>'
             elif (last_page + 1) == book.page_count:
-                df.label = '<span class="label label-success pull-right">Read</span>'
+                df.label = '<center><span class="label label-success">Read</span></center>'
                 df.cur_page = last_page
             else:
-                label_text = '<span class="label label-primary pull-right">%s/%s</span>' % \
+                label_text = '<center><span class="label label-primary">%s/%s</span></center>' % \
                              (last_page + 1, book.page_count)
                 df.label = label_text
                 df.cur_page = last_page
@@ -131,6 +148,21 @@ def generate_directory(user, directory=False):
                 # df.label = '<span class="label label-danger pull-right">Unprocessed</span>'
         files.append(df)
     return files
+
+
+def generate_dir_status(user, directory):
+    cb_list = ComicBook.objects.filter(directory=directory)
+    total = cb_list.count()
+    total_read = ComicStatus.objects.filter(user=user,
+                                            comic__in=cb_list,
+                                            finished=True).count()
+    if total == 0:
+        return '<center><span class="label label-default">Empty</span></center>'
+    elif total == total_read:
+        return '<center><span class="label label-success">All Read</span></center>'
+    elif total_read == 0:
+        return '<center><span class="label label-default">Unread</span></center>'
+    return '<center><span class="label label-primary">{0}/{1}</span></center>'.format(total_read, total)
 
 
 def get_ordered_dir_list(folder):

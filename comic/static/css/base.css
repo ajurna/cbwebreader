@@ -32,3 +32,11 @@ body {
  overflow: auto;
  box-shadow: none;
  }
+
+ td a {
+    display:block;
+    width:100%;
+ }
+ tr.clickable-row {
+    cursor: pointer;
+ }
