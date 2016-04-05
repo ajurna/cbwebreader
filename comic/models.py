@@ -1,14 +1,14 @@
-from django.db import models
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.contrib.auth.models import User
-from django.conf import settings
-from django.db.transaction import atomic
-
-from comic import rarfile
-
 import uuid
 import zipfile
 from os import path, listdir
+
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.db import models
+from django.db.transaction import atomic
+from django.utils.http import urlsafe_base64_encode
+
+from comic import rarfile
 
 if settings.UNRAR_TOOL:
     rarfile.UNRAR_TOOL = settings.UNRAR_TOOL
