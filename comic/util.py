@@ -107,12 +107,20 @@ def generate_directory(user, directory=False):
         df = DirFile()
         df.name = file_name
         if path.isdir(path.join(base_dir, dir_path, file_name)):
-            if directory:
-                d = Directory.objects.get(name=file_name,
-                                          parent=directory)
-            else:
-                d = Directory.objects.get(name=file_name,
-                                          parent__isnull=True)
+            try:
+                if directory:
+                    d = Directory.objects.get(name=file_name,
+                                              parent=directory)
+                else:
+                    d = Directory.objects.get(name=file_name,
+                                              parent__isnull=True)
+            except Directory.DoesNotExist:
+                if directory:
+                    d = Directory(name=file_name,
+                                  parent=directory)
+                else:
+                    d = Directory(name=file_name)
+                d.save()
             df.isdir = True
             df.icon = 'glyphicon-folder-open'
             df.location = '/comic/{0}/'.format(urlsafe_base64_encode(d.selector.bytes).decode())

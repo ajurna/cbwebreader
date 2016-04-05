@@ -71,7 +71,7 @@ class Directory(models.Model):
 
 
 class ComicBook(models.Model):
-    file_name = models.CharField(max_length=100, unique=True)
+    file_name = models.CharField(max_length=100, unique=False)
     date_added = models.DateTimeField(auto_now_add=True)
     directory = models.ForeignKey(Directory, blank=True, null=True)
     selector = models.UUIDField(unique=True, default=uuid.uuid4, db_index=True)
@@ -226,39 +226,6 @@ class ComicBook(models.Model):
 
         def __str__(self):
             return self.name
-
-    @staticmethod
-    def generate_directory(user, base_dir, comic_path):
-        files = []
-        for fn in ComicBook.get_ordered_dir_list(path.join(base_dir, comic_path)):
-            df = ComicBook.DirFile()
-            df.name = fn
-            if path.isdir(path.join(base_dir, comic_path, fn)):
-                df.isdir = True
-                df.icon = 'glyphicon-folder-open'
-                df.location = urlsafe_base64_encode(path.join(comic_path.encode(), fn.encode()))
-            elif fn.lower()[-4:] in ['.rar', '.zip', '.cbr', '.cbz']:
-                df.iscb = True
-                df.icon = 'glyphicon-book'
-                df.location = urlsafe_base64_encode(path.join(comic_path.encode(), fn.encode()))
-                try:
-                    book = ComicBook.objects.get(file_name=fn)
-                    status, _ = ComicStatus.objects.get_or_create(comic=book, user=user)
-                    last_page = status.last_read_page
-                    if status.unread:
-                        df.label = '<span class="label label-default pull-right">Unread</span>'
-                    elif (last_page + 1) == book.page_count:
-                        df.label = '<span class="label label-success pull-right">Read</span>'
-                        df.cur_page = last_page
-                    else:
-                        label_text = '<span class="label label-primary pull-right">%s/%s</span>' % \
-                                     (last_page + 1, book.page_count)
-                        df.label = label_text
-                        df.cur_page = last_page
-                except ComicBook.DoesNotExist:
-                    df.label = '<span class="label label-danger pull-right">Unprocessed</span>'
-            files.append(df)
-        return files
 
     @property
     def pages(self):

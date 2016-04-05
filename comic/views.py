@@ -232,7 +232,6 @@ def settings_page(request):
 
 @login_required
 def read_comic(request, comic_selector, page):
-    base_dir = Setting.objects.get(name='BASE_DIR').value
     page = int(page)
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
     book = get_object_or_404(ComicBook, selector=selector)
