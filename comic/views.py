@@ -15,7 +15,7 @@ from django.views.decorators.http import require_POST
 from .forms import SettingsForm, AccountForm, EditUserForm, AddUserForm, InitialSetupForm
 from .models import Setting, ComicBook, ComicStatus, Directory, ComicPage
 from .util import generate_breadcrumbs_from_path, generate_breadcrumbs_from_menu, \
-    generate_title_from_path, Menu, generate_directory, scan_directory
+    generate_title_from_path, Menu, generate_directory
 
 
 @ensure_csrf_cookie
@@ -33,8 +33,6 @@ def comic_list(request, directory_selector=False):
         directory = Directory.objects.get(selector=selector)
     else:
         directory = False
-
-    scan_directory(directory)
 
     if directory:
         title = generate_title_from_path(directory.path)
@@ -78,7 +76,6 @@ def comic_list_json(request, directory_selector=False):
         json.dumps(response_data),
         content_type="application/json"
     )
-
 
 
 @login_required

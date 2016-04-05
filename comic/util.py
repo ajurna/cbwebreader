@@ -182,26 +182,3 @@ def get_ordered_dir_list(folder):
         else:
             files.append(item)
     return sorted(directories) + sorted(files)
-
-
-def scan_directory(directory=False):
-    """
-    TODO: Increase efficiency of this. reduce amount of queries.
-    :type directory: Directory
-    """
-    base_dir = Setting.objects.get(name='BASE_DIR').value
-    # filter(os.path.isdir, os.listdir(os.getcwd()))
-    if directory:
-        full_path = path.join(base_dir, directory.path)
-    else:
-        full_path = base_dir
-    dir_list = listdir(full_path)
-    directorys = [d for d in dir_list if path.isdir(path.join(full_path, d))]
-    for direct in directorys:
-        if directory:
-            d, created = Directory.objects.get_or_create(name=direct,
-                                                         parent=directory)
-        else:
-            d, created = Directory.objects.get_or_create(name=direct)
-        if created:
-            d.save()

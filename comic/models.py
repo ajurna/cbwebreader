@@ -27,7 +27,7 @@ class Setting(models.Model):
 
 class Directory(models.Model):
     name = models.CharField(max_length=100)
-    parent = models.ForeignKey('Directory', null=True, blank=True)
+    parent = models.ForeignKey('Directory', null=True, blank=True, on_delete=models.CASCADE)
     selector = models.UUIDField(unique=True, default=uuid.uuid4, db_index=True)
 
     def __str__(self):
@@ -73,7 +73,7 @@ class Directory(models.Model):
 class ComicBook(models.Model):
     file_name = models.CharField(max_length=100, unique=False)
     date_added = models.DateTimeField(auto_now_add=True)
-    directory = models.ForeignKey(Directory, blank=True, null=True)
+    directory = models.ForeignKey(Directory, blank=True, null=True, on_delete=models.CASCADE)
     selector = models.UUIDField(unique=True, default=uuid.uuid4, db_index=True)
     version = models.IntegerField(default=1)
 
@@ -309,7 +309,7 @@ class ComicBook(models.Model):
 
 
 class ComicPage(models.Model):
-    Comic = models.ForeignKey(ComicBook)
+    Comic = models.ForeignKey(ComicBook, on_delete=models.CASCADE)
     index = models.IntegerField()
     page_file_name = models.CharField(max_length=100, unique=False)
     content_type = models.CharField(max_length=30)
@@ -317,7 +317,7 @@ class ComicPage(models.Model):
 
 class ComicStatus(models.Model):
     user = models.ForeignKey(User, unique=False, null=False)
-    comic = models.ForeignKey(ComicBook, unique=False, null=False)
+    comic = models.ForeignKey(ComicBook, unique=False, null=False, on_delete=models.CASCADE)
     last_read_page = models.IntegerField(default=0)
     unread = models.BooleanField(default=True)
     finished = models.BooleanField(default=False)
