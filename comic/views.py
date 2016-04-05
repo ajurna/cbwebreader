@@ -1,15 +1,16 @@
+import json
 import uuid
 from os import path
-import json
 
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
+from django.db.models import Max
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.http import urlsafe_base64_decode
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.db.models import Max
+from django.views.decorators.http import require_POST
 
 from .forms import SettingsForm, AccountForm, EditUserForm, AddUserForm, InitialSetupForm
 from .models import Setting, ComicBook, ComicStatus, Directory, ComicPage
@@ -55,6 +56,7 @@ def comic_list(request, directory_selector=False):
 
 
 @login_required
+@require_POST
 def comic_list_json(request, directory_selector=False):
     icon_str = '<span class="glyphicon {0}"></span>'
     if directory_selector:
@@ -76,6 +78,7 @@ def comic_list_json(request, directory_selector=False):
         json.dumps(response_data),
         content_type="application/json"
     )
+
 
 
 @login_required
