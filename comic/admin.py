@@ -9,7 +9,7 @@ class SettingAdmin(admin.ModelAdmin):
 
 @admin.register(ComicBook)
 class ComicBookAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['file_name', 'date_added']
 
 
 @admin.register(ComicPage)
