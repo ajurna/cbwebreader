@@ -20,6 +20,7 @@ class Menu:
         """
         self.menu_items = OrderedDict()
         self.menu_items['Browse'] = '/comic/'
+        self.menu_items['Recent'] = '/comic/recent/'
         self.menu_items['Account'] = '/comic/account/'
         if user.is_superuser:
             self.menu_items['Settings'] = '/comic/settings/'
@@ -84,6 +85,8 @@ class DirFile:
         self.location = ''
         self.label = ''
         self.cur_page = 0
+        self.type = ''
+        self.selector = ''
 
     def __str__(self):
         return self.name
@@ -91,7 +94,6 @@ class DirFile:
 
 def generate_directory(user, directory=False):
     """
-
     :type user: User
     :type directory: Directory
     """
@@ -123,8 +125,10 @@ def generate_directory(user, directory=False):
                 d.save()
             df.isdir = True
             df.icon = 'glyphicon-folder-open'
-            df.location = '/comic/{0}/'.format(urlsafe_base64_encode(d.selector.bytes).decode())
+            df.selector = urlsafe_base64_encode(d.selector.bytes).decode()
+            df.location = '/comic/{0}/'.format(df.selector)
             df.label = generate_dir_status(user, d)
+            df.type = 'directory'
         elif file_name.lower()[-4:] in ['.rar', '.zip', '.cbr', '.cbz']:
             df.iscb = True
             df.icon = 'glyphicon-book'
@@ -138,24 +142,30 @@ def generate_directory(user, directory=False):
             except ComicBook.DoesNotExist:
                 book = ComicBook.process_comic_book(file_name, directory)
 
-            status, _ = ComicStatus.objects.get_or_create(comic=book, user=user)
+            status, created = ComicStatus.objects.get_or_create(comic=book, user=user)
+            if created:
+                status.save()
             last_page = status.last_read_page
-            df.location = '/comic/read/{0}/{1}/'.format(urlsafe_base64_encode(book.selector.bytes).decode(),
+            df.selector = urlsafe_base64_encode(book.selector.bytes).decode()
+            df.location = '/comic/read/{0}/{1}/'.format(df.selector,
                                                         last_page)
-            if status.unread:
-                df.label = '<center><span class="label label-default">Unread</span></center>'
-            elif (last_page + 1) == book.page_count:
-                df.label = '<center><span class="label label-success">Read</span></center>'
-                df.cur_page = last_page
-            else:
-                label_text = '<center><span class="label label-primary">%s/%s</span></center>' % \
-                             (last_page + 1, book.page_count)
-                df.label = label_text
-                df.cur_page = last_page
+            df.cur_page = last_page
+            df.label = generate_label(book, status)
+            df.type = 'book'
 
-                # df.label = '<span class="label label-danger pull-right">Unprocessed</span>'
         files.append(df)
     return files
+
+
+def generate_label(book, status):
+    if status.unread:
+        label_text = '<center><span class="label label-default">Unread</span></center>'
+    elif (status.last_read_page + 1) == book.page_count:
+        label_text = '<center><span class="label label-success">Read</span></center>'
+    else:
+        label_text = '<center><span class="label label-primary">%s/%s</span></center>' % \
+                     (status.last_read_page + 1, book.page_count)
+    return label_text
 
 
 def generate_dir_status(user, directory):

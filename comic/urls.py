@@ -13,5 +13,8 @@ urlpatterns = [
     url(r'^read/(?P<comic_selector>[\w-]+)/(?P<page>[0-9]+)/img$', views.get_image, name='get_image'),
     url(r'^list_json/$', views.comic_list_json, name='comic_list_json1'),
     url(r'^list_json/(?P<directory_selector>[\w-]+)/$', views.comic_list_json, name='comic_list_json2'),
+    url(r'^recent/$', views.recent_comics, name='recent_comics'),
+    url(r'^recent/json/$', views.recent_comics_json, name='recent_comics_json'),
+    url(r'^edit/$', views.comic_edit, name='comic_edit'),
     url(r'^(?P<directory_selector>[\w-]+)/$', views.comic_list, name='comic_list'),
 ]

@@ -5,30 +5,36 @@
 <div class="container">
     <form id="comic_form" method="post" action="/comic/edit/">
         {% csrf_token %}
-    <table class="table table-bordered table-striped table-hover" id="comic_list">
-        <caption><h2>Comics</h2> mark selected issues as:
-            <select name="func" id="func_selector">
-                <option value="choose">Choose...</option>
-                <option value="read">Read</option>
-                <option value="unread">Un-Read</option>
-            </select>
-        </caption>
-        <thead>
-        <tr>
-            <th id="select-all"><input type="checkbox" id="select-all-cb"></th>
-            <th><center><span class="glyphicon glyphicon-file"></span></center></th>
-            <th width="100%">File/Folder</th>
-            <th>Status</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr class="clickable-row" data-href="/comic/">
-            <td><center><span class="glyphicon glyphicon-file"></span></center></td>
-            <td>loading data</td>
-            <td><span class="label label-primary pull-right">1/23</span></td>
-        </tr>
-        </tbody>
-    </table>
+        <table class="table table-bordered table-striped table-hover" id="comic_list">
+            <caption><h2>Recent Comics</h2>
+                mark selected issues as:
+                <select name="func" id="func_selector">
+                    <option value="choose">Choose...</option>
+                    <option value="read">Read</option>
+                    <option value="unread">Un-Read</option>
+                </select>
+            </caption>
+            <thead>
+            <tr>
+                <th id="select-all"><input type="checkbox" id="select-all-cb"></th>
+                <th>
+                    <center><span class="glyphicon glyphicon-file"></span></center>
+                </th>
+                <th width="100%">File/Folder</th>
+                <th>Date&nbsp;Added</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr class="clickable-row" data-href="/comic/">
+                <td>
+                    <center><span class="glyphicon glyphicon-file"></span></center>
+                </td>
+                <td>loading data</td>
+                <td><span class="label label-primary pull-right">1/23</span></td>
+            </tr>
+            </tbody>
+        </table>
     </form>
 </div>
 
@@ -37,12 +43,14 @@
 {% block script %}
 <script>
 $(document).ready(function() {
+
     var table = $('#comic_list').DataTable({
         "processing": true,
         "stateSave": true,
+        "serverSide": true,
         "ajax": {
             "type": "POST",
-            "url": "{{ json_url }}",
+            "url": "/comic/recent/json/",
             "data": function ( d ) {
                 d.csrfmiddlewaretoken = Cookies.get('csrftoken');
             },
@@ -56,15 +64,12 @@ $(document).ready(function() {
                 window.document.location = $(this).data("href");
             });
             var tds = $('td:eq(0)', row);
-            if (data['type'] == 'directory'){
-                tds.html('');
-            } else {
-                tds.html('<input type="checkbox" name="selected" value="'+data['selector']+'" data-type="'+data['type']+'"/>');
-                var cb = $('input', tds);
-                cb.change(function() {
-                    $(this).closest('tr').toggleClass('info')
-                });
-            };
+            tds.html('<input type="checkbox" name="selected" value="'+data['selector']+'" data-type="'+data['type']+'"/>');
+            var cb = $('input', tds);
+            cb.change(function() {
+                $(this).closest('tr').toggleClass('info')
+            });
+
         },
         "drawCallback": function( settings ) {
             var tds = $('table tr td:first-child');
@@ -76,13 +81,14 @@ $(document).ready(function() {
             });
         },
         "columns": [
-            { "data" : "blank", "orderable": false },
+            { "data" : "selector", "orderable": false },
             { "data" : "icon", "orderable": false },
             { "data" : "name" },
-            { "data" : "label" },
+            { "data" : "date" },
+            { "data" : "label", "orderable": false },
         ],
 
-        "order": [[ 2, 'asc' ]],
+        "order": [[ 3, 'asc' ]],
     });
     $(".clickable-row").click(function() {
         window.document.location = $(this).data("href");
@@ -111,5 +117,7 @@ $(document).ready(function() {
         });
     });
 } );
+
+
 </script>
 {% endblock %}
