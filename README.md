@@ -13,7 +13,10 @@ This is for if you have a collection of comics on a media server and want to rea
 # Installation
 Pull from git and use like any django project.
 
-Haven't gotten around to cleaning it up yet.
+Also has a task manage.py scan_comics.
+Use this after getting setup and it will speed up your browsing.
+to keep your comics always up to date you should set this up as a scheduled task to run
+as often as you wish, that way the recent comics page will work best.
 
 
 # License
