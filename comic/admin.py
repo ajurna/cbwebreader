@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from comic.models import Setting, ComicBook, ComicPage, ComicStatus, Directory
 
 
@@ -10,6 +11,7 @@ class SettingAdmin(admin.ModelAdmin):
 @admin.register(ComicBook)
 class ComicBookAdmin(admin.ModelAdmin):
     list_display = ['file_name', 'date_added']
+    search_fields = ['file_name']
 
 
 @admin.register(ComicPage)
