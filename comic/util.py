@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from os import path, listdir
 
+from django.db.transaction import atomic
 from django.utils.http import urlsafe_base64_encode
 
 from .models import ComicBook, Setting, ComicStatus, Directory
@@ -105,55 +106,56 @@ def generate_directory(user, directory=False):
     else:
         dir_path = ''
         ordered_dir_list = get_ordered_dir_list(base_dir)
-    for file_name in ordered_dir_list:
-        df = DirFile()
-        df.name = file_name
-        if path.isdir(path.join(base_dir, dir_path, file_name)):
-            try:
-                if directory:
-                    d = Directory.objects.get(name=file_name,
-                                              parent=directory)
-                else:
-                    d = Directory.objects.get(name=file_name,
-                                              parent__isnull=True)
-            except Directory.DoesNotExist:
-                if directory:
-                    d = Directory(name=file_name,
-                                  parent=directory)
-                else:
-                    d = Directory(name=file_name)
-                d.save()
-            df.isdir = True
-            df.icon = 'glyphicon-folder-open'
-            df.selector = urlsafe_base64_encode(d.selector.bytes).decode()
-            df.location = '/comic/{0}/'.format(df.selector)
-            df.label = generate_dir_status(user, d)
-            df.type = 'directory'
-        elif file_name.lower()[-4:] in ['.rar', '.zip', '.cbr', '.cbz']:
-            df.iscb = True
-            df.icon = 'glyphicon-book'
-            try:
-                if directory:
-                    book = ComicBook.objects.get(file_name=file_name,
-                                                 directory=directory)
-                else:
-                    book = ComicBook.objects.get(file_name=file_name,
-                                                 directory__isnull=True)
-            except ComicBook.DoesNotExist:
-                book = ComicBook.process_comic_book(file_name, directory)
+    with atomic():
+        for file_name in ordered_dir_list:
+            df = DirFile()
+            df.name = file_name
+            if path.isdir(path.join(base_dir, dir_path, file_name)):
+                try:
+                    if directory:
+                        d = Directory.objects.get(name=file_name,
+                                                  parent=directory)
+                    else:
+                        d = Directory.objects.get(name=file_name,
+                                                  parent__isnull=True)
+                except Directory.DoesNotExist:
+                    if directory:
+                        d = Directory(name=file_name,
+                                      parent=directory)
+                    else:
+                        d = Directory(name=file_name)
+                    d.save()
+                df.isdir = True
+                df.icon = 'glyphicon-folder-open'
+                df.selector = urlsafe_base64_encode(d.selector.bytes).decode()
+                df.location = '/comic/{0}/'.format(df.selector)
+                df.label = generate_dir_status(user, d)
+                df.type = 'directory'
+            elif file_name.lower()[-4:] in ['.rar', '.zip', '.cbr', '.cbz']:
+                df.iscb = True
+                df.icon = 'glyphicon-book'
+                try:
+                    if directory:
+                        book = ComicBook.objects.get(file_name=file_name,
+                                                     directory=directory)
+                    else:
+                        book = ComicBook.objects.get(file_name=file_name,
+                                                     directory__isnull=True)
+                except ComicBook.DoesNotExist:
+                    book = ComicBook.process_comic_book(file_name, directory)
 
-            status, created = ComicStatus.objects.get_or_create(comic=book, user=user)
-            if created:
-                status.save()
-            last_page = status.last_read_page
-            df.selector = urlsafe_base64_encode(book.selector.bytes).decode()
-            df.location = '/comic/read/{0}/{1}/'.format(df.selector,
-                                                        last_page)
-            df.cur_page = last_page
-            df.label = generate_label(book, status)
-            df.type = 'book'
+                status, created = ComicStatus.objects.get_or_create(comic=book, user=user)
+                if created:
+                    status.save()
+                last_page = status.last_read_page
+                df.selector = urlsafe_base64_encode(book.selector.bytes).decode()
+                df.location = '/comic/read/{0}/{1}/'.format(df.selector,
+                                                            last_page)
+                df.cur_page = last_page
+                df.label = generate_label(book, status)
+                df.type = 'book'
 
-        files.append(df)
+            files.append(df)
     return files
 
 
