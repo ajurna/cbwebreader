@@ -311,7 +311,7 @@ class ComicBook(models.Model):
 class ComicPage(models.Model):
     Comic = models.ForeignKey(ComicBook, on_delete=models.CASCADE)
     index = models.IntegerField()
-    page_file_name = models.CharField(max_length=100, unique=False)
+    page_file_name = models.CharField(max_length=200, unique=False)
     content_type = models.CharField(max_length=30)
 
 
