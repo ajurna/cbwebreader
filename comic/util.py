@@ -150,8 +150,7 @@ def generate_directory(user, directory=False):
                 directory_obj = Directory(name=directory_name,
                                           parent=directory)
             else:
-                directory_obj = Directory(name=directory_name,
-                                          parent__isnull=True)
+                directory_obj = Directory(name=directory_name)
             directory_obj.save()
             df = DirFile()
             df.populate_directory(directory_obj, user)
