@@ -1,9 +1,9 @@
+import os
+from os.path import isdir
+
 from django.core.management.base import BaseCommand
 
 from comic.models import Setting, Directory, ComicBook
-
-import os
-from os.path import isdir
 
 
 class Command(BaseCommand):
@@ -26,6 +26,13 @@ class Command(BaseCommand):
             comic_dir = self.base_dir
         else:
             comic_dir = os.path.join(self.base_dir, directory.path)
+        if directory:
+            books = ComicBook.objects.filter(directory=directory)
+        else:
+            books = ComicBook.objects.filter(directory__isnull=True)
+        for book in books:
+            if not os.path.isfile(os.path.join(comic_dir, book.file_name)):
+                book.delete()
         for file in os.listdir(comic_dir):
             if isdir(os.path.join(comic_dir, file)):
                 if directory:
