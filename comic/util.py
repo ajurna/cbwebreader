@@ -80,17 +80,34 @@ def generate_breadcrumbs_from_menu(paths):
 class DirFile:
     def __init__(self):
         self.name = ''
-        self.isdir = False
         self.icon = ''
-        self.iscb = False
         self.location = ''
         self.label = ''
-        self.cur_page = 0
         self.type = ''
         self.selector = ''
 
     def __str__(self):
         return self.name
+
+    def populate_directory(self, directory, user):
+        self.name = directory.name
+        self.icon = 'glyphicon-folder-open'
+        self.selector = urlsafe_base64_encode(directory.selector.bytes).decode()
+        self.location = '/comic/{0}/'.format(self.selector)
+        self.label = generate_dir_status(user, directory)
+        self.type = 'directory'
+
+    def populate_comic(self, comic, user):
+        self.icon = 'glyphicon-book'
+        self.name = comic.file_name
+        status, created = ComicStatus.objects.get_or_create(comic=comic, user=user)
+        if created:
+            status.save()
+        self.selector = urlsafe_base64_encode(comic.selector.bytes).decode()
+        self.location = '/comic/read/{0}/{1}/'.format(self.selector,
+                                                      status.last_read_page)
+        self.label = generate_label(comic, status)
+        self.type = 'book'
 
 
 def generate_directory(user, directory=False):
@@ -101,61 +118,50 @@ def generate_directory(user, directory=False):
     base_dir = Setting.objects.get(name='BASE_DIR').value
     files = []
     if directory:
-        dir_path = directory.path
-        ordered_dir_list = get_ordered_dir_list(path.join(base_dir, directory.path))
+        ordered_dir_list = listdir(path.join(base_dir, directory.path))
+        dir_list = [x for x in ordered_dir_list if path.isdir(path.join(base_dir, directory.path, x))]
     else:
-        dir_path = ''
-        ordered_dir_list = get_ordered_dir_list(base_dir)
+        ordered_dir_list = listdir(base_dir)
+        dir_list = [x for x in ordered_dir_list if path.isdir(path.join(base_dir, x))]
+    file_list = [x for x in ordered_dir_list if x not in dir_list]
+    if directory:
+        dir_list_obj = Directory.objects.filter(name__in=dir_list,
+                                                parent=directory)
+        file_list_obj = ComicBook.objects.filter(file_name__in=file_list,
+                                                 directory=directory)
+    else:
+        dir_list_obj = Directory.objects.filter(name__in=dir_list,
+                                                parent__isnull=True)
+        file_list_obj = ComicBook.objects.filter(file_name__in=file_list,
+                                                 directory__isnull=True)
+    for directory_obj in dir_list_obj:
+        df = DirFile()
+        df.populate_directory(directory_obj, user)
+        files.append(df)
+        dir_list.remove(directory_obj.name)
     with atomic():
-        for file_name in ordered_dir_list:
+        for file_obj in file_list_obj:
             df = DirFile()
-            df.name = file_name
-            if path.isdir(path.join(base_dir, dir_path, file_name)):
-                try:
-                    if directory:
-                        d = Directory.objects.get(name=file_name,
-                                                  parent=directory)
-                    else:
-                        d = Directory.objects.get(name=file_name,
-                                                  parent__isnull=True)
-                except Directory.DoesNotExist:
-                    if directory:
-                        d = Directory(name=file_name,
-                                      parent=directory)
-                    else:
-                        d = Directory(name=file_name)
-                    d.save()
-                df.isdir = True
-                df.icon = 'glyphicon-folder-open'
-                df.selector = urlsafe_base64_encode(d.selector.bytes).decode()
-                df.location = '/comic/{0}/'.format(df.selector)
-                df.label = generate_dir_status(user, d)
-                df.type = 'directory'
-            elif file_name.lower()[-4:] in ['.rar', '.zip', '.cbr', '.cbz']:
-                df.iscb = True
-                df.icon = 'glyphicon-book'
-                try:
-                    if directory:
-                        book = ComicBook.objects.get(file_name=file_name,
-                                                     directory=directory)
-                    else:
-                        book = ComicBook.objects.get(file_name=file_name,
-                                                     directory__isnull=True)
-                except ComicBook.DoesNotExist:
-                    book = ComicBook.process_comic_book(file_name, directory)
-
-                status, created = ComicStatus.objects.get_or_create(comic=book, user=user)
-                if created:
-                    status.save()
-                last_page = status.last_read_page
-                df.selector = urlsafe_base64_encode(book.selector.bytes).decode()
-                df.location = '/comic/read/{0}/{1}/'.format(df.selector,
-                                                            last_page)
-                df.cur_page = last_page
-                df.label = generate_label(book, status)
-                df.type = 'book'
-
+            df.populate_comic(file_obj, user)
             files.append(df)
+            file_list.remove(file_obj.file_name)
+        for directory_name in dir_list:
+            if directory:
+                directory_obj = Directory(name=directory_name,
+                                          parent=directory)
+            else:
+                directory_obj = Directory(name=directory_name,
+                                          parent__isnull=True)
+            directory_obj.save()
+            df = DirFile()
+            df.populate_directory(directory_obj, user)
+            files.append(df)
+        for file_name in file_list:
+            if file_name.lower()[-4:] in ['.rar', '.zip', '.cbr', '.cbz']:
+                book = ComicBook.process_comic_book(file_name, directory)
+                df = DirFile()
+                df.populate_comic(book, user)
+                files.append(df)
     return files
 
 
