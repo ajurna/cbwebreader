@@ -8,5 +8,5 @@ setup(
     license='http://creativecommons.org/licenses/by-sa/4.0/',
     author='Ajurna',
     author_email='ajurna@gmail.com',
-    description='Comic Book Web Reader', requires=['django-recaptcha', 'django']
+    description='Comic Book Web Reader', requires=['django-recaptcha', 'django', 'ujson']
 )
