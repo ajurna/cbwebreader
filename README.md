@@ -4,7 +4,7 @@ This is for if you have a collection of comics on a media server and want to rea
 
 # Requirments
 
-- [Django 1.9](https://www.djangoproject.com/)
+- [Django 1.10](https://www.djangoproject.com/)
 - [python 3.5](https://www.python.org/)
 - [rarfile python library by Marko Kreen](https://github.com/markokr/rarfile) (included)
 - [Unrar by winrar](http://rarlabs.com)
