@@ -316,7 +316,7 @@ class ComicPage(models.Model):
 
 
 class ComicStatus(models.Model):
-    user = models.ForeignKey(User, unique=False, null=False)
+    user = models.ForeignKey(User, unique=False, null=False, on_delete=models.CASCADE)
     comic = models.ForeignKey(ComicBook, unique=False, null=False, on_delete=models.CASCADE)
     last_read_page = models.IntegerField(default=0)
     unread = models.BooleanField(default=True)
@@ -329,3 +329,8 @@ class ComicStatus(models.Model):
     def __str__(self):
         return 'C:{0} P:{1}'.format(self.comic.file_name, self.last_read_page)
 # TODO: add support to reference items last being read
+
+
+class UserMisc(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    feed_id = models.UUIDField(unique=True, default=uuid.uuid4, db_index=True)

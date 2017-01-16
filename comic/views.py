@@ -17,7 +17,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
 from .forms import SettingsForm, AccountForm, EditUserForm, AddUserForm, InitialSetupForm
-from .models import Setting, ComicBook, ComicStatus, Directory, ComicPage
+from .models import Setting, ComicBook, ComicStatus, Directory, ComicPage, UserMisc
 from .util import generate_breadcrumbs_from_path, generate_breadcrumbs_from_menu, \
     generate_title_from_path, Menu, generate_directory, generate_label
 
@@ -86,12 +86,15 @@ def comic_list_json(request, directory_selector=False):
 
 @login_required
 def recent_comics(request):
+    feed_id = UserMisc.objects.get(user=request.user)
+
     return render(request,
                   'comic/recent_comics.html',
                   {
                       'breadcrumbs': generate_breadcrumbs_from_menu([('Recent', '/comic/recent/')]),
                       'menu': Menu(request.user, 'Recent'),
-                      'title': 'Recent Comics'
+                      'title': 'Recent Comics',
+                      'feed_id': urlsafe_base64_encode(feed_id.feed_id.bytes).decode(),
                   })
 
 

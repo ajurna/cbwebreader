@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
+from . import feeds
 from . import views
-
 urlpatterns = [
     url(r'^$', views.comic_list, name='index'),
     url(r'^settings/$', views.settings_page, name='settings'),
@@ -16,5 +16,6 @@ urlpatterns = [
     url(r'^recent/$', views.recent_comics, name='recent_comics'),
     url(r'^recent/json/$', views.recent_comics_json, name='recent_comics_json'),
     url(r'^edit/$', views.comic_edit, name='comic_edit'),
+    url(r'^feed/(?P<user_selector>[\w-]+)/$', feeds.RecentComics()),
     url(r'^(?P<directory_selector>[\w-]+)/$', views.comic_list, name='comic_list'),
 ]

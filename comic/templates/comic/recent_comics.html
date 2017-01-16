@@ -6,7 +6,7 @@
     <form id="comic_form" method="post" action="/comic/edit/">
         {% csrf_token %}
         <table class="table table-bordered table-striped table-hover" id="comic_list">
-            <caption><h2>Recent Comics</h2>
+            <caption><h2>Recent Comics - <a href="/comic/feed/{{ feed_id }}/">Feed</a></h2>
                 mark selected issues as:
                 <select name="func" id="func_selector">
                     <option value="choose">Choose...</option>
@@ -58,7 +58,7 @@ $(document).ready(function() {
             var r = $(row);
             var cols = $('td:nth-child(n+2)', row);
             cols.attr('data-href', data['url']);
-            cols.attr('style', 'cursor: pointer;')
+            cols.attr('style', 'cursor: pointer;');;;;;;;;;;;;;;;;;;;;;;;;;;;;
             cols.click(function() {
                 window.document.location = $(this).data("href");
             });
@@ -74,9 +74,9 @@ $(document).ready(function() {
             var tds = $('table tr td:first-child');
             tds.click(function(event){
                 if (!$(event.target).is('input')) {
-                    var $cb = $('input', this)
+                    var $cb = $('input', this);;;;;;;;;;;;;;;;;;;;;;;;;;;;
                     $cb.click();
-                };
+                }
             });
         },
         "columns": [
@@ -104,12 +104,12 @@ $(document).ready(function() {
 
     });
     $('#select-all').click(function(event){
-        var cb = $('input', this)
+        var cb = $('input', this);;;;;;;;;;;;;;;;;;;;;;;;;;;;
         if (!$(event.target).is('input')) {
             cb.click();
-        };
+        }
         $('table tr td:first-child input').each(function(chkbx) {
-            row = $(this)
+            row = $(this);;;;;;;;;;;;;;;;;;;;;;;;;;;;
             if (row.prop('checked') != cb.prop('checked')){
                 row.click();
             }
