@@ -1,2 +1,3 @@
 ujson
 django
+django-simple-captcha

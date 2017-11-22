@@ -46,18 +46,23 @@ $(document).ready(function() {
             "url": "{{ json_url }}",
             "data": function ( d ) {
                 d.csrfmiddlewaretoken = Cookies.get('csrftoken');
-            },
+            }
         },
         "rowCallback": function( row, data, index ) {
             var r = $(row);
             var cols = $('td:nth-child(n+2)', row);
-            cols.attr('data-href', data['url']);
-            cols.attr('style', 'cursor: pointer;')
-            cols.click(function() {
-                window.document.location = $(this).data("href");
-            });
+
+            if (data['selector'] === '0') {
+
+            } else {
+                cols.attr('data-href', data['url']);
+                cols.attr('style', 'cursor: pointer;');
+                cols.click(function () {
+                    window.document.location = $(this).data("href");
+                });
+            }
             var tds = $('td:eq(0)', row);
-            if (data['type'] == 'directory'){
+            if (data['type'] === 'directory') {
                 tds.html('');
             } else {
                 tds.html('<input type="checkbox" name="selected" value="'+data['selector']+'" data-type="'+data['type']+'"/>');
@@ -65,25 +70,25 @@ $(document).ready(function() {
                 cb.change(function() {
                     $(this).closest('tr').toggleClass('info')
                 });
-            };
+            }
         },
         "drawCallback": function( settings ) {
             var tds = $('table tr td:first-child');
             tds.click(function(event){
                 if (!$(event.target).is('input')) {
-                    var $cb = $('input', this)
+                    var $cb = $('input', this);
                     $cb.click();
-                };
+                }
             });
         },
         "columns": [
             { "data" : "blank", "orderable": false },
             { "data" : "icon", "orderable": false },
             { "data" : "name" },
-            { "data" : "label" },
+            {"data": "label"}
         ],
 
-        "order": [[ 2, 'asc' ]],
+        "order": [[2, 'asc']]
     });
     $(".clickable-row").click(function() {
         window.document.location = $(this).data("href");
@@ -100,12 +105,12 @@ $(document).ready(function() {
 
     });
     $('#select-all').click(function(event){
-        var cb = $('input', this)
+        var cb = $('input', this);
         if (!$(event.target).is('input')) {
             cb.click();
-        };
+        }
         $('table tr td:first-child input').each(function(chkbx) {
-            row = $(this)
+            row = $(this);
             if (row.prop('checked') != cb.prop('checked')){
                 row.click();
             }

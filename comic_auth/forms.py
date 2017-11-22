@@ -1,5 +1,6 @@
+from captcha.fields import CaptchaField
 from django import forms
-from captcha.fields import ReCaptchaField
+
 from comic.models import Setting
 
 
@@ -33,7 +34,7 @@ class LoginForm(forms.Form):
             public_key = Setting.objects.get(name='RECAPTCHA_PUBLIC_KEY').value
             private_key = Setting.objects.get(name='RECAPTCHA_PRIVATE_KEY').value
 
-            captcha = ReCaptchaField(
+            captcha = CaptchaField(
                 label='',
                 public_key=public_key,
                 private_key=private_key,

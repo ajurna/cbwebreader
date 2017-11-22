@@ -203,6 +203,8 @@ class ComicBook(models.Model):
                     book = ComicBook.process_comic_book(next_comic, self.directory)
                 else:
                     book = ComicBook.process_comic_book(next_comic)
+            if type(book) is str:
+                raise IndexError
             comic_path = urlsafe_base64_encode(book.selector.bytes)
             cs, _ = ComicStatus.objects.get_or_create(comic=book, user=user)
             index = cs.last_read_page
@@ -258,12 +260,16 @@ class ComicBook(models.Model):
             comic_full_path = path.join(base_dir, directory.get_path(), comic_file_name)
         else:
             comic_full_path = path.join(base_dir, comic_file_name)
+
         try:
             cbx = rarfile.RarFile(comic_full_path)
         except rarfile.NotRarFile:
-            cbx = zipfile.ZipFile(comic_full_path)
-        except zipfile.BadZipfile:
-            return False
+            cbx = None
+        if not cbx:
+            try:
+                cbx = zipfile.ZipFile(comic_full_path)
+            except zipfile.BadZipFile:
+                return comic_file_name
         with atomic():
             if directory:
                 book = ComicBook(file_name=comic_file_name,

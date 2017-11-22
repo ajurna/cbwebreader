@@ -98,16 +98,24 @@ class DirFile:
         self.type = 'directory'
 
     def populate_comic(self, comic, user):
-        self.icon = 'glyphicon-book'
-        self.name = comic.file_name
-        status, created = ComicStatus.objects.get_or_create(comic=comic, user=user)
-        if created:
-            status.save()
-        self.selector = urlsafe_base64_encode(comic.selector.bytes).decode()
-        self.location = '/comic/read/{0}/{1}/'.format(self.selector,
-                                                      status.last_read_page)
-        self.label = generate_label(comic, status)
-        self.type = 'book'
+        if type(comic) == str:
+            self.icon = 'glyphicon-remove'
+            self.name = comic
+            self.selector = '0'
+            self.location = '/'
+            self.label = '<center><span class="label label-danger">Error</span></center>'
+            self.type = 'book'
+        else:
+            self.icon = 'glyphicon-book'
+            self.name = comic.file_name
+            status, created = ComicStatus.objects.get_or_create(comic=comic, user=user)
+            if created:
+                status.save()
+            self.selector = urlsafe_base64_encode(comic.selector.bytes).decode()
+            self.location = '/comic/read/{0}/{1}/'.format(self.selector,
+                                                          status.last_read_page)
+            self.label = generate_label(comic, status)
+            self.type = 'book'
 
 
 def generate_directory(user, directory=False):
