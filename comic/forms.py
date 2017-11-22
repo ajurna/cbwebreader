@@ -1,7 +1,7 @@
+from os import path
+
 from django import forms
 from django.contrib.auth.models import User
-
-from os import path
 
 from comic.models import Setting
 
@@ -233,10 +233,10 @@ class SettingsForm(forms.Form):
 
     @staticmethod
     def get_initial_values():
-        base_dir, created = Setting.objects.get_or_create(name='BASE_DIR')
-        recaptcha_public_key, created = Setting.objects.get_or_create(name='RECAPTCHA_PUBLIC_KEY')
-        recaptcha_private_key, created = Setting.objects.get_or_create(name='RECAPTCHA_PRIVATE_KEY')
-        recaptcha, created = Setting.objects.get_or_create(name='RECAPTCHA')
+        base_dir, _ = Setting.objects.get_or_create(name='BASE_DIR')
+        recaptcha_public_key, _ = Setting.objects.get_or_create(name='RECAPTCHA_PUBLIC_KEY')
+        recaptcha_private_key, _ = Setting.objects.get_or_create(name='RECAPTCHA_PRIVATE_KEY')
+        recaptcha, _ = Setting.objects.get_or_create(name='RECAPTCHA')
         if recaptcha.value == '1':
             recaptcha = True
         else:

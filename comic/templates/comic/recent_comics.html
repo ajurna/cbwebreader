@@ -18,7 +18,7 @@
             <tr>
                 <th id="select-all"><input type="checkbox" id="select-all-cb"></th>
                 <th>
-                    <center><span class="glyphicon glyphicon-file"></span></center>
+                    <div style="text-align: center;"><span class="glyphicon glyphicon-file"></span></div>
                 </th>
                 <th width="100%">File/Folder</th>
                 <th>Date&nbsp;Added</th>
@@ -58,7 +58,7 @@ $(document).ready(function() {
             var r = $(row);
             var cols = $('td:nth-child(n+2)', row);
             cols.attr('data-href', data['url']);
-            cols.attr('style', 'cursor: pointer;');;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            cols.attr('style', 'cursor: pointer;');
             cols.click(function() {
                 window.document.location = $(this).data("href");
             });
@@ -74,7 +74,7 @@ $(document).ready(function() {
             var tds = $('table tr td:first-child');
             tds.click(function(event){
                 if (!$(event.target).is('input')) {
-                    var $cb = $('input', this);;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                    var $cb = $('input', this);
                     $cb.click();
                 }
             });
@@ -104,12 +104,12 @@ $(document).ready(function() {
 
     });
     $('#select-all').click(function(event){
-        var cb = $('input', this);;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        var cb = $('input', this);
         if (!$(event.target).is('input')) {
             cb.click();
         }
         $('table tr td:first-child input').each(function(chkbx) {
-            row = $(this);;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            row = $(this);
             if (row.prop('checked') != cb.prop('checked')){
                 row.click();
             }

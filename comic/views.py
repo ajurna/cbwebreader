@@ -86,7 +86,7 @@ def comic_list_json(request, directory_selector=False):
 
 @login_required
 def recent_comics(request):
-    feed_id = UserMisc.objects.get(user=request.user)
+    feed_id, _ = UserMisc.objects.get_or_create(user=request.user)
 
     return render(request,
                   'comic/recent_comics.html',
@@ -261,6 +261,7 @@ def user_add_page(request):
             )
             user.set_password(form.cleaned_data['password'])
             user.save()
+            UserMisc.objects.create(user=user)
             success_message = 'User {} created.'.format(user.username)
 
     else:

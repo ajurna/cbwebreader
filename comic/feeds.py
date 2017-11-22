@@ -13,11 +13,12 @@ class RecentComics(Feed):
     link = "/comics/"
     description = "Recently added Comics"
 
-    def get_object(self, request: HttpRequest, user_selector: str) -> UserMisc:
+    def get_object(self, request: HttpRequest, user_selector: str, *args, **kwargs) -> UserMisc:
         user_selector = uuid.UUID(bytes=urlsafe_base64_decode(user_selector))
         return get_object_or_404(UserMisc, feed_id=user_selector)
 
-    def items(self) -> ComicBook:
+    @staticmethod
+    def items() -> ComicBook:
         return ComicBook.objects.order_by('-date_added')[:10]
 
     def item_title(self, item: ComicBook) -> str:
