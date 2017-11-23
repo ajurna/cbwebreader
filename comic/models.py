@@ -35,25 +35,23 @@ class Directory(models.Model):
 
     @property
     def path(self):
-        l = self.get_path_items()
-        l.reverse()
-        return path.sep.join(l)
+        return self.get_path()
 
     def get_path(self):
-        l = self.get_path_items()
-        l.reverse()
-        return path.sep.join(l)
+        path_items = self.get_path_items()
+        path_items.reverse()
+        return path.sep.join(path_items)
 
-    def get_path_items(self, p=False):
-        if not p:
+    def get_path_items(self, p=None):
+        if p is None:
             p = []
         p.append(self.name)
         if self.parent:
             self.parent.get_path_items(p)
         return p
 
-    def get_path_objects(self, p=False):
-        if not p:
+    def get_path_objects(self, p=None):
+        if p is None:
             p = []
         p.append(self)
         if self.parent:
@@ -103,25 +101,27 @@ class ComicBook(models.Model):
 
     @property
     def page_count(self):
-        page_count = ComicPage.objects.filter(Comic=self).count()
-        return page_count
+        return ComicPage.objects.filter(Comic=self).count()
 
     class Navigation:
-        def __init__(self):
-            self.next_index = 0
-            self.next_path = ''
-            self.prev_index = 0
-            self.prev_path = ''
-            self.cur_index = 0
-            self.cur_path = ''
-            self.q_prev_to_directory = False
-            self.q_next_to_directory = False
+        next_index = 0
+        next_path = ''
+        prev_index = 0
+        prev_path = ''
+        cur_index = 0
+        cur_path = ''
+        q_prev_to_directory = False
+        q_next_to_directory = False
+
+        def __init__(self, **kwargs):
+            for arg in kwargs:
+                setattr(self, arg, kwargs[arg])
 
     def nav(self, page, user):
-        out = self.Navigation()
-        out.cur_index = page
-        out.cur_path = urlsafe_base64_encode(self.selector.bytes)
-
+        out = self.Navigation(
+            cur_index=page,
+            cur_path=urlsafe_base64_encode(self.selector.bytes)
+        )
         if page == 0:
             out.prev_path, out.prev_index = self.nav_get_prev_comic(user)
             if out.prev_index == -1:
@@ -137,7 +137,6 @@ class ComicBook(models.Model):
         else:
             out.next_index = page + 1
             out.next_path = out.cur_path
-
         return out
 
     def nav_get_prev_comic(self, user):
@@ -231,10 +230,7 @@ class ComicBook(models.Model):
 
     @property
     def pages(self):
-        out = []
-        for item in ComicPage.objects.filter(Comic=self).order_by('index'):
-            out.append(item)
-        return out
+        return [cp for cp in ComicPage.objects.filter(Comic=self).order_by('index')]
 
     def page_name(self, index):
         return ComicPage.objects.get(Comic=self, index=index).page_file_name

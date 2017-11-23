@@ -15,8 +15,9 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
-import comic_auth.views
+
 import comic.views
+import comic_auth.views
 
 urlpatterns = [
     url(r'^$', comic.views.comic_redirect),
@@ -25,5 +26,5 @@ urlpatterns = [
     url(r'^setup/', comic.views.initial_setup),
     url(r'^comic/', include('comic.urls')),
     url(r'^admin/', include(admin.site.urls)),
-
+    url(r'^silk/', include('silk.urls', namespace='silk'))
 ]
