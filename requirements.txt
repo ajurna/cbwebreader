@@ -1,3 +1,4 @@
 ujson
 django
-django-simple-captcha
+django-silk
+django-recaptcha2

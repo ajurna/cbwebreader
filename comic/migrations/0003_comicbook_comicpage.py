@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                 ('index', models.IntegerField()),
                 ('page_file_name', models.CharField(max_length=100)),
                 ('content_type', models.CharField(max_length=30)),
-                ('Comic', models.ForeignKey(to='comic.ComicBook')),
+                ('Comic', models.ForeignKey(to='comic.ComicBook', on_delete=models.CASCADE)),
             ],
         ),
     ]

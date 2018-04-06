@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
 from django.conf import settings
+from django.db import models, migrations
 
 
 class Migration(migrations.Migration):
@@ -32,11 +32,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='comicstatus',
             name='comic',
-            field=models.ForeignKey(to='comic.ComicBook'),
+            field=models.ForeignKey(to='comic.ComicBook', on_delete=models.CASCADE),
         ),
         migrations.AddField(
             model_name='comicstatus',
             name='user',
-            field=models.ForeignKey(to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE),
         ),
     ]

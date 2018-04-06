@@ -38,22 +38,32 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'silk',
-    'captcha',
+    'snowpenguin.django.recaptcha2',
     'comic',
     'comic_auth',
 )
 
-MIDDLEWARE_CLASSES = (
+# MIDDLEWARE_CLASSES = (
+#     'django.contrib.sessions.middleware.SessionMiddleware',
+#     'django.middleware.common.CommonMiddleware',
+#     'django.middleware.csrf.CsrfViewMiddleware',
+#     'django.contrib.auth.middleware.AuthenticationMiddleware',
+#     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+#     'django.contrib.messages.middleware.MessageMiddleware',
+#     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+#     'django.middleware.security.SecurityMiddleware',
+#     'silk.middleware.SilkyMiddleware',
+# )
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
     'silk.middleware.SilkyMiddleware',
-)
+]
 
 ROOT_URLCONF = 'cbreader.urls'
 
@@ -106,8 +116,11 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-LOGIN_REDIRECT_URL  = '/comic/'
+LOGIN_REDIRECT_URL = '/comic/'
 
 LOGIN_URL = '/login/'
 
 UNRAR_TOOL = 'C:/Program Files/WinRAR/unrar'
+
+RECAPTCHA_PRIVATE_KEY = '6Ld50TUUAAAAAD6tQ4pR7HoBZ80EW_Mp2TyoS8Dz'
+RECAPTCHA_PUBLIC_KEY = '6Ld50TUUAAAAANJmBFM0lUVqwuFyyCdoejfpdema'

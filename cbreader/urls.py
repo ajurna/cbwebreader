@@ -14,7 +14,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
 from django.conf.urls import include, url
-from django.contrib import admin
 
 import comic.views
 import comic_auth.views
@@ -25,6 +24,6 @@ urlpatterns = [
     url(r'^logout/', comic_auth.views.comic_logout),
     url(r'^setup/', comic.views.initial_setup),
     url(r'^comic/', include('comic.urls')),
-    url(r'^admin/', include(admin.site.urls)),
+    # url(r'^admin/', include(admin.site.urls)),
     url(r'^silk/', include('silk.urls', namespace='silk'))
 ]
