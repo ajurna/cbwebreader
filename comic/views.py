@@ -293,18 +293,6 @@ def settings_page(request):
             base_dir = Setting.objects.get(name='BASE_DIR')
             base_dir.value = form.cleaned_data['base_dir']
             base_dir.save()
-            recap = Setting.objects.get(name='RECAPTCHA')
-            if form.cleaned_data['recaptcha']:
-                recap.value = '1'
-            else:
-                recap.value = '0'
-            recap.save()
-            recaptcha_private_key = Setting.objects.get(name='RECAPTCHA_PRIVATE_KEY')
-            recaptcha_private_key.value = form.cleaned_data['recaptcha_private_key']
-            recaptcha_private_key.save()
-            recaptcha_public_key = Setting.objects.get(name='RECAPTCHA_PUBLIC_KEY')
-            recaptcha_public_key.value = form.cleaned_data['recaptcha_public_key']
-            recaptcha_public_key.save()
             success_message.append('Settings updated.')
     form = SettingsForm(initial=SettingsForm.get_initial_values())
     context = {

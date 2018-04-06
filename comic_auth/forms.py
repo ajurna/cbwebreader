@@ -1,8 +1,7 @@
 from django import forms
+from django.conf import settings
 from snowpenguin.django.recaptcha2.fields import ReCaptchaField
 from snowpenguin.django.recaptcha2.widgets import ReCaptchaWidget
-
-from comic.models import Setting
 
 
 class LoginForm(forms.Form):
@@ -28,15 +27,5 @@ class LoginForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(LoginForm, self).__init__(*args, **kwargs)
-        setting, created = Setting.objects.get_or_create(name='RECAPTCHA')
-        if created:
-            setting.value = '0'
-        if setting.value == '1':
-            # public_key = Setting.objects.get(name='RECAPTCHA_PUBLIC_KEY').value
-            # private_key = Setting.objects.get(name='RECAPTCHA_PRIVATE_KEY').value
-            #
-            # captcha = ReCaptchaField(
-            #     public_key=public_key,
-            #     private_key=private_key,
-            # )
+        if settings.CBREADER_USE_RECAPTCHA if hasattr(settings, 'CBREADER_USE_RECAPTCHA') else False:
             self.fields['captcha'] = ReCaptchaField(widget=ReCaptchaWidget())
