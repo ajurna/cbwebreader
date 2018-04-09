@@ -50,7 +50,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 'silk.middleware.SilkyMiddleware',
 ]
 
 ROOT_URLCONF = 'cbreader.urls'
@@ -110,6 +109,6 @@ LOGIN_URL = '/login/'
 
 UNRAR_TOOL = 'C:/Program Files/WinRAR/unrar'
 
-CBREADER_USE_RECAPTCHA = True
-RECAPTCHA_PRIVATE_KEY = '6Ld50TUUAAAAAD6tQ4pR7HoBZ80EW_Mp2TyoS8Dz'
-RECAPTCHA_PUBLIC_KEY = '6Ld50TUUAAAAANJmBFM0lUVqwuFyyCdoejfpdema'
+CBREADER_USE_RECAPTCHA = False
+RECAPTCHA_PRIVATE_KEY = ''
+RECAPTCHA_PUBLIC_KEY = ''
