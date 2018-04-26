@@ -56,12 +56,12 @@ def generate_breadcrumbs_from_path(directory=False, book=False):
     for item in folders[::-1]:
         bc = Breadcrumb()
         bc.name = item.name
-        bc.url = b'/comic/' + urlsafe_base64_encode(item.selector.bytes)
+        bc.url = '/comic/' + urlsafe_base64_encode(item.selector.bytes).decode()
         output.append(bc)
     if book:
         bc = Breadcrumb()
         bc.name = book.file_name
-        bc.url = b'/read/' + urlsafe_base64_encode(book.selector.bytes)
+        bc.url = '/read/' + urlsafe_base64_encode(book.selector.bytes).decode()
         output.append(bc)
 
     return output
