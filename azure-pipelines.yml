@@ -56,9 +56,10 @@ steps:
   displayName: 'Run tests'
 
 - script: |
-    pip install pytest
-    pip install pytest-cov
-    pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+    pip install coverage
+    coverage run --source='.' manage.py test
+    coverage xml
+    coverage html
   displayName: 'Test with pytest'
 
 
