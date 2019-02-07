@@ -57,7 +57,7 @@ steps:
 
 - script: |
     pip install coverage
-    coverage run --source='.' manage.py test
+    coverage run --source='.' --omit=*migrations*,comic\rarfile.py  manage.py test
     coverage xml
     coverage html
   displayName: 'Test with pytest'
