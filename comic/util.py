@@ -117,6 +117,9 @@ class DirFile:
             self.label = generate_label(comic, status)
             self.type = 'book'
 
+    def __repr__(self):
+        return f'<DirFile: {self.name}: {self.type}>'
+
 
 def generate_directory(user, directory=False):
     """
@@ -147,6 +150,7 @@ def generate_directory(user, directory=False):
         df.populate_directory(directory_obj, user)
         files.append(df)
         dir_list.remove(directory_obj.name)
+
     with atomic():
         for file_obj in file_list_obj:
             df = DirFile()
@@ -169,6 +173,8 @@ def generate_directory(user, directory=False):
                 df = DirFile()
                 df.populate_comic(book, user)
                 files.append(df)
+    files.sort(key=lambda x: x.name)
+    files.sort(key=lambda x: x.type, reverse=True)
     return files
 
 

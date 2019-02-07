@@ -63,11 +63,11 @@ class ComicBookTests(TestCase):
         user = User.objects.get(username='test')
         nav = book.nav(0, user)
         self.assertEqual(nav.next_index, 1)
-        self.assertEqual(nav.next_path, urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav.next_path.encode(), urlsafe_base64_encode(book.selector.bytes))
         self.assertEqual(nav.prev_index, -1)
         self.assertEqual(nav.prev_path, '')
         self.assertEqual(nav.cur_index, 0)
-        self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav.cur_path.encode(), urlsafe_base64_encode(book.selector.bytes))
         self.assertEqual(nav.q_prev_to_directory, True)
         self.assertEqual(nav.q_next_to_directory, False)
 
@@ -79,11 +79,11 @@ class ComicBookTests(TestCase):
 
         nav = book.nav(0, user)
         self.assertEqual(nav.next_index, 1)
-        self.assertEqual(nav.next_path, urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav.next_path.encode(), urlsafe_base64_encode(book.selector.bytes))
         self.assertEqual(nav.prev_index, 0)
-        self.assertEqual(nav.prev_path, urlsafe_base64_encode(prev_book.selector.bytes))
+        self.assertEqual(nav.prev_path.encode(), urlsafe_base64_encode(prev_book.selector.bytes))
         self.assertEqual(nav.cur_index, 0)
-        self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav.cur_path.encode(), urlsafe_base64_encode(book.selector.bytes))
         self.assertEqual(nav.q_prev_to_directory, False)
         self.assertEqual(nav.q_next_to_directory, False)
 
@@ -95,11 +95,11 @@ class ComicBookTests(TestCase):
                                           directory__isnull=True)
         nav = book.nav(3, user)
         self.assertEqual(nav.next_index, 2)
-        self.assertEqual(nav.next_path, urlsafe_base64_encode(next_book.selector.bytes))
+        self.assertEqual(nav.next_path.encode(), urlsafe_base64_encode(next_book.selector.bytes))
         self.assertEqual(nav.prev_index, 2)
-        self.assertEqual(nav.prev_path, urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav.prev_path.encode(), urlsafe_base64_encode(book.selector.bytes))
         self.assertEqual(nav.cur_index, 3)
-        self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav.cur_path.encode(), urlsafe_base64_encode(book.selector.bytes))
         self.assertEqual(nav.q_prev_to_directory, False)
         self.assertEqual(nav.q_next_to_directory, False)
 
@@ -110,9 +110,9 @@ class ComicBookTests(TestCase):
         self.assertEqual(nav.next_index, -1)
         self.assertEqual(nav.next_path, '')
         self.assertEqual(nav.prev_index, 2)
-        self.assertEqual(nav.prev_path, urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav.prev_path.encode(), urlsafe_base64_encode(book.selector.bytes))
         self.assertEqual(nav.cur_index, 3)
-        self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav.cur_path.encode(), urlsafe_base64_encode(book.selector.bytes))
         self.assertEqual(nav.q_prev_to_directory, False)
         self.assertEqual(nav.q_next_to_directory, True)
 
@@ -122,11 +122,11 @@ class ComicBookTests(TestCase):
                                      directory__isnull=True)
         nav = book.nav(1, user)
         self.assertEqual(nav.next_index, 2)
-        self.assertEqual(nav.next_path, urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav.next_path.encode(), urlsafe_base64_encode(book.selector.bytes))
         self.assertEqual(nav.prev_index, 0)
-        self.assertEqual(nav.prev_path, urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav.prev_path.encode(), urlsafe_base64_encode(book.selector.bytes))
         self.assertEqual(nav.cur_index, 1)
-        self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav.cur_path.encode(), urlsafe_base64_encode(book.selector.bytes))
         self.assertEqual(nav.q_prev_to_directory, False)
         self.assertEqual(nav.q_next_to_directory, False)
 
@@ -135,54 +135,46 @@ class ComicBookTests(TestCase):
         folders = generate_directory(user)
         dir1 = folders[0]
         self.assertEqual(dir1.name, 'test_folder')
-        self.assertTrue(dir1.isdir)
+        self.assertEqual(dir1.type, 'directory')
         self.assertEqual(dir1.icon, 'glyphicon-folder-open')
-        self.assertFalse(dir1.iscb)
         d = Directory.objects.get(name='test_folder',
                                   parent__isnull=True)
         location = '/comic/{0}/'.format(urlsafe_base64_encode(d.selector.bytes).decode())
         self.assertEqual(dir1.location, location)
         self.assertEqual(dir1.label, '<center><span class="label label-default">Empty</span></center>')
-        self.assertEqual(dir1.cur_page, 0)
 
         dir2 = folders[1]
         self.assertEqual(dir2.name, 'test1.rar')
-        self.assertFalse(dir2.isdir)
+        self.assertEqual(dir2.type, 'book')
         self.assertEqual(dir2.icon, 'glyphicon-book')
-        self.assertTrue(dir2.iscb)
         c = ComicBook.objects.get(file_name='test1.rar',
                                   directory__isnull=True)
         location = '/comic/read/{0}/{1}/'.format(urlsafe_base64_encode(c.selector.bytes).decode(),
                                                  '0')
         self.assertEqual(dir2.location, location)
         self.assertEqual(dir2.label, '<center><span class="label label-default">Unread</span></center>')
-        self.assertEqual(dir2.cur_page, 0)
 
         dir3 = folders[2]
         self.assertEqual(dir3.name, 'test2.rar')
-        self.assertFalse(dir3.isdir)
+        self.assertEqual(dir3.type, 'book')
         self.assertEqual(dir3.icon, 'glyphicon-book')
-        self.assertTrue(dir3.iscb)
         c = ComicBook.objects.get(file_name='test2.rar',
                                   directory__isnull=True)
         location = '/comic/read/{0}/{1}/'.format(urlsafe_base64_encode(c.selector.bytes).decode(),
                                                  '2')
         self.assertEqual(dir3.location, location)
         self.assertEqual(dir3.label, '<center><span class="label label-primary">3/4</span></center>')
-        self.assertEqual(dir3.cur_page, 2)
 
-        dir3 = folders[3]
-        self.assertEqual(dir3.name, 'test3.rar')
-        self.assertFalse(dir3.isdir)
+        dir4 = folders[3]
+        self.assertEqual(dir4.name, 'test3.rar')
+        self.assertEqual(dir4.type, 'book')
         self.assertEqual(dir3.icon, 'glyphicon-book')
-        self.assertTrue(dir3.iscb)
         c = ComicBook.objects.get(file_name='test3.rar',
                                   directory__isnull=True)
         location = '/comic/read/{0}/{1}/'.format(urlsafe_base64_encode(c.selector.bytes).decode(),
                                                  '0')
-        self.assertEqual(dir3.location, location)
-        self.assertEqual(dir3.label, '<center><span class="label label-default">Unread</span></center>')
-        self.assertEqual(dir3.cur_page, 0)
+        self.assertEqual(dir4.location, location)
+        self.assertEqual(dir4.label, '<center><span class="label label-default">Unread</span></center>')
 
     def test_pages(self):
         book = ComicBook.objects.get(file_name='test1.rar')
