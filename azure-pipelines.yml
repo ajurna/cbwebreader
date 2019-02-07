@@ -46,7 +46,7 @@ steps:
 
 - script: |
     python -m pip install flake8
-    flake8 .
+    flake8 --max-line-length 120 --exclude rarfile.py,migrations
   displayName: 'Run lint tests'
 
 - script: |
