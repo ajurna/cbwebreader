@@ -4,6 +4,8 @@ RUN apk update
 RUN apk add --no-cache tini bash unrar dcron postgresql-dev
 RUN mkdir /src
 WORKDIR /src
+ADD Pipfile /src
+ADD Pipfile.lock /src
 RUN apk add --no-cache --virtual .build-deps mariadb-dev build-base \
     && pip install pipenv \
     && pipenv install --system \
