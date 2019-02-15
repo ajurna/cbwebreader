@@ -6,7 +6,8 @@ RUN mkdir /src
 WORKDIR /src
 ADD requirements.txt /src/
 RUN apk add --no-cache --virtual .build-deps mariadb-dev build-base \
-    && pipenv install --system
+    && pip install pipenv \
+    && pipenv install --system \
     && apk add --virtual .runtime-deps mariadb-connector-c-dev mariadb-connector-c \
     && apk del .build-deps
 ADD . /src/
