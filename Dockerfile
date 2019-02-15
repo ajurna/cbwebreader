@@ -13,3 +13,4 @@ RUN apk add --no-cache --virtual .build-deps mariadb-dev build-base \
     && apk del .build-deps
 ADD . /src/
 RUN cat /src/cbreader/crontab >> /etc/crontabs/root
+EXPOSE 8000

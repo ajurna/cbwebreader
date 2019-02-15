@@ -112,3 +112,5 @@ UNRAR_TOOL = 'C:/Program Files/WinRAR/unrar'
 CBREADER_USE_RECAPTCHA = False
 RECAPTCHA_PRIVATE_KEY = ''
 RECAPTCHA_PUBLIC_KEY = ''
+
+COMIC_DIR = "/media/comics"
