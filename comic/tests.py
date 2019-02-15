@@ -318,7 +318,7 @@ class ComicBookTests(TestCase):
     def test_account_page(self):
         c = Client()
         user = User.objects.get(username='test')
-
+        self.assertEqual(user.username, 'test')
         response = c.get('/comic/account/')
         self.assertEqual(response.status_code, 302)
 
@@ -326,5 +326,3 @@ class ComicBookTests(TestCase):
 
         response = c.get('/comic/account/')
         self.assertEqual(response.status_code, 200)
-
-        response = c.post('/comic/account/')
