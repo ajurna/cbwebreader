@@ -39,8 +39,8 @@ steps:
       print('##vso[task.setvariable variable=projectRoot]{}'.format(project_location))
 
 - script: |
-    python -m pip install --upgrade pip setuptools wheel
-    pip install -r requirements.txt
+    python -m pip install --upgrade pip setuptools wheel pipenv
+    pipenv install --system
     pip install unittest-xml-reporting
   displayName: 'Install prerequisites'
 
