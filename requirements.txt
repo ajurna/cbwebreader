@@ -1,4 +1,0 @@
-ujson
-django
-django-silk
-django-recaptcha2

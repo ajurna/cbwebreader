@@ -78,6 +78,10 @@ class ComicBook(models.Model):
     def __str__(self):
         return self.file_name
 
+    @property
+    def selector_string(self):
+        return urlsafe_base64_encode(self.selector.bytes).decode()
+
     def get_image(self, page):
         base_dir = Setting.objects.get(name='BASE_DIR').value
         if self.directory:
@@ -329,7 +333,11 @@ class ComicStatus(models.Model):
         return self.last_read_page
 
     def __str__(self):
-        return 'C:{0} P:{1}'.format(self.comic.file_name, self.last_read_page)
+        return self.__repr__()
+
+    def __repr__(self):
+        return f'<ComicStatus:{self.user.username}:{self.comic.file_name}:{self.last_read_page}:' \
+            f'{self.unread}:{self.finished}'
 # TODO: add support to reference items last being read
 
 
