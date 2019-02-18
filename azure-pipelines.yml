@@ -73,3 +73,10 @@ steps:
     codeCoverageTool: Cobertura
     summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
     reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+
+- script: docker build -t cbwebreaderacr.azurecr.io/cbwebreader .  # add options to this command to meet your needs
+
+- script: |
+    docker build -t cbwebreaderacr.azurecr.io/cbwebreader .
+    docker login -u cbwebreaderacr -p 1/os6ps5UYEL5I9ZCOZaoKbqcVhNfBqw cbwebreaderacr.azurecr.io
+    docker push cbwebreaderacr.azurecr.io/cbwebreader
