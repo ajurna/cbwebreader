@@ -1,0 +1,10 @@
+# Dockerignore whitelist
+*
+
+!Pipfile
+!Pipfile.lock
+!cbreader
+!comic
+!comic_auth
+!manage.py
+!pytest
