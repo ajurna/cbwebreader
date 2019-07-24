@@ -4,14 +4,20 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+pdbpp = "*"
+pytest-django = "*"
+pytest-black = "*"
+pytest-flake8 = "*"
 
 [packages]
 ujson = "*"
 django-silk = "*"
 django-recaptcha2 = "*"
+dj-database-url  = "*"
 Django = "*"
 gunicorn = "*"
 flake8 = "*"
+psycopg2-binary = "*"
 
 [requires]
 python_version = "3.7"
