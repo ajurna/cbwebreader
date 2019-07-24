@@ -27,12 +27,25 @@ The CBWebReader is a Django project and follows the standard conventions for a D
 git clone https://github.com/ajurna/cbwebreader
 ```
 
+Configure the environment using the `.env` file or setting each variable within your environment:
+
+```bash
+cp .env.example .env
+```
+
+Alternatively, set the path to your `COMIC_BOOK_VOLUME` like so:
+
+```bash
+export COMIC_BOOK_VOLUME=some_path_to_comics_directory
+```
+
 Build and run the project using docker-compose:
 
 ```bash
 docker-compose build
 docker-compose up
 ```
+
 
 ## Running Tests
 

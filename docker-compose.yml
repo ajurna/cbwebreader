@@ -17,7 +17,7 @@ services:
       - ./cbreader:/src/cbreader
       - ./comic:/src/comic
       - ./comic_auth:/src/comic_auth
-      - D:\Downloads\comics:/data
+      - ${COMIC_BOOK_VOLUME}:/data
     command: python manage.py runserver 0.0.0.0:8000
 
   database:
@@ -30,8 +30,3 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=cbwebreader
-
-# volumes:
-#     comic-volume:
-#         name: comic-volume
-#         external: true
