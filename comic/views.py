@@ -94,7 +94,7 @@ def recent_comics(request):
                       'breadcrumbs': generate_breadcrumbs_from_menu([('Recent', '/comic/recent/')]),
                       'menu': Menu(request.user, 'Recent'),
                       'title': 'Recent Comics',
-                      'feed_id': urlsafe_base64_encode(feed_id.feed_id.bytes).decode(),
+                      'feed_id': urlsafe_base64_encode(feed_id.feed_id.bytes),
                   })
 
 
@@ -128,13 +128,13 @@ def recent_comics_json(request):
         if created:
             status.save()
         response_data['data'].append({
-            'selector': urlsafe_base64_encode(book.selector.bytes).decode(),
+            'selector': urlsafe_base64_encode(book.selector.bytes),
             'icon': icon,
             'type': 'book',
             'name': book.file_name,
             'date': book.date_added.strftime('%d/%m/%y-%H:%M'),
             'label': generate_label(book, status),
-            'url': '/comic/read/{0}/{1}/'.format(urlsafe_base64_encode(book.selector.bytes).decode(),
+            'url': '/comic/read/{0}/{1}/'.format(urlsafe_base64_encode(book.selector.bytes),
                                                  status.last_read_page)
         })
     return HttpResponse(

@@ -114,7 +114,7 @@ LOGIN_REDIRECT_URL = '/comic/'
 
 LOGIN_URL = '/login/'
 
-UNRAR_TOOL = 'C:/Program Files/WinRAR/unrar'
+UNRAR_TOOL = os.getenv("UNRAR_TOOL", None)
 
 CBREADER_USE_RECAPTCHA = False
 RECAPTCHA_PRIVATE_KEY = ''
