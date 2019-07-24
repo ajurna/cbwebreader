@@ -6,7 +6,8 @@ services:
     build: .
     environment:
       - DATABASE_URL=postgres://admin:password@database:5432/cbwebreader
-      - DJANGO_SETTINGS_MODULE=cbreader.settings
+      - TEST_DATABASE_URL=postgres://admin:password@database:5432/cbwebreader_test
+      - DJANGO_SETTINGS_MODULE=cbreader.settings.base
     links:
       - database
     depends_on:

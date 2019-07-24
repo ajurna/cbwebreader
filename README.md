@@ -46,7 +46,6 @@ docker-compose build
 docker-compose up
 ```
 
-
 ## Running Tests
 
 To run the entire test suite for CBWebReader, execute the following command:
