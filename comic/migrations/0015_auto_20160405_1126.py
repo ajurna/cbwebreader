@@ -7,14 +7,8 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('comic', '0014_auto_20160404_1402'),
-    ]
+    dependencies = [("comic", "0014_auto_20160404_1402")]
 
     operations = [
-        migrations.AlterField(
-            model_name='comicbook',
-            name='file_name',
-            field=models.CharField(max_length=100),
-        ),
+        migrations.AlterField(model_name="comicbook", name="file_name", field=models.CharField(max_length=100))
     ]

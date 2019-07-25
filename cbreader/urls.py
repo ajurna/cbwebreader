@@ -20,11 +20,11 @@ import comic.views
 import comic_auth.views
 
 urlpatterns = [
-    url(r'^$', comic.views.comic_redirect),
-    url(r'^login/', comic_auth.views.comic_login),
-    url(r'^logout/', comic_auth.views.comic_logout),
-    url(r'^setup/', comic.views.initial_setup),
-    url(r'^comic/', include('comic.urls')),
-    url(r'^admin/', admin.site.urls),
+    url(r"^$", comic.views.comic_redirect),
+    url(r"^login/", comic_auth.views.comic_login),
+    url(r"^logout/", comic_auth.views.comic_logout),
+    url(r"^setup/", comic.views.initial_setup),
+    url(r"^comic/", include("comic.urls")),
+    url(r"^admin/", admin.site.urls),
     # url(r'^silk/', include('silk.urls', namespace='silk'))
 ]

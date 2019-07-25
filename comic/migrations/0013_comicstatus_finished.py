@@ -7,14 +7,8 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('comic', '0012_auto_20160401_0949'),
-    ]
+    dependencies = [("comic", "0012_auto_20160401_0949")]
 
     operations = [
-        migrations.AddField(
-            model_name='comicstatus',
-            name='finished',
-            field=models.BooleanField(default=False),
-        ),
+        migrations.AddField(model_name="comicstatus", name="finished", field=models.BooleanField(default=False))
     ]

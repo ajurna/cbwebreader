@@ -74,10 +74,10 @@ For more details, refer to source.
 
 """
 
-__version__ = '2.7'
+__version__ = "2.7"
 
 # export only interesting items
-__all__ = ['is_rarfile', 'RarInfo', 'RarFile', 'RarExtFile']
+__all__ = ["is_rarfile", "RarInfo", "RarFile", "RarExtFile"]
 
 ##
 ## Imports and compat - support both Python 2.x and 3.x
@@ -93,6 +93,7 @@ from datetime import datetime
 # only needed for encryped headers
 try:
     from Crypto.Cipher import AES
+
     try:
         from hashlib import sha1
     except ImportError:
@@ -108,6 +109,8 @@ if sys.hexversion < 0x3000000:
     # py2.6 has broken bytes()
     def bytes(s, enc):
         return str(s)
+
+
 else:
     unicode = str
 
@@ -116,14 +119,17 @@ try:
     bytearray
 except NameError:
     import array
+
     class bytearray:
-        def __init__(self, val = ''):
-            self.arr = array.array('B', val)
+        def __init__(self, val=""):
+            self.arr = array.array("B", val)
             self.append = self.arr.append
             self.__getitem__ = self.arr.__getitem__
             self.__len__ = self.arr.__len__
+
         def decode(self, *args):
             return self.arr.tostring().decode(*args)
+
 
 # Optimized .readinto() requires memoryview
 try:
@@ -136,21 +142,27 @@ except NameError:
 try:
     from struct import Struct
 except ImportError:
+
     class Struct:
         def __init__(self, fmt):
             self.format = fmt
             self.size = struct.calcsize(fmt)
+
         def unpack(self, buf):
             return unpack(self.format, buf)
-        def unpack_from(self, buf, ofs = 0):
+
+        def unpack_from(self, buf, ofs=0):
             return unpack(self.format, buf[ofs : ofs + self.size])
+
         def pack(self, *args):
             return pack(self.format, *args)
+
 
 # file object superclass
 try:
     from io import RawIOBase
 except ImportError:
+
     class RawIOBase(object):
         def close(self):
             pass
@@ -164,19 +176,19 @@ except ImportError:
 DEFAULT_CHARSET = "windows-1252"
 
 #: list of encodings to try, with fallback to DEFAULT_CHARSET if none succeed
-TRY_ENCODINGS = ('utf8', 'utf-16le')
+TRY_ENCODINGS = ("utf8", "utf-16le")
 
 #: 'unrar', 'rar' or full path to either one
 UNRAR_TOOL = "unrar"
 
 #: Command line args to use for opening file for reading.
-OPEN_ARGS = ('p', '-inul')
+OPEN_ARGS = ("p", "-inul")
 
 #: Command line args to use for extracting file to disk.
-EXTRACT_ARGS = ('x', '-y', '-idq')
+EXTRACT_ARGS = ("x", "-y", "-idq")
 
 #: args for testrar()
-TEST_ARGS = ('t', '-idq')
+TEST_ARGS = ("t", "-idq")
 
 #
 # Allow use of tool that is not compatible with unrar.
@@ -189,17 +201,17 @@ TEST_ARGS = ('t', '-idq')
 # - Does not support password-protected archives.
 #
 
-ALT_TOOL = 'bsdtar'
-ALT_OPEN_ARGS = ('-x', '--to-stdout', '-f')
-ALT_EXTRACT_ARGS = ('-x', '-f')
-ALT_TEST_ARGS = ('-t', '-f')
-ALT_CHECK_ARGS = ('--help',)
+ALT_TOOL = "bsdtar"
+ALT_OPEN_ARGS = ("-x", "--to-stdout", "-f")
+ALT_EXTRACT_ARGS = ("-x", "-f")
+ALT_TEST_ARGS = ("-t", "-f")
+ALT_CHECK_ARGS = ("--help",)
 
 #: whether to speed up decompression by using tmp archive
 USE_EXTRACT_HACK = 1
 
 #: limit the filesize for tmp archive usage
-HACK_SIZE_LIMIT = 20*1024*1024
+HACK_SIZE_LIMIT = 20 * 1024 * 1024
 
 #: whether to parse file/archive comments.
 NEED_COMMENTS = 0
@@ -212,75 +224,75 @@ USE_DATETIME = 0
 
 #: Separator for path name components.  RAR internally uses '\\'.
 #: Use '/' to be similar with zipfile.
-PATH_SEP = '\\'
+PATH_SEP = "\\"
 
 ##
 ## rar constants
 ##
 
 # block types
-RAR_BLOCK_MARK          = 0x72 # r
-RAR_BLOCK_MAIN          = 0x73 # s
-RAR_BLOCK_FILE          = 0x74 # t
-RAR_BLOCK_OLD_COMMENT   = 0x75 # u
-RAR_BLOCK_OLD_EXTRA     = 0x76 # v
-RAR_BLOCK_OLD_SUB       = 0x77 # w
-RAR_BLOCK_OLD_RECOVERY  = 0x78 # x
-RAR_BLOCK_OLD_AUTH      = 0x79 # y
-RAR_BLOCK_SUB           = 0x7a # z
-RAR_BLOCK_ENDARC        = 0x7b # {
+RAR_BLOCK_MARK = 0x72  # r
+RAR_BLOCK_MAIN = 0x73  # s
+RAR_BLOCK_FILE = 0x74  # t
+RAR_BLOCK_OLD_COMMENT = 0x75  # u
+RAR_BLOCK_OLD_EXTRA = 0x76  # v
+RAR_BLOCK_OLD_SUB = 0x77  # w
+RAR_BLOCK_OLD_RECOVERY = 0x78  # x
+RAR_BLOCK_OLD_AUTH = 0x79  # y
+RAR_BLOCK_SUB = 0x7A  # z
+RAR_BLOCK_ENDARC = 0x7B  # {
 
 # flags for RAR_BLOCK_MAIN
-RAR_MAIN_VOLUME         = 0x0001
-RAR_MAIN_COMMENT        = 0x0002
-RAR_MAIN_LOCK           = 0x0004
-RAR_MAIN_SOLID          = 0x0008
-RAR_MAIN_NEWNUMBERING   = 0x0010
-RAR_MAIN_AUTH           = 0x0020
-RAR_MAIN_RECOVERY       = 0x0040
-RAR_MAIN_PASSWORD       = 0x0080
-RAR_MAIN_FIRSTVOLUME    = 0x0100
-RAR_MAIN_ENCRYPTVER     = 0x0200
+RAR_MAIN_VOLUME = 0x0001
+RAR_MAIN_COMMENT = 0x0002
+RAR_MAIN_LOCK = 0x0004
+RAR_MAIN_SOLID = 0x0008
+RAR_MAIN_NEWNUMBERING = 0x0010
+RAR_MAIN_AUTH = 0x0020
+RAR_MAIN_RECOVERY = 0x0040
+RAR_MAIN_PASSWORD = 0x0080
+RAR_MAIN_FIRSTVOLUME = 0x0100
+RAR_MAIN_ENCRYPTVER = 0x0200
 
 # flags for RAR_BLOCK_FILE
-RAR_FILE_SPLIT_BEFORE   = 0x0001
-RAR_FILE_SPLIT_AFTER    = 0x0002
-RAR_FILE_PASSWORD       = 0x0004
-RAR_FILE_COMMENT        = 0x0008
-RAR_FILE_SOLID          = 0x0010
-RAR_FILE_DICTMASK       = 0x00e0
-RAR_FILE_DICT64         = 0x0000
-RAR_FILE_DICT128        = 0x0020
-RAR_FILE_DICT256        = 0x0040
-RAR_FILE_DICT512        = 0x0060
-RAR_FILE_DICT1024       = 0x0080
-RAR_FILE_DICT2048       = 0x00a0
-RAR_FILE_DICT4096       = 0x00c0
-RAR_FILE_DIRECTORY      = 0x00e0
-RAR_FILE_LARGE          = 0x0100
-RAR_FILE_UNICODE        = 0x0200
-RAR_FILE_SALT           = 0x0400
-RAR_FILE_VERSION        = 0x0800
-RAR_FILE_EXTTIME        = 0x1000
-RAR_FILE_EXTFLAGS       = 0x2000
+RAR_FILE_SPLIT_BEFORE = 0x0001
+RAR_FILE_SPLIT_AFTER = 0x0002
+RAR_FILE_PASSWORD = 0x0004
+RAR_FILE_COMMENT = 0x0008
+RAR_FILE_SOLID = 0x0010
+RAR_FILE_DICTMASK = 0x00E0
+RAR_FILE_DICT64 = 0x0000
+RAR_FILE_DICT128 = 0x0020
+RAR_FILE_DICT256 = 0x0040
+RAR_FILE_DICT512 = 0x0060
+RAR_FILE_DICT1024 = 0x0080
+RAR_FILE_DICT2048 = 0x00A0
+RAR_FILE_DICT4096 = 0x00C0
+RAR_FILE_DIRECTORY = 0x00E0
+RAR_FILE_LARGE = 0x0100
+RAR_FILE_UNICODE = 0x0200
+RAR_FILE_SALT = 0x0400
+RAR_FILE_VERSION = 0x0800
+RAR_FILE_EXTTIME = 0x1000
+RAR_FILE_EXTFLAGS = 0x2000
 
 # flags for RAR_BLOCK_ENDARC
-RAR_ENDARC_NEXT_VOLUME  = 0x0001
-RAR_ENDARC_DATACRC      = 0x0002
-RAR_ENDARC_REVSPACE     = 0x0004
-RAR_ENDARC_VOLNR        = 0x0008
+RAR_ENDARC_NEXT_VOLUME = 0x0001
+RAR_ENDARC_DATACRC = 0x0002
+RAR_ENDARC_REVSPACE = 0x0004
+RAR_ENDARC_VOLNR = 0x0008
 
 # flags common to all blocks
-RAR_SKIP_IF_UNKNOWN     = 0x4000
-RAR_LONG_BLOCK          = 0x8000
+RAR_SKIP_IF_UNKNOWN = 0x4000
+RAR_LONG_BLOCK = 0x8000
 
 # Host OS types
 RAR_OS_MSDOS = 0
-RAR_OS_OS2   = 1
+RAR_OS_OS2 = 1
 RAR_OS_WIN32 = 2
-RAR_OS_UNIX  = 3
+RAR_OS_UNIX = 3
 RAR_OS_MACOS = 4
-RAR_OS_BEOS  = 5
+RAR_OS_BEOS = 5
 
 # Compression methods - '0'..'5'
 RAR_M0 = 0x30
@@ -294,71 +306,116 @@ RAR_M5 = 0x35
 ## internal constants
 ##
 
-RAR_ID = bytes("Rar!\x1a\x07\x00", 'ascii')
-ZERO = bytes("\0", 'ascii')
-EMPTY = bytes("", 'ascii')
+RAR_ID = bytes("Rar!\x1a\x07\x00", "ascii")
+ZERO = bytes("\0", "ascii")
+EMPTY = bytes("", "ascii")
 
-S_BLK_HDR = Struct('<HBHH')
-S_FILE_HDR = Struct('<LLBLLBBHL')
-S_LONG = Struct('<L')
-S_SHORT = Struct('<H')
-S_BYTE = Struct('<B')
-S_COMMENT_HDR = Struct('<HBBH')
+S_BLK_HDR = Struct("<HBHH")
+S_FILE_HDR = Struct("<LLBLLBBHL")
+S_LONG = Struct("<L")
+S_SHORT = Struct("<H")
+S_BYTE = Struct("<B")
+S_COMMENT_HDR = Struct("<HBBH")
 
 ##
 ## Public interface
 ##
 
+
 class Error(Exception):
     """Base class for rarfile errors."""
+
+
 class BadRarFile(Error):
     """Incorrect data in archive."""
+
+
 class NotRarFile(Error):
     """The file is not RAR archive."""
+
+
 class BadRarName(Error):
     """Cannot guess multipart name components."""
+
+
 class NoRarEntry(Error):
     """File not found in RAR"""
+
+
 class PasswordRequired(Error):
     """File requires password"""
+
+
 class NeedFirstVolume(Error):
     """Need to start from first volume."""
+
+
 class NoCrypto(Error):
     """Cannot parse encrypted headers - no crypto available."""
+
+
 class RarExecError(Error):
     """Problem reported by unrar/rar."""
+
+
 class RarWarning(RarExecError):
     """Non-fatal error"""
+
+
 class RarFatalError(RarExecError):
     """Fatal error"""
+
+
 class RarCRCError(RarExecError):
     """CRC error during unpacking"""
+
+
 class RarLockedArchiveError(RarExecError):
     """Must not modify locked archive"""
+
+
 class RarWriteError(RarExecError):
     """Write error"""
+
+
 class RarOpenError(RarExecError):
     """Open error"""
+
+
 class RarUserError(RarExecError):
     """User error"""
+
+
 class RarMemoryError(RarExecError):
     """Memory error"""
+
+
 class RarCreateError(RarExecError):
     """Create error"""
+
+
 class RarNoFilesError(RarExecError):
     """No files that match pattern were found"""
+
+
 class RarUserBreak(RarExecError):
     """User stop"""
+
+
 class RarUnknownError(RarExecError):
     """Unknown exit code"""
+
+
 class RarSignalExit(RarExecError):
     """Unrar exited with signal"""
+
+
 class RarCannotExec(RarExecError):
     """Executable not found."""
 
 
 def is_rarfile(xfile):
-    '''Check quickly whether file is rar archive.'''
+    """Check quickly whether file is rar archive."""
     fd = XFile(xfile)
     buf = fd.read(len(RAR_ID))
     fd.close()
@@ -366,7 +423,7 @@ def is_rarfile(xfile):
 
 
 class RarInfo(object):
-    r'''An entry in rar archive.
+    r"""An entry in rar archive.
 
     :mod:`zipfile`-compatible fields:
     
@@ -417,49 +474,46 @@ class RarInfo(object):
             One of RAR_BLOCK_* types.  Only entries with type==RAR_BLOCK_FILE are shown in .infolist().
         flags
             For files, RAR_FILE_* bits.
-    '''
+    """
 
     __slots__ = (
         # zipfile-compatible fields
-        'filename',
-        'file_size',
-        'compress_size',
-        'date_time',
-        'comment',
-        'CRC',
-        'volume',
-        'orig_filename', # bytes in unknown encoding
-
+        "filename",
+        "file_size",
+        "compress_size",
+        "date_time",
+        "comment",
+        "CRC",
+        "volume",
+        "orig_filename",  # bytes in unknown encoding
         # rar-specific fields
-        'extract_version',
-        'compress_type',
-        'host_os',
-        'mode',
-        'type',
-        'flags',
-
+        "extract_version",
+        "compress_type",
+        "host_os",
+        "mode",
+        "type",
+        "flags",
         # optional extended time fields
         # tuple where the sec is float, or datetime().
-        'mtime', # same as .date_time
-        'ctime',
-        'atime',
-        'arctime',
-
+        "mtime",  # same as .date_time
+        "ctime",
+        "atime",
+        "arctime",
         # RAR internals
-        'name_size',
-        'header_size',
-        'header_crc',
-        'file_offset',
-        'add_size',
-        'header_data',
-        'header_base',
-        'header_offset',
-        'salt',
-        'volume_file',
+        "name_size",
+        "header_size",
+        "header_crc",
+        "file_offset",
+        "add_size",
+        "header_data",
+        "header_base",
+        "header_offset",
+        "salt",
+        "volume_file",
     )
 
     def isdir(self):
-        '''Returns True if the entry is a directory.'''
+        """Returns True if the entry is a directory."""
         if self.type == RAR_BLOCK_FILE:
             return (self.flags & RAR_FILE_DIRECTORY) == RAR_FILE_DIRECTORY
         return False
@@ -469,15 +523,14 @@ class RarInfo(object):
 
 
 class RarFile(object):
-    '''Parse RAR structure, provide access to files in archive.
-    '''
+    """Parse RAR structure, provide access to files in archive.
+    """
 
     #: Archive comment.  Byte string or None.  Use :data:`UNICODE_COMMENTS`
     #: to get automatic decoding to unicode.
     comment = None
 
-    def __init__(self, rarfile, mode="r", charset=None, info_callback=None,
-                 crc_check = True, errors = "stop"):
+    def __init__(self, rarfile, mode="r", charset=None, info_callback=None, crc_check=True, errors="stop"):
         """Open and parse a RAR archive.
         
         Parameters:
@@ -529,39 +582,39 @@ class RarFile(object):
         self.close()
 
     def setpassword(self, password):
-        '''Sets the password to use when extracting.'''
+        """Sets the password to use when extracting."""
         self._password = password
         if not self._main:
             self._parse()
 
     def needs_password(self):
-        '''Returns True if any archive entries require password for extraction.'''
+        """Returns True if any archive entries require password for extraction."""
         return self._needs_password
 
     def namelist(self):
-        '''Return list of filenames in archive.'''
+        """Return list of filenames in archive."""
         return [f.filename for f in self._info_list]
 
     def infolist(self):
-        '''Return RarInfo objects for all files/directories in archive.'''
+        """Return RarInfo objects for all files/directories in archive."""
         return self._info_list
 
     def volumelist(self):
-        '''Returns filenames of archive volumes.
+        """Returns filenames of archive volumes.
 
         In case of single-volume archive, the list contains
         just the name of main archive file.
-        '''
+        """
         return self._vol_list
 
     def getinfo(self, fname):
-        '''Return RarInfo for file.'''
+        """Return RarInfo for file."""
 
         if isinstance(fname, RarInfo):
             return fname
 
         # accept both ways here
-        if PATH_SEP == '/':
+        if PATH_SEP == "/":
             fname2 = fname.replace("\\", "/")
         else:
             fname2 = fname.replace("/", "\\")
@@ -572,10 +625,10 @@ class RarFile(object):
             try:
                 return self._info_map[fname2]
             except KeyError:
-                raise NoRarEntry("No such file: "+fname)
+                raise NoRarEntry("No such file: " + fname)
 
-    def open(self, fname, mode = 'r', psw = None):
-        '''Returns file-like object (:class:`RarExtFile`),
+    def open(self, fname, mode="r", psw=None):
+        """Returns file-like object (:class:`RarExtFile`),
         from where the data can be read.
         
         The object implements :class:`io.RawIOBase` interface, so it can
@@ -597,9 +650,9 @@ class RarFile(object):
                 must be 'r'
             psw
                 password to use for extracting.
-        '''
+        """
 
-        if mode != 'r':
+        if mode != "r":
             raise NotImplementedError("RarFile.open() supports only mode=r")
 
         # entry lookup
@@ -641,7 +694,7 @@ class RarFile(object):
         else:
             return self._open_unrar(self.rarfile, inf, psw)
 
-    def read(self, fname, psw = None):
+    def read(self, fname, psw=None):
         """Return uncompressed data for archive entry.
         
         For longer files using :meth:`RarFile.open` may be better idea.
@@ -654,7 +707,7 @@ class RarFile(object):
                 password to use for extracting.
         """
 
-        f = self.open(fname, 'r', psw)
+        f = self.open(fname, "r", psw)
         try:
             return f.read()
         finally:
@@ -752,7 +805,7 @@ class RarFile(object):
                 old.compress_size += item.compress_size
 
         # parse new-style comment
-        if item.type == RAR_BLOCK_SUB and item.filename == 'CMT':
+        if item.type == RAR_BLOCK_SUB and item.filename == "CMT":
             if not NEED_COMMENTS:
                 pass
             elif item.flags & (RAR_FILE_SPLIT_BEFORE | RAR_FILE_SPLIT_AFTER):
@@ -786,7 +839,7 @@ class RarFile(object):
         self._fd = fd
         id = fd.read(len(RAR_ID))
         if id != RAR_ID:
-            raise NotRarFile("Not a Rar archive: "+self.rarfile)
+            raise NotRarFile("Not a Rar archive: " + self.rarfile)
 
         volume = 0  # first vol (.rar) is 0
         more_vols = 0
@@ -795,7 +848,7 @@ class RarFile(object):
         self._vol_list = [self.rarfile]
         while 1:
             if endarc:
-                h = None    # don't read past ENDARC
+                h = None  # don't read past ENDARC
             else:
                 h = self._parse_header(fd)
             if not h:
@@ -848,10 +901,11 @@ class RarFile(object):
                 fd.seek(h.file_offset + h.add_size, 0)
 
     # AES encrypted headers
-    _last_aes_key = (None, None, None) # (salt, key, iv)
+    _last_aes_key = (None, None, None)  # (salt, key, iv)
+
     def _decrypt_header(self, fd):
         if not _have_crypto:
-            raise NoCrypto('Cannot parse encrypted headers - no crypto')
+            raise NoCrypto("Cannot parse encrypted headers - no crypto")
         salt = fd.read(8)
         if self._last_aes_key[0] == salt:
             key, iv = self._last_aes_key[1:]
@@ -872,7 +926,7 @@ class RarFile(object):
             # now read actual header
             return self._parse_block_header(fd)
         except struct.error:
-            self._set_error('Broken header in RAR file')
+            self._set_error("Broken header in RAR file")
             return None
 
     # common header
@@ -899,7 +953,7 @@ class RarFile(object):
 
         # unexpected EOF?
         if len(h.header_data) != h.header_size:
-            self._set_error('Unexpected EOF when reading header')
+            self._set_error("Unexpected EOF when reading header")
             return None
 
         # block has data assiciated with it?
@@ -934,7 +988,7 @@ class RarFile(object):
         if h.type == RAR_BLOCK_OLD_SUB:
             crcdat = h.header_data[2:] + fd.read(h.add_size)
         else:
-            crcdat = h.header_data[2:h.header_base]
+            crcdat = h.header_data[2 : h.header_base]
 
         calc_crc = crc32(crcdat) & 0xFFFF
 
@@ -943,8 +997,9 @@ class RarFile(object):
             return h
 
         # header parsing failed.
-        self._set_error('Header CRC error (%02x): exp=%x got=%x (xlen = %d)',
-                h.type, h.header_crc, calc_crc, len(crcdat))
+        self._set_error(
+            "Header CRC error (%02x): exp=%x got=%x (xlen = %d)", h.type, h.header_crc, calc_crc, len(crcdat)
+        )
 
         # instead panicing, send eof
         return None
@@ -971,12 +1026,12 @@ class RarFile(object):
             pos += 8
             h.add_size = h.compress_size
 
-        name = h.header_data[pos : pos + h.name_size ]
+        name = h.header_data[pos : pos + h.name_size]
         pos += h.name_size
         if h.flags & RAR_FILE_UNICODE:
             nul = name.find(ZERO)
             h.orig_filename = name[:nul]
-            u = UnicodeFilename(h.orig_filename, name[nul + 1 : ])
+            u = UnicodeFilename(h.orig_filename, name[nul + 1 :])
             h.filename = u.decode()
 
             # if parsing failed fall back to simple name
@@ -987,8 +1042,8 @@ class RarFile(object):
             h.filename = self._decode(name)
 
         # change separator, if requested
-        if PATH_SEP != '\\':
-            h.filename = h.filename.replace('\\', PATH_SEP)
+        if PATH_SEP != "\\":
+            h.filename = h.filename.replace("\\", PATH_SEP)
 
         if h.flags & RAR_FILE_SALT:
             h.salt = h.header_data[pos : pos + 8]
@@ -1044,9 +1099,8 @@ class RarFile(object):
             if stype == RAR_BLOCK_OLD_COMMENT and pos + S_COMMENT_HDR.size <= pos_next:
                 declen, ver, meth, crc = S_COMMENT_HDR.unpack_from(hdata, pos)
                 pos += S_COMMENT_HDR.size
-                data = hdata[pos : pos_next]
-                cmt = rar_decompress(ver, meth, data, declen, sflags,
-                                     crc, self._password)
+                data = hdata[pos:pos_next]
+                cmt = rar_decompress(ver, meth, data, declen, sflags, crc, self._password)
                 if not self._crc_check:
                     h.comment = self._decode_comment(cmt)
                 elif crc32(cmt) & 0xFFFF == crc:
@@ -1063,14 +1117,14 @@ class RarFile(object):
             flags = S_SHORT.unpack_from(data, pos)[0]
             pos += 2
 
-        h.mtime, pos = self._parse_xtime(flags >> 3*4, data, pos, h.date_time)
-        h.ctime, pos = self._parse_xtime(flags >> 2*4, data, pos)
-        h.atime, pos = self._parse_xtime(flags >> 1*4, data, pos)
-        h.arctime, pos = self._parse_xtime(flags >> 0*4, data, pos)
+        h.mtime, pos = self._parse_xtime(flags >> 3 * 4, data, pos, h.date_time)
+        h.ctime, pos = self._parse_xtime(flags >> 2 * 4, data, pos)
+        h.atime, pos = self._parse_xtime(flags >> 1 * 4, data, pos)
+        h.arctime, pos = self._parse_xtime(flags >> 0 * 4, data, pos)
         return pos
 
-    def _parse_xtime(self, flag, data, pos, dostime = None):
-        unit = 10000000.0 # 100 ns units
+    def _parse_xtime(self, flag, data, pos, dostime=None):
+        unit = 10000000.0  # 100 ns units
         if flag & 8:
             if not dostime:
                 t = S_LONG.unpack_from(data, pos)[0]
@@ -1100,47 +1154,47 @@ class RarFile(object):
     def _next_newvol(self, volfile):
         i = len(volfile) - 1
         while i >= 0:
-            if volfile[i] >= '0' and volfile[i] <= '9':
+            if volfile[i] >= "0" and volfile[i] <= "9":
                 return self._inc_volname(volfile, i)
             i -= 1
-        raise BadRarName("Cannot construct volume name: "+volfile)
+        raise BadRarName("Cannot construct volume name: " + volfile)
 
     # old-style next volume
     def _next_oldvol(self, volfile):
         # rar -> r00
-        if volfile[-4:].lower() == '.rar':
-            return volfile[:-2] + '00'
+        if volfile[-4:].lower() == ".rar":
+            return volfile[:-2] + "00"
         return self._inc_volname(volfile, len(volfile) - 1)
 
     # increase digits with carry, otherwise just increment char
     def _inc_volname(self, volfile, i):
         fn = list(volfile)
         while i >= 0:
-            if fn[i] != '9':
+            if fn[i] != "9":
                 fn[i] = chr(ord(fn[i]) + 1)
                 break
-            fn[i] = '0'
+            fn[i] = "0"
             i -= 1
-        return ''.join(fn)
+        return "".join(fn)
 
     def _open_clear(self, inf):
         return DirectReader(self, inf)
 
     # put file compressed data into temporary .rar archive, and run
     # unrar on that, thus avoiding unrar going over whole archive
-    def _open_hack(self, inf, psw = None):
-        BSIZE = 32*1024
+    def _open_hack(self, inf, psw=None):
+        BSIZE = 32 * 1024
 
         size = inf.compress_size + inf.header_size
         rf = XFile(inf.volume_file, 0)
         rf.seek(inf.header_offset)
 
-        tmpfd, tmpname = mkstemp(suffix='.rar')
+        tmpfd, tmpname = mkstemp(suffix=".rar")
         tmpf = os.fdopen(tmpfd, "wb")
 
         try:
             # create main header: crc, type, flags, size, res1, res2
-            mh = S_BLK_HDR.pack(0x90CF, 0x73, 0, 13) + ZERO * (2+4)
+            mh = S_BLK_HDR.pack(0x90CF, 0x73, 0, 13) + ZERO * (2 + 4)
             tmpf.write(RAR_ID + mh)
             while size > 0:
                 if size > BSIZE:
@@ -1148,7 +1202,7 @@ class RarFile(object):
                 else:
                     buf = rf.read(size)
                 if not buf:
-                    raise BadRarFile('read failed: ' + inf.filename)
+                    raise BadRarFile("read failed: " + inf.filename)
                 tmpf.write(buf)
                 size -= len(buf)
             tmpf.close()
@@ -1170,21 +1224,22 @@ class RarFile(object):
         rf.close()
 
         # decompress
-        cmt = rar_decompress(inf.extract_version, inf.compress_type, data,
-                             inf.file_size, inf.flags, inf.CRC, psw, inf.salt)
+        cmt = rar_decompress(
+            inf.extract_version, inf.compress_type, data, inf.file_size, inf.flags, inf.CRC, psw, inf.salt
+        )
 
         # check crc
         if self._crc_check:
             crc = crc32(cmt)
             if crc < 0:
-                crc += (long(1) << 32)
+                crc += long(1) << 32
             if crc != inf.CRC:
                 return None
 
         return self._decode_comment(cmt)
 
     # extract using unrar
-    def _open_unrar(self, rarfile, inf, psw = None, tmpfile = None):
+    def _open_unrar(self, rarfile, inf, psw=None, tmpfile=None):
         if is_filelike(rarfile):
             raise ValueError("Cannot use unrar directly on memory buffer")
         cmd = [UNRAR_TOOL] + list(OPEN_ARGS)
@@ -1208,7 +1263,7 @@ class RarFile(object):
                 return val.decode(c)
             except UnicodeError:
                 pass
-        return val.decode(self._charset, 'replace')
+        return val.decode(self._charset, "replace")
 
     def _decode_comment(self, val):
         if UNICODE_COMMENTS:
@@ -1241,9 +1296,11 @@ class RarFile(object):
         output = p.communicate()[0]
         check_returncode(p, output)
 
+
 ##
 ## Utility classes
 ##
+
 
 class UnicodeFilename:
     """Handle unicode filename decompression"""
@@ -1269,7 +1326,7 @@ class UnicodeFilename:
             return self.std_name[self.pos]
         except IndexError:
             self.failed = 1
-            return ord('?')
+            return ord("?")
 
     def put(self, lo, hi):
         self.buf.append(lo)
@@ -1295,7 +1352,7 @@ class UnicodeFilename:
                 n = self.enc_byte()
                 if n & 0x80:
                     c = self.enc_byte()
-                    for i in range((n & 0x7f) + 2):
+                    for i in range((n & 0x7F) + 2):
                         lo = (self.std_byte() + c) & 0xFF
                         self.put(lo, hi)
                 else:
@@ -1326,7 +1383,7 @@ class RarExtFile(RawIOBase):
 
         # standard io.* properties
         self.name = inf.filename
-        self.mode = 'rb'
+        self.mode = "rb"
 
         self.rf = rf
         self.inf = inf
@@ -1345,7 +1402,7 @@ class RarExtFile(RawIOBase):
         self.CRC = 0
         self.remain = self.inf.file_size
 
-    def read(self, cnt = None):
+    def read(self, cnt=None):
         """Read all or specified amount of data from archive entry."""
 
         # sanitize cnt
@@ -1366,7 +1423,7 @@ class RarExtFile(RawIOBase):
 
         # done?
         if not data or self.remain == 0:
-            #self.close()
+            # self.close()
             self._check()
         return data
 
@@ -1375,12 +1432,12 @@ class RarExtFile(RawIOBase):
         if not self.crc_check:
             return
         if self.returncode:
-            check_returncode(self, '')
+            check_returncode(self, "")
         if self.remain != 0:
             raise BadRarFile("Failed the read enough data")
         crc = self.CRC
         if crc < 0:
-            crc += (long(1) << 32)
+            crc += long(1) << 32
         if crc != self.inf.CRC:
             raise BadRarFile("Corrupt file - CRC check failed: " + self.inf.filename)
 
@@ -1412,6 +1469,7 @@ class RarExtFile(RawIOBase):
             buf[:n] = data
         except TypeError:
             import array
+
             if not isinstance(buf, array.array):
                 raise
             buf[:n] = array.array(buf.typecode, data)
@@ -1421,7 +1479,7 @@ class RarExtFile(RawIOBase):
         """Return current reading position in uncompressed data."""
         return self.inf.file_size - self.remain
 
-    def seek(self, ofs, whence = 0):
+    def seek(self, ofs, whence=0):
         """Seek in data.
         
         On uncompressed files, the seeking works by actual
@@ -1436,14 +1494,14 @@ class RarExtFile(RawIOBase):
         fsize = self.inf.file_size
         cur_ofs = self.tell()
 
-        if whence == 0:     # seek from beginning of file
+        if whence == 0:  # seek from beginning of file
             new_ofs = ofs
-        elif whence == 1:   # seek from current position
+        elif whence == 1:  # seek from current position
             new_ofs = cur_ofs + ofs
-        elif whence == 2:   # seek from end of file
+        elif whence == 2:  # seek from end of file
             new_ofs = fsize + ofs
         else:
-            raise ValueError('Invalid value for whence')
+            raise ValueError("Invalid value for whence")
 
         # sanity check
         if new_ofs < 0:
@@ -1456,7 +1514,7 @@ class RarExtFile(RawIOBase):
             self._skip(new_ofs - cur_ofs)
         else:
             # process old data ?
-            #self._skip(fsize - cur_ofs)
+            # self._skip(fsize - cur_ofs)
             # reopen and seek
             self._open()
             self._skip(new_ofs)
@@ -1566,6 +1624,7 @@ class PipeReader(RarExtFile):
             self.tempfile = None
 
     if have_memoryview:
+
         def readinto(self, buf):
             """Zero-copy read directly into buffer."""
             cnt = len(buf)
@@ -1574,7 +1633,7 @@ class PipeReader(RarExtFile):
             vbuf = memoryview(buf)
             res = got = 0
             while got < cnt:
-                res = self.fd.readinto(vbuf[got : cnt])
+                res = self.fd.readinto(vbuf[got:cnt])
                 if not res:
                     break
                 if self.crc_check:
@@ -1676,6 +1735,7 @@ class DirectReader(RarExtFile):
             return True
 
     if have_memoryview:
+
         def readinto(self, buf):
             """Zero-copy read directly into buffer."""
             got = 0
@@ -1705,6 +1765,7 @@ class DirectReader(RarExtFile):
 
 class HeaderDecrypt:
     """File-like object that decrypts from another file"""
+
     def __init__(self, f, key, iv):
         self.f = f
         self.ciph = AES.new(key, AES.MODE_CBC, iv)
@@ -1714,8 +1775,8 @@ class HeaderDecrypt:
         return self.f.tell()
 
     def read(self, cnt=None):
-        if cnt > 8*1024:
-            raise BadRarFile('Bad count to header decrypt - wrong password?')
+        if cnt > 8 * 1024:
+            raise BadRarFile("Bad count to header decrypt - wrong password?")
 
         # consume old data
         if cnt <= len(self.buf):
@@ -1743,62 +1804,75 @@ class HeaderDecrypt:
 
         return res
 
+
 # handle (filename|filelike) object
 class XFile(object):
-    __slots__ = ('_fd', '_need_close')
-    def __init__(self, xfile, bufsize = 1024):
+    __slots__ = ("_fd", "_need_close")
+
+    def __init__(self, xfile, bufsize=1024):
         if is_filelike(xfile):
             self._need_close = False
             self._fd = xfile
             self._fd.seek(0)
         else:
             self._need_close = True
-            self._fd = open(xfile, 'rb', bufsize)
+            self._fd = open(xfile, "rb", bufsize)
+
     def read(self, n=None):
         return self._fd.read(n)
+
     def tell(self):
         return self._fd.tell()
+
     def seek(self, ofs, whence=0):
         return self._fd.seek(ofs, whence)
+
     def readinto(self, dst):
         return self._fd.readinto(dst)
+
     def close(self):
         if self._need_close:
             self._fd.close()
+
     def __enter__(self):
         return self
+
     def __exit__(self, typ, val, tb):
         self.close()
+
 
 ##
 ## Utility functions
 ##
 
+
 def is_filelike(obj):
     if isinstance(obj, str) or isinstance(obj, unicode):
         return False
     res = True
-    for a in ('read', 'tell', 'seek'):
+    for a in ("read", "tell", "seek"):
         res = res and hasattr(obj, a)
     if not res:
         raise ValueError("Invalid object passed as file")
     return True
 
+
 def rar3_s2k(psw, salt):
     """String-to-key hash for RAR3."""
 
-    seed = psw.encode('utf-16le') + salt
+    seed = psw.encode("utf-16le") + salt
     iv = EMPTY
     h = sha1()
     for i in range(16):
         for j in range(0x4000):
-            cnt = S_LONG.pack(i*0x4000 + j)
+            cnt = S_LONG.pack(i * 0x4000 + j)
             h.update(seed + cnt[:3])
             if j == 0:
                 iv += h.digest()[19:20]
     key_be = h.digest()[:16]
     key_le = pack("<LLLL", *unpack(">LLLL", key_be))
     return key_le, iv
+
 
 def rar_decompress(vers, meth, data, declen=0, flags=0, crc=0, psw=None, salt=None):
     """Decompress blob of compressed data.
@@ -1815,11 +1889,10 @@ def rar_decompress(vers, meth, data, declen=0, flags=0, crc=0, psw=None, salt=No
     flags |= RAR_LONG_BLOCK
 
     # file header
-    fname = bytes('data', 'ascii')
+    fname = bytes("data", "ascii")
     date = 0
     mode = 0x20
-    fhdr = S_FILE_HDR.pack(len(data), declen, RAR_OS_MSDOS, crc,
-                           date, vers, meth, len(fname), mode)
+    fhdr = S_FILE_HDR.pack(len(data), declen, RAR_OS_MSDOS, crc, date, vers, meth, len(fname), mode)
     fhdr += fname
     if flags & RAR_FILE_SALT:
         if not salt:
@@ -1833,10 +1906,10 @@ def rar_decompress(vers, meth, data, declen=0, flags=0, crc=0, psw=None, salt=No
     hdr = S_BLK_HDR.pack(hcrc, RAR_BLOCK_FILE, flags, hlen) + fhdr
 
     # archive main header
-    mh = S_BLK_HDR.pack(0x90CF, RAR_BLOCK_MAIN, 0, 13) + ZERO * (2+4)
+    mh = S_BLK_HDR.pack(0x90CF, RAR_BLOCK_MAIN, 0, 13) + ZERO * (2 + 4)
 
     # decompress via temp rar
-    tmpfd, tmpname = mkstemp(suffix='.rar')
+    tmpfd, tmpname = mkstemp(suffix=".rar")
     tmpf = os.fdopen(tmpfd, "wb")
     try:
         tmpf.write(RAR_ID + mh + hdr + data)
@@ -1851,6 +1924,7 @@ def rar_decompress(vers, meth, data, declen=0, flags=0, crc=0, psw=None, salt=No
     finally:
         tmpf.close()
         os.unlink(tmpname)
+
 
 def to_datetime(t):
     """Convert 6-part time tuple into datetime object."""
@@ -1871,13 +1945,20 @@ def to_datetime(t):
 
     # sanitize invalid values
     MDAY = (0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-    if mon < 1:  mon = 1
-    if mon > 12: mon = 12
-    if day < 1:  day = 1
-    if day > MDAY[mon]: day = MDAY[mon]
-    if h > 23:   h = 23
-    if m > 59:   m = 59
-    if s > 59:   s = 59
+    if mon < 1:
+        mon = 1
+    if mon > 12:
+        mon = 12
+    if day < 1:
+        day = 1
+    if day > MDAY[mon]:
+        day = MDAY[mon]
+    if h > 23:
+        h = 23
+    if m > 59:
+        m = 59
+    if s > 59:
+        s = 59
     if mon == 2 and day == 29:
         try:
             return datetime(year, mon, day, h, m, s, us)
@@ -1885,36 +1966,42 @@ def to_datetime(t):
             day = 28
     return datetime(year, mon, day, h, m, s, us)
 
+
 def parse_dos_time(stamp):
     """Parse standard 32-bit DOS timestamp."""
 
-    sec = stamp & 0x1F; stamp = stamp >> 5
-    min = stamp & 0x3F; stamp = stamp >> 6
-    hr  = stamp & 0x1F; stamp = stamp >> 5
-    day = stamp & 0x1F; stamp = stamp >> 5
-    mon = stamp & 0x0F; stamp = stamp >> 4
+    sec = stamp & 0x1F
+    stamp = stamp >> 5
+    min = stamp & 0x3F
+    stamp = stamp >> 6
+    hr = stamp & 0x1F
+    stamp = stamp >> 5
+    day = stamp & 0x1F
+    stamp = stamp >> 5
+    mon = stamp & 0x0F
+    stamp = stamp >> 4
     yr = (stamp & 0x7F) + 1980
     return (yr, mon, day, hr, min, sec * 2)
+
 
 def custom_popen(cmd):
     """Disconnect cmd from parent fds, read only from stdout."""
 
     # needed for py2exe
     creationflags = 0
-    if sys.platform == 'win32':
-        creationflags = 0x08000000 # CREATE_NO_WINDOW
+    if sys.platform == "win32":
+        creationflags = 0x08000000  # CREATE_NO_WINDOW
 
     # run command
     try:
-        p = Popen(cmd, bufsize = 0,
-                  stdout = PIPE, stdin = PIPE, stderr = STDOUT,
-                  creationflags = creationflags)
+        p = Popen(cmd, bufsize=0, stdout=PIPE, stdin=PIPE, stderr=STDOUT, creationflags=creationflags)
     except OSError:
         ex = sys.exc_info()[1]
         if ex.errno == errno.ENOENT:
             raise RarCannotExec("Unrar not installed? (rarfile.UNRAR_TOOL=%r)" % UNRAR_TOOL)
         raise
     return p
+
 
 def custom_check(cmd, ignore_retcode=False):
     """Run command, collect output, raise error if needed."""
@@ -1924,14 +2011,16 @@ def custom_check(cmd, ignore_retcode=False):
         raise RarExecError("Check-run failed")
     return out
 
+
 def add_password_arg(cmd, psw, required=False):
     """Append password switch to commandline."""
     if UNRAR_TOOL == ALT_TOOL:
         return
     if psw is not None:
-        cmd.append('-p' + psw)
+        cmd.append("-p" + psw)
     else:
-        cmd.append('-p-')
+        cmd.append("-p-")
+
 
 def check_returncode(p, out):
     """Raise exception according to unrar exit code"""
@@ -1941,10 +2030,19 @@ def check_returncode(p, out):
         return
 
     # map return code to exception class
-    errmap = [None,
-        RarWarning, RarFatalError, RarCRCError, RarLockedArchiveError,
-        RarWriteError, RarOpenError, RarUserError, RarMemoryError,
-        RarCreateError, RarNoFilesError] # codes from rar.txt
+    errmap = [
+        None,
+        RarWarning,
+        RarFatalError,
+        RarCRCError,
+        RarLockedArchiveError,
+        RarWriteError,
+        RarOpenError,
+        RarUserError,
+        RarMemoryError,
+        RarCreateError,
+        RarNoFilesError,
+    ]  # codes from rar.txt
     if UNRAR_TOOL == ALT_TOOL:
         errmap = [None]
     if code > 0 and code < len(errmap):
@@ -1963,6 +2061,7 @@ def check_returncode(p, out):
         msg = "%s [%d]" % (exc.__doc__, p.returncode)
 
     raise exc(msg)
+
 
 #
 # Check if unrar works
@@ -1983,4 +2082,3 @@ except RarCannotExec:
     except RarCannotExec:
         # no usable tool, only uncompressed archives work
         pass
-

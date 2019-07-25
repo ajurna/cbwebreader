@@ -6,14 +6,8 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-    dependencies = [
-        ('comic', '0015_auto_20160405_1126'),
-    ]
+    dependencies = [("comic", "0015_auto_20160405_1126")]
 
     operations = [
-        migrations.AlterField(
-            model_name='comicpage',
-            name='page_file_name',
-            field=models.CharField(max_length=200),
-        ),
+        migrations.AlterField(model_name="comicpage", name="page_file_name", field=models.CharField(max_length=200))
     ]

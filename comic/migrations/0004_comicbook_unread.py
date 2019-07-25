@@ -6,15 +6,10 @@ from django.db import models, migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('comic', '0003_comicbook_comicpage'),
-    ]
+    dependencies = [("comic", "0003_comicbook_comicpage")]
 
     operations = [
         migrations.AddField(
-            model_name='comicbook',
-            name='unread',
-            field=models.BooleanField(default=True),
-            preserve_default=False,
-        ),
+            model_name="comicbook", name="unread", field=models.BooleanField(default=True), preserve_default=False
+        )
     ]

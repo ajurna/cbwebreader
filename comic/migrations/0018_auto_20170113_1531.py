@@ -6,17 +6,13 @@ from django.db import migrations
 
 
 def gen_feeds(apps, schema_editor):
-    user_misc = apps.get_model('comic', 'UserMisc')
-    User = apps.get_model('auth', 'user')
+    user_misc = apps.get_model("comic", "UserMisc")
+    User = apps.get_model("auth", "user")
     for user in User.objects.all():
         um = user_misc.objects.create(user=user)
 
 
 class Migration(migrations.Migration):
-    dependencies = [
-        ('comic', '0017_usermisc'),
-    ]
+    dependencies = [("comic", "0017_usermisc")]
 
-    operations = [
-        migrations.RunPython(gen_feeds, reverse_code=migrations.RunPython.noop),
-    ]
+    operations = [migrations.RunPython(gen_feeds, reverse_code=migrations.RunPython.noop)]

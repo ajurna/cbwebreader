@@ -8,11 +8,11 @@ import uuid
 
 
 def gen_uuid(apps, schema_editor):
-    comicbook = apps.get_model('comic', 'comicbook')
+    comicbook = apps.get_model("comic", "comicbook")
     for row in comicbook.objects.all():
         row.selector = uuid.uuid4()
         row.save()
-    directory = apps.get_model('comic', 'directory')
+    directory = apps.get_model("comic", "directory")
     for row in directory.objects.all():
         row.selector = uuid.uuid4()
         row.save()
@@ -20,10 +20,6 @@ def gen_uuid(apps, schema_editor):
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('comic', '0008_auto_20160331_1140'),
-    ]
+    dependencies = [("comic", "0008_auto_20160331_1140")]
 
-    operations = [
-        migrations.RunPython(gen_uuid, reverse_code=migrations.RunPython.noop),
-    ]
+    operations = [migrations.RunPython(gen_uuid, reverse_code=migrations.RunPython.noop)]

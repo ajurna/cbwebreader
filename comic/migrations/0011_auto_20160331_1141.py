@@ -7,14 +7,6 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('comic', '0010_auto_20160331_1140'),
-    ]
+    dependencies = [("comic", "0010_auto_20160331_1140")]
 
-    operations = [
-        migrations.AlterField(
-            model_name='comicbook',
-            name='version',
-            field=models.IntegerField(default=1),
-        ),
-    ]
+    operations = [migrations.AlterField(model_name="comicbook", name="version", field=models.IntegerField(default=1))]
