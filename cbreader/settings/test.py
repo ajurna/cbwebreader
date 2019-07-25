@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
+import dj_database_url
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -76,12 +78,17 @@ WSGI_APPLICATION = 'cbreader.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+DATABASE_URL = os.getenv("TEST_DATABASE_URL")
+
+if DATABASE_URL:
+    DATABASES = {"default": dj_database_url.config(conn_max_age=500)}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
     }
-}
 
 
 # Internationalization
@@ -107,7 +114,7 @@ LOGIN_REDIRECT_URL = '/comic/'
 
 LOGIN_URL = '/login/'
 
-UNRAR_TOOL = 'C:/Program Files/WinRAR/unrar'
+UNRAR_TOOL = os.getenv("UNRAR_TOOL", None)
 
 CBREADER_USE_RECAPTCHA = False
 RECAPTCHA_PRIVATE_KEY = ''

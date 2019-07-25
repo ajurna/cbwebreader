@@ -1,0 +1,33 @@
+version: '3.7'
+
+services:
+
+  app:
+    build: .
+    environment:
+      - DATABASE_URL=postgres://admin:password@database:5432/cbwebreader
+      - TEST_DATABASE_URL=postgres://admin:password@database:5432/cbwebreader_test
+      - DJANGO_SETTINGS_MODULE=cbreader.settings.base
+    links:
+      - database
+    depends_on:
+      - database
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./cbreader:/src/cbreader
+      - ./comic:/src/comic
+      - ./comic_auth:/src/comic_auth
+      - ${COMIC_BOOK_VOLUME}:/data
+    command: python manage.py runserver 0.0.0.0:8000
+
+  database:
+    image: postgres:11.4-alpine
+    ports:
+      - 5432:5432
+    volumes:
+      - /var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=cbwebreader

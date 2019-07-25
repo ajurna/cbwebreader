@@ -80,7 +80,7 @@ class ComicBook(models.Model):
 
     @property
     def selector_string(self):
-        return urlsafe_base64_encode(self.selector.bytes).decode()
+        return urlsafe_base64_encode(self.selector.bytes)
 
     def get_image(self, page):
         base_dir = Setting.objects.get(name='BASE_DIR').value
@@ -124,7 +124,7 @@ class ComicBook(models.Model):
     def nav(self, page, user):
         out = self.Navigation(
             cur_index=page,
-            cur_path=urlsafe_base64_encode(self.selector.bytes).decode()
+            cur_path=urlsafe_base64_encode(self.selector.bytes)
         )
         if page == 0:
             out.prev_path, out.prev_index = self.nav_get_prev_comic(user)
@@ -153,7 +153,7 @@ class ComicBook(models.Model):
         comic_index = dir_list.index(self.file_name)
         if comic_index == 0:
             if self.directory:
-                comic_path = urlsafe_base64_encode(self.directory.selector.bytes).decode()
+                comic_path = urlsafe_base64_encode(self.directory.selector.bytes)
             else:
                 comic_path = ''
             index = -1
@@ -175,10 +175,10 @@ class ComicBook(models.Model):
                         book = ComicBook.process_comic_book(prev_comic)
                 cs, _ = ComicStatus.objects.get_or_create(comic=book, user=user)
                 index = cs.last_read_page
-                comic_path = urlsafe_base64_encode(book.selector.bytes).decode()
+                comic_path = urlsafe_base64_encode(book.selector.bytes)
             else:
                 if self.directory:
-                    comic_path = urlsafe_base64_encode(self.directory.selector.bytes).decode()
+                    comic_path = urlsafe_base64_encode(self.directory.selector.bytes)
                 else:
                     comic_path = ''
                 index = -1
@@ -208,12 +208,12 @@ class ComicBook(models.Model):
                     book = ComicBook.process_comic_book(next_comic)
             if type(book) is str:
                 raise IndexError
-            comic_path = urlsafe_base64_encode(book.selector.bytes).decode()
+            comic_path = urlsafe_base64_encode(book.selector.bytes)
             cs, _ = ComicStatus.objects.get_or_create(comic=book, user=user)
             index = cs.last_read_page
         except IndexError:
             if self.directory:
-                comic_path = urlsafe_base64_encode(self.directory.selector.bytes).decode()
+                comic_path = urlsafe_base64_encode(self.directory.selector.bytes)
             else:
                 comic_path = ''
             index = -1

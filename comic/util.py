@@ -56,12 +56,12 @@ def generate_breadcrumbs_from_path(directory=False, book=False):
     for item in folders[::-1]:
         bc = Breadcrumb()
         bc.name = item.name
-        bc.url = '/comic/' + urlsafe_base64_encode(item.selector.bytes).decode()
+        bc.url = '/comic/' + urlsafe_base64_encode(item.selector.bytes)
         output.append(bc)
     if book:
         bc = Breadcrumb()
         bc.name = book.file_name
-        bc.url = '/read/' + urlsafe_base64_encode(book.selector.bytes).decode()
+        bc.url = '/read/' + urlsafe_base64_encode(book.selector.bytes)
         output.append(bc)
 
     return output
@@ -92,7 +92,7 @@ class DirFile:
     def populate_directory(self, directory, user):
         self.name = directory.name
         self.icon = 'glyphicon-folder-open'
-        self.selector = urlsafe_base64_encode(directory.selector.bytes).decode()
+        self.selector = urlsafe_base64_encode(directory.selector.bytes)
         self.location = '/comic/{0}/'.format(self.selector)
         self.label = generate_dir_status(user, directory)
         self.type = 'directory'
@@ -111,7 +111,7 @@ class DirFile:
             status, created = ComicStatus.objects.get_or_create(comic=comic, user=user)
             if created:
                 status.save()
-            self.selector = urlsafe_base64_encode(comic.selector.bytes).decode()
+            self.selector = urlsafe_base64_encode(comic.selector.bytes)
             self.location = '/comic/read/{0}/{1}/'.format(self.selector,
                                                           status.last_read_page)
             self.label = generate_label(comic, status)
