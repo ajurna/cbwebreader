@@ -6,14 +6,8 @@ from django.db import models, migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('comic', '0001_initial'),
-    ]
+    dependencies = [("comic", "0001_initial")]
 
     operations = [
-        migrations.AlterField(
-            model_name='setting',
-            name='name',
-            field=models.CharField(unique=True, max_length=50),
-        ),
+        migrations.AlterField(model_name="setting", name="name", field=models.CharField(unique=True, max_length=50))
     ]

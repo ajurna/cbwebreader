@@ -8,19 +8,17 @@ import uuid
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('comic', '0011_auto_20160331_1141'),
-    ]
+    dependencies = [("comic", "0011_auto_20160331_1141")]
 
     operations = [
         migrations.AlterField(
-            model_name='comicbook',
-            name='selector',
+            model_name="comicbook",
+            name="selector",
             field=models.UUIDField(db_index=True, default=uuid.uuid4, unique=True),
         ),
         migrations.AlterField(
-            model_name='directory',
-            name='selector',
+            model_name="directory",
+            name="selector",
             field=models.UUIDField(db_index=True, default=uuid.uuid4, unique=True),
         ),
     ]

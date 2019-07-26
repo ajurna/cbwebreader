@@ -9,45 +9,28 @@ def comic_login(request):
     if request.POST:
         form = LoginForm(request.POST)
         if form.is_valid():
-            user = authenticate(username=form.cleaned_data['username'],
-                                password=form.cleaned_data['password'])
+            user = authenticate(username=form.cleaned_data["username"], password=form.cleaned_data["password"])
             if user is not None:
                 if user.is_active:
                     login(request, user)
-                    if 'next' in request.GET:
-                        return redirect(request.GET['next'])
+                    if "next" in request.GET:
+                        return redirect(request.GET["next"])
                     else:
-                        return redirect('/comic/')
+                        return redirect("/comic/")
                 else:
-                    return render(request,
-                                  'comic_auth/login.html',
-                                  {
-                                      'error': True,
-                                  })
+                    return render(request, "comic_auth/login.html", {"error": True})
             else:
-                return render(request,
-                              'comic_auth/login.html',
-                              {
-                                  'error': True,
-                                  'form': form
-                              })
+                return render(request, "comic_auth/login.html", {"error": True, "form": form})
         else:
-            return render(request,
-                          'comic_auth/login.html',
-                          {
-                              'error': True,
-                              'form': form
-                          })
+            return render(request, "comic_auth/login.html", {"error": True, "form": form})
     else:
         if not User.objects.all().exists():
-            return redirect('/setup/')
+            return redirect("/setup/")
         form = LoginForm()
-        context = {
-            'form': form
-        }
-        return render(request, 'comic_auth/login.html', context)
+        context = {"form": form}
+        return render(request, "comic_auth/login.html", context)
 
 
 def comic_logout(request):
     logout(request)
-    return redirect('/login/')
+    return redirect("/login/")

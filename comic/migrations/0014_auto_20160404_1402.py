@@ -5,22 +5,19 @@ from __future__ import unicode_literals
 from django.db import migrations
 from django.db.models import Max
 
+
 def set_finished(apps, schema_editor):
-    comicstatus = apps.get_model('comic', 'comicstatus')
-    comicpage = apps.get_model('comic', 'ComicPage')
+    comicstatus = apps.get_model("comic", "comicstatus")
+    comicpage = apps.get_model("comic", "ComicPage")
     for row in comicstatus.objects.all():
-        last_page = comicpage.objects.filter(Comic=row.comic).aggregate(Max('index'))
-        if row.last_read_page == last_page['index__max']:
+        last_page = comicpage.objects.filter(Comic=row.comic).aggregate(Max("index"))
+        if row.last_read_page == last_page["index__max"]:
             row.finished = True
             row.save()
 
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('comic', '0013_comicstatus_finished'),
-    ]
+    dependencies = [("comic", "0013_comicstatus_finished")]
 
-    operations = [
-        migrations.RunPython(set_finished, reverse_code=migrations.RunPython.noop),
-    ]
+    operations = [migrations.RunPython(set_finished, reverse_code=migrations.RunPython.noop)]

@@ -78,7 +78,7 @@ WSGI_APPLICATION = "cbreader.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 
 if DATABASE_URL:
     DATABASES = {"default": dj_database_url.config(conn_max_age=500)}

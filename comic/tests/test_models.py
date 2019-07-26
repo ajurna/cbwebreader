@@ -12,9 +12,7 @@ from comic.util import generate_directory
 
 class ComicBookTests(TestCase):
     def setUp(self):
-        Setting.objects.create(
-            name="BASE_DIR", value=path.join(os.getcwd(), "comic", "test")
-        )
+        Setting.objects.create(name="BASE_DIR", value=path.join(os.getcwd(), "comic", "test"))
         User.objects.create_user("test", "test@test.com", "test")
         user = User.objects.first()
         ComicBook.process_comic_book("test1.rar")
@@ -133,51 +131,34 @@ class ComicBookTests(TestCase):
         d = Directory.objects.get(name="test_folder", parent__isnull=True)
         location = "/comic/{0}/".format(urlsafe_base64_encode(d.selector.bytes))
         self.assertEqual(dir1.location, location)
-        self.assertEqual(
-            dir1.label,
-            '<center><span class="label label-default">Empty</span></center>',
-        )
+        self.assertEqual(dir1.label, '<center><span class="label label-default">Empty</span></center>')
 
         dir2 = folders[1]
         self.assertEqual(dir2.name, "test1.rar")
         self.assertEqual(dir2.type, "book")
         self.assertEqual(dir2.icon, "glyphicon-book")
         c = ComicBook.objects.get(file_name="test1.rar", directory__isnull=True)
-        location = "/comic/read/{0}/{1}/".format(
-            urlsafe_base64_encode(c.selector.bytes), "0"
-        )
+        location = "/comic/read/{0}/{1}/".format(urlsafe_base64_encode(c.selector.bytes), "0")
         self.assertEqual(dir2.location, location)
-        self.assertEqual(
-            dir2.label,
-            '<center><span class="label label-default">Unread</span></center>',
-        )
+        self.assertEqual(dir2.label, '<center><span class="label label-default">Unread</span></center>')
 
         dir3 = folders[2]
         self.assertEqual(dir3.name, "test2.rar")
         self.assertEqual(dir3.type, "book")
         self.assertEqual(dir3.icon, "glyphicon-book")
         c = ComicBook.objects.get(file_name="test2.rar", directory__isnull=True)
-        location = "/comic/read/{0}/{1}/".format(
-            urlsafe_base64_encode(c.selector.bytes), "2"
-        )
+        location = "/comic/read/{0}/{1}/".format(urlsafe_base64_encode(c.selector.bytes), "2")
         self.assertEqual(dir3.location, location)
-        self.assertEqual(
-            dir3.label, '<center><span class="label label-primary">3/4</span></center>'
-        )
+        self.assertEqual(dir3.label, '<center><span class="label label-primary">3/4</span></center>')
 
         dir4 = folders[3]
         self.assertEqual(dir4.name, "test3.rar")
         self.assertEqual(dir4.type, "book")
         self.assertEqual(dir3.icon, "glyphicon-book")
         c = ComicBook.objects.get(file_name="test3.rar", directory__isnull=True)
-        location = "/comic/read/{0}/{1}/".format(
-            urlsafe_base64_encode(c.selector.bytes), "0"
-        )
+        location = "/comic/read/{0}/{1}/".format(urlsafe_base64_encode(c.selector.bytes), "0")
         self.assertEqual(dir4.location, location)
-        self.assertEqual(
-            dir4.label,
-            '<center><span class="label label-default">Unread</span></center>',
-        )
+        self.assertEqual(dir4.label, '<center><span class="label label-default">Unread</span></center>')
 
     def test_pages(self):
         book = ComicBook.objects.get(file_name="test1.rar")
@@ -217,9 +198,7 @@ class ComicBookTests(TestCase):
         response = c.post("/comic/list_json/")
         self.assertEqual(response.status_code, 200)
         directory = Directory.objects.first()
-        response = c.post(
-            f"/comic/list_json/{urlsafe_base64_encode(directory.selector.bytes)}/"
-        )
+        response = c.post(f"/comic/list_json/{urlsafe_base64_encode(directory.selector.bytes)}/")
         self.assertEqual(response.status_code, 200)
 
     def test_recent_comics(self):
@@ -241,12 +220,7 @@ class ComicBookTests(TestCase):
         generate_directory(User.objects.first())
         ComicStatus.objects.all().delete()
 
-        req_data = {
-            "start": "0",
-            "length": "10",
-            "search[value]": "",
-            "order[0][dir]": "desc",
-        }
+        req_data = {"start": "0", "length": "10", "search[value]": "", "order[0][dir]": "desc"}
         response = c.post("/comic/recent/json/", req_data)
         self.assertEqual(response.status_code, 200)
         req_data["search[value]"] = "test1.rar"
@@ -261,13 +235,11 @@ class ComicBookTests(TestCase):
                     {
                         "date": book.date_added.strftime("%d/%m/%y-%H:%M"),
                         "icon": '<span class="glyphicon glyphicon-book"></span>',
-                        "label": '<center><span class="label '
-                        'label-default">Unread</span></center>',
+                        "label": '<center><span class="label ' 'label-default">Unread</span></center>',
                         "name": "test1.rar",
                         "selector": urlsafe_base64_encode(book.selector.bytes),
                         "type": "book",
-                        "url": f"/comic/read/"
-                        f"{urlsafe_base64_encode(book.selector.bytes)}/0/",
+                        "url": f"/comic/read/" f"{urlsafe_base64_encode(book.selector.bytes)}/0/",
                     }
                 ],
                 "recordsFiltered": 1,
@@ -302,11 +274,7 @@ class ComicBookTests(TestCase):
         response = c.get("/comic/edit/")
         self.assertEqual(response.status_code, 405)
 
-        req_data = {
-            "comic_list_length": 10,
-            "func": "unread",
-            "selected": book.selector_string,
-        }
+        req_data = {"comic_list_length": 10, "func": "unread", "selected": book.selector_string}
         response = c.post("/comic/edit/", req_data)
         self.assertEqual(response.status_code, 200)
 
