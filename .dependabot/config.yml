@@ -1,0 +1,15 @@
+# Validated using https://dependabot.com/docs/config-file/validator/
+# Configured using https://dependabot.com/docs/config-file/
+
+version: 1
+update_configs:
+  - package_manager: "python"
+    directory: "/"
+    update_schedule: "live"
+    default_labels:
+      - "Status: Review Needed"
+      - "Scope: Backend"
+      - "Type: Dependencies"
+    allowed_updates:
+      - match:
+           update_type: "live"
