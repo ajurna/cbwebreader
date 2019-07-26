@@ -1,6 +1,6 @@
 import uuid
 import zipfile
-from os import path, listdir
+from os import listdir, path
 
 from django.conf import settings
 from django.contrib.auth.models import User

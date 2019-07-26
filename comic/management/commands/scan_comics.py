@@ -3,7 +3,7 @@ from os.path import isdir
 
 from django.core.management.base import BaseCommand
 
-from comic.models import Setting, Directory, ComicBook
+from comic.models import ComicBook, Directory, Setting
 
 
 class Command(BaseCommand):

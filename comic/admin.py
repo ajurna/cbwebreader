@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from comic.models import Setting, ComicBook, ComicPage, ComicStatus, Directory
+from comic.models import ComicBook, ComicPage, ComicStatus, Directory, Setting
 
 
 @admin.register(Setting)

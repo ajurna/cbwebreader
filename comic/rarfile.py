@@ -83,12 +83,15 @@ __all__ = ["is_rarfile", "RarInfo", "RarFile", "RarExtFile"]
 ## Imports and compat - support both Python 2.x and 3.x
 ##
 
-import sys, os, struct, errno
-from struct import pack, unpack
+import errno
+import os
+import struct
+import sys
 from binascii import crc32
-from tempfile import mkstemp
-from subprocess import Popen, PIPE, STDOUT
 from datetime import datetime
+from struct import pack, unpack
+from subprocess import PIPE, STDOUT, Popen
+from tempfile import mkstemp
 
 # only needed for encryped headers
 try:

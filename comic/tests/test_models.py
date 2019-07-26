@@ -3,10 +3,10 @@ import os
 from os import path
 
 from django.contrib.auth.models import User
-from django.test import TestCase, Client
+from django.test import Client, TestCase
 from django.utils.http import urlsafe_base64_encode
 
-from comic.models import ComicBook, ComicPage, Setting, ComicStatus, Directory
+from comic.models import ComicBook, ComicPage, ComicStatus, Directory, Setting
 from comic.util import generate_directory
 
 
