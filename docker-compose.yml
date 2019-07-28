@@ -18,6 +18,7 @@ services:
       - ./cbreader:/src/cbreader
       - ./comic:/src/comic
       - ./comic_auth:/src/comic_auth
+      - ./tests:/src/tests
       - ${COMIC_BOOK_VOLUME}:/data
     command: python manage.py runserver 0.0.0.0:8000
 

@@ -119,3 +119,5 @@ RECAPTCHA_PRIVATE_KEY = ""
 RECAPTCHA_PUBLIC_KEY = ""
 
 COMIC_DIR = "/media/comics"
+
+TEST_RUNNER = "snapshottest.django.TestRunner"

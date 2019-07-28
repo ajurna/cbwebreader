@@ -9,3 +9,5 @@
 !manage.py
 !pyproject.toml
 !setup.cfg
+!pytest
+!tests
