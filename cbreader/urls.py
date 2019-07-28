@@ -15,6 +15,8 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+from django.views.decorators.csrf import csrf_exempt
+from graphene_django.views import GraphQLView
 
 import comic.views
 import comic_auth.views
@@ -26,5 +28,6 @@ urlpatterns = [
     url(r"^setup/", comic.views.initial_setup),
     url(r"^comic/", include("comic.urls")),
     url(r"^admin/", admin.site.urls),
+    url(r"^graphql/", csrf_exempt(GraphQLView.as_view(graphiql=True))),
     # url(r'^silk/', include('silk.urls', namespace='silk'))
 ]

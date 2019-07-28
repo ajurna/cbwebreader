@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "snowpenguin.django.recaptcha2",
+    "graphene_django",
     "comic",
     "comic_auth",
 )
@@ -71,6 +72,8 @@ TEMPLATES = [
         },
     }
 ]
+
+GRAPHENE = {"SCHEMA": "cbreader.schema.schema"}
 
 WSGI_APPLICATION = "cbreader.wsgi.application"
 
