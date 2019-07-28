@@ -20,6 +20,9 @@ Django = "*"
 gunicorn = "*"
 flake8 = "*"
 psycopg2-binary = "*"
+graphene-django = "*"
+django-filter = "*"
+django-graphql-jwt = "*"
 
 [requires]
 python_version = "3.7"
