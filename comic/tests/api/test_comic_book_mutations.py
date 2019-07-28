@@ -1,11 +1,10 @@
 import os
 
-from graphene.test import Client
-from snapshottest.django import TestCase
-from freezegun import freeze_time
-
 from comic.api.schema import schema
 from comic.models import ComicBook, Directory, Setting
+from freezegun import freeze_time
+from graphene.test import Client
+from snapshottest.django import TestCase
 
 
 class TestComicBookMutations(TestCase):

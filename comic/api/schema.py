@@ -1,7 +1,6 @@
-import graphene
-
-import comic.api.queries
 import comic.api.mutations
+import comic.api.queries
+import graphene
 
 
 class Query(comic.api.queries.Query, graphene.ObjectType):

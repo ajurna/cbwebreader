@@ -1,7 +1,7 @@
 import graphene
-
+from comic.api.types import (ComicBookInput, ComicBookType, DirectoryInput,
+                             DirectoryType)
 from comic.models import ComicBook, Directory
-from comic.api.types import ComicBookInput, ComicBookType, DirectoryInput, DirectoryType
 
 
 class CreateDirectory(graphene.Mutation):
