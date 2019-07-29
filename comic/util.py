@@ -1,10 +1,10 @@
 from collections import OrderedDict
-from os import path, listdir
+from os import listdir, path
 
 from django.db.transaction import atomic
 from django.utils.http import urlsafe_base64_encode
 
-from .models import ComicBook, Setting, ComicStatus, Directory
+from .models import ComicBook, ComicStatus, Directory, Setting
 
 
 def generate_title_from_path(file_path):

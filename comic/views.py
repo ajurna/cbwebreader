@@ -5,26 +5,26 @@ except ImportError:
 import uuid
 from os import path
 
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.db.models import Max
 from django.db.transaction import atomic
 from django.http import HttpResponse
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
-from .forms import SettingsForm, AccountForm, EditUserForm, AddUserForm, InitialSetupForm
-from .models import Setting, ComicBook, ComicStatus, Directory, ComicPage, UserMisc
+from .forms import AccountForm, AddUserForm, EditUserForm, InitialSetupForm, SettingsForm
+from .models import ComicBook, ComicPage, ComicStatus, Directory, Setting, UserMisc
 from .util import (
-    generate_breadcrumbs_from_path,
-    generate_breadcrumbs_from_menu,
-    generate_title_from_path,
     Menu,
+    generate_breadcrumbs_from_menu,
+    generate_breadcrumbs_from_path,
     generate_directory,
     generate_label,
+    generate_title_from_path,
 )
 
 

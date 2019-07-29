@@ -7,4 +7,5 @@
 !comic
 !comic_auth
 !manage.py
-!pytest
+!pyproject.toml
+!setup.cfg

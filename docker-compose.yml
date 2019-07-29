@@ -1,7 +1,6 @@
-version: '3.7'
+version: "3.7"
 
 services:
-
   app:
     build: .
     environment:
@@ -15,11 +14,11 @@ services:
       - database
     ports:
       - "8000:8000"
-    # volumes:
-    #   - ./cbreader:/src/cbreader
-    #   - ./comic:/src/comic
-    #   - ./comic_auth:/src/comic_auth
-    #   - ${COMIC_BOOK_VOLUME}:/data
+    volumes:
+      - ./cbreader:/src/cbreader
+      - ./comic:/src/comic
+      - ./comic_auth:/src/comic_auth
+      - ${COMIC_BOOK_VOLUME}:/data
     command: python manage.py runserver 0.0.0.0:8000
 
   database:

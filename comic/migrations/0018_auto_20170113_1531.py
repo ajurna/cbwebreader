@@ -9,7 +9,7 @@ def gen_feeds(apps, schema_editor):
     user_misc = apps.get_model("comic", "UserMisc")
     User = apps.get_model("auth", "user")
     for user in User.objects.all():
-        um = user_misc.objects.create(user=user)
+        user_misc.objects.create(user=user)
 
 
 class Migration(migrations.Migration):
