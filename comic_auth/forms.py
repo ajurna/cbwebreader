@@ -15,7 +15,7 @@ class LoginForm(forms.Form):
     )
     password = forms.CharField(
         label="Password",
-        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "Username", "required": True}),
+        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "Password", "required": True}),
     )
 
     def __init__(self, *args, **kwargs):

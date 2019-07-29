@@ -8,6 +8,7 @@ services:
       - DATABASE_URL=postgres://admin:password@database:5432/cbwebreader
       - TEST_DATABASE_URL=postgres://admin:password@database:5432/cbwebreader_test
       - DJANGO_SETTINGS_MODULE=cbreader.settings.base
+      - DJANGO_ALLOWED_HOSTS=*
     links:
       - database
     depends_on:
