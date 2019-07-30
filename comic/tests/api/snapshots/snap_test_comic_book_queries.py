@@ -11,10 +11,10 @@ snapshots['TestComicBookQueries::test_get_comic_books 1'] = {
     'data': {
         'comicBooks': [
             {
-                'dateAdded': '2019-07-28T11:17:57.175695+00:00',
+                'dateAdded': '2019-01-01T12:00:01+00:00',
                 'directory': None,
                 'fileName': 'test1.rar',
-                'id': '60',
+                'id': '1',
                 'version': 1
             }
         ]

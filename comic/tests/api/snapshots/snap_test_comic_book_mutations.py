@@ -9,20 +9,14 @@ snapshots = Snapshot()
 
 snapshots['TestComicBookMutations::test_create_comic_books 1'] = {
     'data': {
-        'createComicBook': None
-    },
-    'errors': [
-        {
-            'locations': [
-                {
-                    'column': 21,
-                    'line': 3
-                }
-            ],
-            'message': 'Directory matching query does not exist.',
-            'path': [
-                'createComicBook'
-            ]
+        'createComicBook': {
+            'comicBook': {
+                'dateAdded': '2019-01-01T12:00:01+00:00',
+                'fileName': 'test1.rar',
+                'id': '2',
+                'version': 1
+            },
+            'ok': True
         }
-    ]
+    }
 }

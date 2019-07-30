@@ -1,6 +1,7 @@
 import graphene
-from comic.models import ComicBook, Directory
 from graphene_django import DjangoObjectType
+
+from comic.models import ComicBook, Directory
 
 
 class ComicBookType(DjangoObjectType):

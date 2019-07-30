@@ -1,3 +1,4 @@
 [pytest]
+exclude = snapshots
 pep8maxlinelength = 119
 python_files = tests.py test_*.py *_tests.py
