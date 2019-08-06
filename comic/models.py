@@ -69,7 +69,7 @@ class Directory(models.Model):
 
 
 class ComicBook(models.Model):
-    file_name = models.CharField(max_length=100, unique=False)
+    file_name = models.TextField()
     date_added = models.DateTimeField(auto_now_add=True)
     directory = models.ForeignKey(Directory, blank=True, null=True, on_delete=models.CASCADE)
     selector = models.UUIDField(unique=True, default=uuid.uuid4, db_index=True)
