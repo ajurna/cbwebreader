@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.db.models import Max
 from django.db.transaction import atomic
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -325,7 +325,7 @@ def get_image(_, comic_selector, page):
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
     book = ComicBook.objects.get(selector=selector)
     img, content = book.get_image(int(page))
-    return HttpResponse(img.read(), content_type=content)
+    return FileResponse(img, content_type=content)
 
 
 def initial_setup(request):
