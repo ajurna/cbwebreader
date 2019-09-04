@@ -66,4 +66,4 @@ It is recommended that you configure a scheduled task to run the sync as frequen
 
 ## License
 
-This is a [human-readable summary](https://creativecommons.org/licenses/by-sa/4.0/) of (and not a substitute for) the [Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) License](".github/license").
+This is a [human-readable summary](https://creativecommons.org/licenses/by-sa/4.0/) of (and not a substitute for) the [Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) License]("https://creativecommons.org/licenses/by-sa/4.0/legalcode").
