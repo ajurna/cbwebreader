@@ -110,8 +110,6 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
-print(STATICFILES_DIRS)
-
 LOGIN_REDIRECT_URL = "/comic/"
 
 LOGIN_URL = "/login/"
