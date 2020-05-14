@@ -91,7 +91,7 @@ class DirFile:
 
     def populate_directory(self, directory, user):
         self.name = directory.name
-        self.icon = "glyphicon-folder-open"
+        self.icon = "fa-folder-open"
         self.selector = urlsafe_base64_encode(directory.selector.bytes)
         self.location = "/comic/{0}/".format(self.selector)
         self.label = generate_dir_status(user, directory)
@@ -99,14 +99,14 @@ class DirFile:
 
     def populate_comic(self, comic, user):
         if type(comic) == str:
-            self.icon = "glyphicon-remove"
+            self.icon = "fa-exclamation-circle"
             self.name = comic
             self.selector = "0"
             self.location = "/"
             self.label = '<center><span class="label label-danger">Error</span></center>'
             self.type = "book"
         else:
-            self.icon = "glyphicon-book"
+            self.icon = "fa-book"
             self.name = comic.file_name
             status, created = ComicStatus.objects.get_or_create(comic=comic, user=user)
             if created:

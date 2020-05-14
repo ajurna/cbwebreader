@@ -15,9 +15,10 @@
 
     <!-- Bootstrap core CSS -->
     {% bootstrap_css %}
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/t/bs/dt-1.10.11,b-colvis-1.1.2,r-2.0.2/datatables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.21/b-1.6.2/b-colvis-1.6.2/r-2.2.4/datatables.min.css"/>
     <!-- Custom styles for this template -->
     <link href="{% static "css/base.css" %}" rel="stylesheet">
+    <link href="{% static "font-awesome/css/all.css" %}" rel="stylesheet">
 
 
   </head>
@@ -60,8 +61,14 @@
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     {% bootstrap_javascript jquery='full' %}
-    <script type="text/javascript" src="https://cdn.datatables.net/t/bs/dt-1.10.11,b-colvis-1.1.2,r-2.0.2/datatables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.21/b-1.6.2/b-colvis-1.6.2/r-2.2.4/datatables.min.js"></script>
+    <script type="text/javascript" src="{% static "js/js.cookie.js" %}"></script>
  {% block script %}
  {% endblock %}
   </body>
 </html>
+
+
+
+
+

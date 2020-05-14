@@ -64,7 +64,7 @@ def comic_list(request, directory_selector=False):
 @login_required
 @require_POST
 def comic_list_json(request, directory_selector=False):
-    icon_str = '<span class="glyphicon {0}"></span>'
+    icon_str = '<span class="fa {0}"></span>'
     if directory_selector:
         directory_selector = uuid.UUID(bytes=urlsafe_base64_decode(directory_selector))
         directory = Directory.objects.get(selector=directory_selector)
@@ -109,7 +109,7 @@ def recent_comics(request):
 def recent_comics_json(request):
     start = int(request.POST["start"])
     end = start + int(request.POST["length"])
-    icon = '<span class="glyphicon glyphicon-book"></span>'
+    icon = '<span class="fa fa-book"></span>'
     comics = ComicBook.objects.all()
     response_data = dict()
     response_data["recordsTotal"] = comics.count()
