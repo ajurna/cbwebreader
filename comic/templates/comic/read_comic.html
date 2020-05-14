@@ -2,49 +2,47 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="container comic_box">
-<center>
-<br/>
-    {% if nav.q_next_to_directory %}
-        <a href="/comic/{{ nav.next_path }}/">
-    {% else %}
-        <a href="/comic/read/{{ nav.next_path }}/{{ nav.next_index }}/">
-    {% endif %}
-        <img src="/comic/read/{{ nav.cur_path }}/{{ nav.cur_index }}/img" class="img-responsive">
-    </a>
-<br/>
-<div class="btn-group">
-    {% if nav.q_prev_to_directory %}
-        {% if nav.prev_path %}
-            <a href="/comic/{{ nav.prev_path }}/" class="btn btn-default">Next</a>
+<div class="container comic_box justify-content-center">
+    <div class="row justify-content-center">
+        {% if nav.q_next_to_directory %}
+            <a href="/comic/{{ nav.next_path }}/">
         {% else %}
-            <a href="/comic/" class="btn btn-default">Next</a>
+            <a href="/comic/read/{{ nav.next_path }}/{{ nav.next_index }}/">
         {% endif %}
-    {% else %}
-        <a href="/comic/read/{{ nav.prev_path }}/{{ nav.prev_index }}/" class="btn btn-default">Prev</a>
-    {% endif %}
-    {% if book.pages %}
-        <div class="btn-group dropup">
-            <button type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle ">{{ orig_file_name }}<span class="caret"></span></button>
-            <ul class="dropdown-menu" id="dropdown-list">
-                {% for file in book.pages %}
-                    <li><a href="/comic/read/{{ nav.cur_path }}/{{ file.index }}/">{{ file.page_file_name }}</a></li>
-                {% endfor %}
-            </ul>
+            <img src="/comic/read/{{ nav.cur_path }}/{{ nav.cur_index }}/img" class="img-fluid">
+        </a>
+    </div>
+    <div class="row justify-content-center mt-1 mb-1">
+        <div class="btn-group" role="group" aria-label="Navigation">
+            {% if nav.q_prev_to_directory %}
+                {% if nav.prev_path %}
+                    <a href="/comic/{{ nav.prev_path }}/" class="btn btn-secondary">Prev</a>
+                {% else %}
+                    <a href="/comic/" class="btn btn-secondary">Prev</a>
+                {% endif %}
+            {% else %}
+                <a href="/comic/read/{{ nav.prev_path }}/{{ nav.prev_index }}/" class="btn btn-secondary">Prev</a>
+            {% endif %}
+            <div class="btn-group" role="group">
+                <button id="page_list" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  {{ orig_file_name }}
+                </button>
+                <div class="dropdown-menu" aria-labelledby="page_list">
+                    {% for file in book.pages %}
+                        <a class="dropdown-item" href="/comic/read/{{ nav.cur_path }}/{{ file.index }}/">{{ file.page_file_name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if nav.q_next_to_directory %}
+                {% if nav.next_path %}
+                    <a href="/comic/{{ nav.next_path }}/" class="btn btn-secondary">Next</a>
+                {% else %}
+                    <a href="/comic/" class="btn btn-secondary">Next</a>
+                {% endif %}
+            {% else %}
+                <a href="/comic/read/{{ nav.next_path }}/{{ nav.next_index }}/" class="btn btn-secondary">Next</a>
+            {% endif %}
         </div>
-    {% else %}
-        <button class="btn btn-default">No Pages</button>
-    {% endif %}
-    {% if nav.q_next_to_directory %}
-        {% if nav.next_path %}
-            <a href="/comic/{{ nav.next_path }}/" class="btn btn-default">Next</a>
-        {% else %}
-            <a href="/comic/" class="btn btn-default">Next</a>
-        {% endif %}
-    {% else %}
-        <a href="/comic/read/{{ nav.next_path }}/{{ nav.next_index }}/" class="btn btn-default">Next</a>
-    {% endif %}
-</div>
-</center>
+    </div>
 </div>
 {% endblock %}
