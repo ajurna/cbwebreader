@@ -7,13 +7,13 @@ from comic.models import Setting
 
 
 class InitialSetupForm(forms.Form):
-    username = forms.CharField(help_text="Username", widget=forms.TextInput(attrs={"class": "form-control"}))
-    email = forms.CharField(help_text="Email Address", widget=forms.TextInput(attrs={"class": "form-control"}))
-    password = forms.CharField(help_text="New Password", widget=forms.PasswordInput(attrs={"class": "form-control"}))
+    username = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
+    email = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={"class": "form-control"}))
     password_confirm = forms.CharField(
-        help_text="New Password Confirmation", widget=forms.PasswordInput(attrs={"class": "form-control"})
+        widget=forms.PasswordInput(attrs={"class": "form-control"})
     )
-    base_dir = forms.CharField(help_text="Base Directory", widget=forms.TextInput(attrs={"class": "form-control"}))
+    base_dir = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
 
     def clean_base_dir(self):
         data = self.cleaned_data["base_dir"]
@@ -32,16 +32,14 @@ class InitialSetupForm(forms.Form):
 
 class AccountForm(forms.Form):
     username = forms.CharField(
-        help_text="Username",
         required=False,
         widget=forms.TextInput(attrs={"class": "form-control disabled", "readonly": True}),
     )
-    email = forms.CharField(help_text="Email Address", widget=forms.TextInput(attrs={"class": "form-control"}))
+    email = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
     password = forms.CharField(
-        help_text="New Password", required=False, widget=forms.PasswordInput(attrs={"class": "form-control"})
+        required=False, widget=forms.PasswordInput(attrs={"class": "form-control"})
     )
     password_confirm = forms.CharField(
-        help_text="New Password Confirmation",
         required=False,
         widget=forms.PasswordInput(attrs={"class": "form-control"}),
     )
@@ -65,11 +63,11 @@ class AccountForm(forms.Form):
 
 
 class AddUserForm(forms.Form):
-    username = forms.CharField(help_text="Username", widget=forms.TextInput(attrs={"class": "form-control"}))
-    email = forms.CharField(help_text="Email Address", widget=forms.TextInput(attrs={"class": "form-control"}))
-    password = forms.CharField(help_text="New Password", widget=forms.PasswordInput(attrs={"class": "form-control"}))
+    username = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
+    email = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={"class": "form-control"}))
     password_confirm = forms.CharField(
-        help_text="New Password Confirmation", widget=forms.PasswordInput(attrs={"class": "form-control"})
+        widget=forms.PasswordInput(attrs={"class": "form-control"})
     )
 
     def clean_username(self):
@@ -95,13 +93,12 @@ class AddUserForm(forms.Form):
 
 class EditUserForm(forms.Form):
     username = forms.CharField(
-        help_text="Username",
         required=False,
         widget=forms.TextInput(attrs={"class": "form-control disabled", "readonly": True}),
     )
-    email = forms.CharField(help_text="Email Address", widget=forms.TextInput(attrs={"class": "form-control"}))
+    email = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
     password = forms.CharField(
-        help_text="New Password", required=False, widget=forms.PasswordInput(attrs={"class": "form-control"})
+        required=False, widget=forms.PasswordInput(attrs={"class": "form-control"})
     )
     # TODO: allow setting superuser on users
 
@@ -127,7 +124,7 @@ class EditUserForm(forms.Form):
 
 
 class SettingsForm(forms.Form):
-    base_dir = forms.CharField(help_text="Base Directory", widget=forms.TextInput(attrs={"class": "form-control"}))
+    base_dir = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
 
     def clean_base_dir(self):
         data = self.cleaned_data["base_dir"]

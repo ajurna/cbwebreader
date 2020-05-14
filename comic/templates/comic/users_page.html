@@ -16,15 +16,15 @@
         <tbody data-link="row" class="rowlink">
             {% for user in users %}
             <tr>
-                <td><a href="{{user.id}}/">{{user.id}}</a></td>
-                <td>{{user.username}}</td>
+                <td>{{user.id}}</td>
+                <td><a href="{% url 'user_details' user.id %}">{{user.username}}</a></td>
                 <td>{{user.email}}</td>
                 <td>{{user.is_superuser}}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    <a class="btn btn-default" href="/comic/settings/users/add/" role="button">Add User</a>
+    <a class="btn btn-secondary" href="{% url 'add_users' %}" role="button">Add User</a>
 </div>
 {% endblock %}
 {% block script %}

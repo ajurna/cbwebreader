@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load bootstrap4 %}
 
 {% block title %}{{ title }}{% endblock %}
 
@@ -13,13 +14,10 @@
     {% endif %}
     <form method="POST">
         {% csrf_token %}
-        {% for item in form %}
-            <div class="form-group">
-                <label for="{{ item.id_for_label }}">{{ item.help_text }}</label>
-                {{ item }}
-            </div>
-        {% endfor %}
-        <button type="submit" class="btn btn-default">Submit</button>
+        {% bootstrap_form form %}
+        {% buttons %}
+            <button type="submit" class="btn btn-secondary">Submit</button>
+        {% endbuttons %}
     </form>
     {% endblock %}
 
