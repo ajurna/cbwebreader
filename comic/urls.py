@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from django.urls import path
 
 from . import feeds, views
 
@@ -9,7 +10,8 @@ urlpatterns = [
     url(r"^settings/users/(?P<user_id>[0-9]+)/$", views.user_config_page, name="user_details"),
     url(r"^settings/users/add/$", views.user_add_page, name="add_users"),
     url(r"^account/$", views.account_page, name="account"),
-    url(r"^read/(?P<comic_selector>[\w-]+)/(?P<page>[0-9]+)/$", views.read_comic, name="read_comic"),
+    url(r"^read/(?P<comic_selector>[\w-]+)/$", views.read_comic, name="read_comic"),
+    url(r"^set_page/(?P<comic_selector>[\w-]+)/(?P<page>[0-9]+)/$", views.set_read_page, name="set_read_page"),
     url(r"^read/(?P<comic_selector>[\w-]+)/(?P<page>[0-9]+)/img$", views.get_image, name="get_image"),
     url(r"^list_json/$", views.comic_list_json, name="comic_list_json1"),
     url(r"^list_json/(?P<directory_selector>[\w-]+)/$", views.comic_list_json, name="comic_list_json2"),

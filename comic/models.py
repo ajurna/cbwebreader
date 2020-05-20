@@ -131,13 +131,9 @@ class ComicBook(models.Model):
             out.prev_index = page - 1
             out.prev_path = out.cur_path
 
-        if self.is_last_page(page):
-            out.next_path, out.next_index = self.nav_get_next_comic(user)
-            if out.next_index == -1:
-                out.q_next_to_directory = True
-        else:
-            out.next_index = page + 1
-            out.next_path = out.cur_path
+        out.next_path, out.next_index = self.nav_get_next_comic(user)
+        if out.next_index == -1:
+            out.q_next_to_directory = True
         return out
 
     def nav_get_prev_comic(self, user):

@@ -112,7 +112,7 @@ class DirFile:
             if created:
                 status.save()
             self.selector = urlsafe_base64_encode(comic.selector.bytes)
-            self.location = "/comic/read/{0}/{1}/".format(self.selector, status.last_read_page)
+            self.location = "/comic/read/{0}/".format(self.selector)
             self.label = generate_label(comic, status)
             self.type = "book"
 

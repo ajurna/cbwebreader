@@ -140,9 +140,7 @@ def recent_comics_json(request):
                 "name": book.file_name,
                 "date": book.date_added.strftime("%d/%m/%y-%H:%M"),
                 "label": generate_label(book, status),
-                "url": "/comic/read/{0}/{1}/".format(
-                    urlsafe_base64_encode(book.selector.bytes), status.last_read_page
-                ),
+                "url": "/comic/read/{0}/".format(urlsafe_base64_encode(book.selector.bytes)),
             }
         )
     return HttpResponse(json.dumps(response_data), content_type="application/json")
@@ -293,13 +291,31 @@ def settings_page(request):
 
 
 @login_required
-def read_comic(request, comic_selector, page):
+def read_comic(request, comic_selector):
+    selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
+    book = get_object_or_404(ComicBook, selector=selector)
+    pages = ComicPage.objects.filter(Comic=book)
+
+    status, _ = ComicStatus.objects.get_or_create(comic=book, user=request.user)
+    title = "CBWebReader - " + book.file_name
+    context = {
+        "book": book,
+        "pages": pages,
+        # "orig_file_name": book.page_name(page),
+        "nav": book.nav(0, request.user),
+        "status": status,
+        "breadcrumbs": generate_breadcrumbs_from_path(book.directory, book),
+        "menu": Menu(request.user),
+        "title": title,
+    }
+    return render(request, "comic/read_comic.html", context)
+
+
+@login_required
+def set_read_page(request, comic_selector, page):
     page = int(page)
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
     book = get_object_or_404(ComicBook, selector=selector)
-
-    breadcrumbs = generate_breadcrumbs_from_path(book.directory, book)
-
     status, _ = ComicStatus.objects.get_or_create(comic=book, user=request.user)
     status.unread = False
     status.last_read_page = page
@@ -308,16 +324,7 @@ def read_comic(request, comic_selector, page):
     else:
         status.finished = False
     status.save()
-    title = "CBWebReader - " + book.file_name + " - Page: " + str(page)
-    context = {
-        "book": book,
-        "orig_file_name": book.page_name(page),
-        "nav": book.nav(page, request.user),
-        "breadcrumbs": breadcrumbs,
-        "menu": Menu(request.user),
-        "title": title,
-    }
-    return render(request, "comic/read_comic.html", context)
+    return HttpResponse(status=200)
 
 
 @login_required

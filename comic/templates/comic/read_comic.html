@@ -2,47 +2,99 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="container comic_box justify-content-center">
-    <div class="row justify-content-center">
-        {% if nav.q_next_to_directory %}
-            <a href="/comic/{{ nav.next_path }}/">
-        {% else %}
-            <a href="/comic/read/{{ nav.next_path }}/{{ nav.next_index }}/">
-        {% endif %}
-            <img src="/comic/read/{{ nav.cur_path }}/{{ nav.cur_index }}/img" class="img-fluid">
-        </a>
-    </div>
-    <div class="row justify-content-center mt-1 mb-1">
-        <div class="btn-group" role="group" aria-label="Navigation">
-            {% if nav.q_prev_to_directory %}
-                {% if nav.prev_path %}
-                    <a href="/comic/{{ nav.prev_path }}/" class="btn btn-secondary">Prev</a>
-                {% else %}
-                    <a href="/comic/" class="btn btn-secondary">Prev</a>
-                {% endif %}
-            {% else %}
-                <a href="/comic/read/{{ nav.prev_path }}/{{ nav.prev_index }}/" class="btn btn-secondary">Prev</a>
-            {% endif %}
-            <div class="btn-group" role="group">
-                <button id="page_list" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  {{ orig_file_name }}
-                </button>
-                <div class="dropdown-menu" aria-labelledby="page_list">
-                    {% for file in book.pages %}
-                        <a class="dropdown-item" href="/comic/read/{{ nav.cur_path }}/{{ file.index }}/">{{ file.page_file_name }}</a>
-                    {% endfor %}
-                </div>
-            </div>
-            {% if nav.q_next_to_directory %}
-                {% if nav.next_path %}
-                    <a href="/comic/{{ nav.next_path }}/" class="btn btn-secondary">Next</a>
-                {% else %}
-                    <a href="/comic/" class="btn btn-secondary">Next</a>
-                {% endif %}
-            {% else %}
-                <a href="/comic/read/{{ nav.next_path }}/{{ nav.next_index }}/" class="btn btn-secondary">Next</a>
-            {% endif %}
-        </div>
-    </div>
-</div>
+
+
+        <div class="reveal" id="comic_box">
+			<div class="slides">
+                {% for page in pages %}
+				<section><img data-src="{% url "get_image" nav.cur_path page.index %}" class=" w-100" onclick="Reveal.next()"></section>
+                {% endfor %}
+			</div>
+		</div>
+
+{% endblock %}
+
+{% block script %}
+    <script>
+        Reveal.initialize({
+            controls: false,
+            hash: true,
+            width: "100%",
+            height: "100%",
+            margin: 0,
+            minScale: 1,
+            maxScale: 1,
+            disableLayout: true,
+            keyboard: false,
+            touch: false,
+            transition: 'slide',
+        });
+        Reveal.setState({indexh: {{ status.last_read_page }} });
+        Reveal.addEventListener( 'slidechanged', function( event ) {
+            // event.previousSlide, event.currentSlide, event.indexh, event.indexv
+            document.getElementsByClassName('present')[0].scrollIntoView({behavior: 'smooth'})
+            $.ajax({url: "/comic/set_page/{{nav.cur_path}}/" + event.indexh + "/"})
+        } );
+        $(document).keydown(function(e) {
+            switch(e.which) {
+                case 37: // left
+                    if (Reveal.isFirstSlide()){
+                        window.location = "{% url "read_comic" nav.prev_path %}"
+                    } else {
+                        Reveal.prev();
+                    }
+                break;
+
+                case 38: // up
+                    window.scrollTo({
+                      top: window.scrollY-window.innerHeight*.7,
+                      left: 0,
+                      behavior: 'smooth'
+                    });
+                break;
+
+                case 39: // right
+                    if (Reveal.isLastSlide()){
+                        window.location = "{% url "read_comic" nav.next_path %}"
+                    } else {
+                        Reveal.next()
+                    }
+                break;
+
+                case 40: // down
+                    window.scrollTo({
+                      top: window.scrollY+window.innerHeight*.7,
+                      left: 0,
+                      behavior: 'smooth'
+                    });
+                break;
+
+                default: return; // exit this handler for other keys
+            }
+            e.preventDefault(); // prevent the default action (scroll / move caret)
+        });
+
+        var hammertime = new Hammer(document.getElementById('comic_box'), {});
+        hammertime.on('swipeleft', function (ev) {
+            if (Reveal.isLastSlide()){
+                window.location = "{% url "read_comic" nav.next_path %}"
+            } else {
+                Reveal.next()
+            }
+        })
+        hammertime.on('swiperight', function (ev) {
+            if (Reveal.isFirstSlide()){
+                window.location = "{% url "read_comic" nav.prev_path %}"
+            } else {
+                Reveal.prev();
+            }
+        })
+        hammertime.on('tap', function (ev) {
+            if (Reveal.isLastSlide()){
+                window.location = "{% url "read_comic" nav.next_path %}"
+            } else {
+                Reveal.next()
+            }
+        })
+    </script>
 {% endblock %}
