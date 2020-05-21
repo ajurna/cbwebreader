@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.transaction import atomic
 from django.utils.http import urlsafe_base64_encode
+from PyPDF4 import PdfFileReader
 
 from comic import rarfile
 
@@ -81,6 +82,10 @@ class ComicBook(models.Model):
     @property
     def selector_string(self):
         return urlsafe_base64_encode(self.selector.bytes)
+
+    def get_pdf(self):
+        base_dir = Setting.objects.get(name="BASE_DIR").value
+        return path.join(base_dir, self.directory.get_path(), self.file_name)
 
     def get_image(self, page):
         base_dir = Setting.objects.get(name="BASE_DIR").value
@@ -257,7 +262,14 @@ class ComicBook(models.Model):
             try:
                 cbx = zipfile.ZipFile(comic_full_path)
             except zipfile.BadZipFile:
-                return comic_file_name
+                cbx = None
+        if not cbx:
+            pdf_file = PdfFileReader(comic_full_path)
+        else:
+            pdf_file = None
+        if not pdf_file and not cbx:
+            return comic_file_name
+
         with atomic():
             if directory:
                 book = ComicBook(file_name=comic_file_name, directory=directory)
@@ -265,27 +277,34 @@ class ComicBook(models.Model):
                 book = ComicBook(file_name=comic_file_name)
             book.save()
             page_index = 0
-            for page_file_name in sorted([str(x) for x in cbx.namelist()], key=str.lower):
-                try:
-                    dot_index = page_file_name.rindex(".") + 1
-                except ValueError:
-                    continue
-                ext = page_file_name.lower()[dot_index:]
-                if ext in ["jpg", "jpeg"]:
-                    content_type = "image/jpeg"
-                elif ext == "png":
-                    content_type = "image/png"
-                elif ext == "bmp":
-                    content_type = "image/bmp"
-                elif ext == "gif":
-                    content_type = "image/gif"
-                else:
-                    content_type = "text/plain"
-                page = ComicPage(
-                    Comic=book, index=page_index, page_file_name=page_file_name, content_type=content_type
-                )
-                page.save()
-                page_index += 1
+            if cbx:
+                for page_file_name in sorted([str(x) for x in cbx.namelist()], key=str.lower):
+                    try:
+                        dot_index = page_file_name.rindex(".") + 1
+                    except ValueError:
+                        continue
+                    ext = page_file_name.lower()[dot_index:]
+                    if ext in ["jpg", "jpeg"]:
+                        content_type = "image/jpeg"
+                    elif ext == "png":
+                        content_type = "image/png"
+                    elif ext == "bmp":
+                        content_type = "image/bmp"
+                    elif ext == "gif":
+                        content_type = "image/gif"
+                    else:
+                        content_type = "text/plain"
+                    page = ComicPage(
+                        Comic=book, index=page_index, page_file_name=page_file_name, content_type=content_type
+                    )
+                    page.save()
+                    page_index += 1
+            elif pdf_file:
+                for page_index in range(pdf_file.getNumPages()):
+                    page = ComicPage(
+                        Comic=book, index=page_index, page_file_name=page_index+1, content_type='application/pdf'
+                    )
+                    page.save()
         return book
 
     @staticmethod

@@ -2132,7 +2132,7 @@ inherit(TapRecognizer, Recognizer, {
 
 /**
  * Simple way to create a manager with a default set of recognizers.
- * @param {Document} element
+ * @param {HTMLElement} element
  * @param {Object} [options]
  * @constructor
  */

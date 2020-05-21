@@ -11,6 +11,8 @@ gunicorn = "*"
 django-recaptcha2 = "*"
 django-bootstrap4 = "*"
 dj-database-url = "*"
+pypdf2 = "*"
+pypdf4 = "*"
 
 [requires]
 python_version = "3.8"

@@ -162,7 +162,7 @@ def generate_directory(user, directory=False):
             df.populate_directory(directory_obj, user)
             files.append(df)
         for file_name in file_list:
-            if file_name.lower()[-4:] in [".rar", ".zip", ".cbr", ".cbz"]:
+            if file_name.lower()[-4:] in [".rar", ".zip", ".cbr", ".cbz", ".pdf"]:
                 book = ComicBook.process_comic_book(file_name, directory)
                 df = DirFile()
                 df.populate_comic(book, user)

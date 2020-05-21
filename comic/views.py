@@ -293,6 +293,13 @@ def settings_page(request):
 @login_required
 def read_comic(request, comic_selector):
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
+    try:
+        book = ComicBook.objects.get(selector=selector)
+    except ComicBook.DoesNotExist:
+        Directory.objects.get(selector=selector)
+        return redirect('comic_list', directory_selector=comic_selector)
+    except Directory.DoesNotExist:
+        return HttpResponse(status=404)
     book = get_object_or_404(ComicBook, selector=selector)
     pages = ComicPage.objects.filter(Comic=book)
 
@@ -308,7 +315,11 @@ def read_comic(request, comic_selector):
         "menu": Menu(request.user),
         "title": title,
     }
-    return render(request, "comic/read_comic.html", context)
+    if book.file_name.lower().endswith('pdf'):
+        context['status'].last_read_page += 1
+        return render(request, "comic/read_comic_pdf.html", context)
+    else:
+        return render(request, "comic/read_comic.html", context)
 
 
 @login_required
@@ -333,6 +344,13 @@ def get_image(_, comic_selector, page):
     book = ComicBook.objects.get(selector=selector)
     img, content = book.get_image(int(page))
     return FileResponse(img, content_type=content)
+
+
+@login_required
+def get_pdf(_, comic_selector):
+    selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
+    book = ComicBook.objects.get(selector=selector)
+    return FileResponse(open(book.get_pdf(), 'rb'), content_type='application/pdf')
 
 
 def initial_setup(request):

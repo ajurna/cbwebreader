@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+
+    <div class="container m-0">
+    <div class="row justify-content-center w-100">
+        <div class="btn-group" role="group" aria-label="Basic example">
+
+            <button id="prev" class="btn btn-secondary">Previous</button>
+            <button id="pages" class="btn btn-secondary"><span id="page_num"></span> / <span id="page_count"></button>
+
+            <button id="next" class="btn btn-secondary">Next</button>
+
+        </div>
+    </div>
+    <div class="row w-100">
+        <canvas id="the-canvas" width="100%"></canvas>
+    </div>
+    </div>
+
+{% endblock %}
+
+{% block script %}
+    <script type="text/javascript" src="{% static "pdfjs/build/pdf.js" %}"></script>
+    <script>
+// If absolute URL from the remote server is provided, configure the CORS
+// header on that server.
+var url = '{% url "get_pdf" nav.cur_path %}';
+
+// Loaded via <script> tag, create shortcut to access PDF.js exports.
+var pdfjsLib = window['pdfjs-dist/build/pdf'];
+
+
+// The workerSrc property shall be specified.
+pdfjsLib.GlobalWorkerOptions.workerSrc = '{% static "pdfjs/build/pdf.worker.js" %}';
+
+var pdfDoc = null,
+    pageNum = {{ status.last_read_page }},
+    pageRendering = false,
+    pageNumPending = null,
+    scale = 0.8,
+    canvas = document.getElementById('the-canvas'),
+    ctx = canvas.getContext('2d');
+
+/**
+ * Get page info from document, resize canvas accordingly, and render page.
+ * @param num Page number.
+ */
+function renderPage(num) {
+  pageRendering = true;
+  // Using promise to fetch the page
+  pdfDoc.getPage(num).then(function(page) {
+    let viewport = page.getViewport({scale: (window.innerWidth *.95) / page.getViewport(1.0).width});
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    document.getElementById('the-canvas').scrollIntoView({behavior: 'smooth'})
+    $.ajax({url: "/comic/set_page/{{nav.cur_path}}/" + (pageNum - 1) + "/"})
+
+    // Render PDF page into canvas context
+    let renderContext = {
+      canvasContext: ctx,
+      viewport: viewport
+    };
+    let renderTask = page.render(renderContext);
+
+    // Wait for rendering to finish
+    renderTask.promise.then(function() {
+      pageRendering = false;
+      if (pageNumPending !== null) {
+        // New page rendering is pending
+        renderPage(pageNumPending);
+        pageNumPending = null;
+      }
+    });
+  });
+
+  // Update page counters
+  document.getElementById('page_num').textContent = num;
+}
+
+/**
+ * If another page rendering in progress, waits until the rendering is
+ * finised. Otherwise, executes rendering immediately.
+ */
+function queueRenderPage(num) {
+  if (pageRendering) {
+    pageNumPending = num;
+  } else {
+    renderPage(num);
+  }
+}
+
+/**
+ * Displays previous page.
+ */
+function onPrevPage() {
+  if (pageNum <= 1) {
+    window.location = "{% url "read_comic" nav.prev_path %}"
+  }
+  pageNum--;
+  queueRenderPage(pageNum);
+}
+document.getElementById('prev').addEventListener('click', onPrevPage);
+
+/**
+ * Displays next page.
+ */
+function onNextPage() {
+  if (pageNum >= pdfDoc.numPages) {
+    window.location = "{% url "read_comic" nav.next_path %}"
+  }
+  pageNum++;
+  queueRenderPage(pageNum);
+}
+document.getElementById('next').addEventListener('click', onNextPage);
+
+/**
+ * Asynchronously downloads PDF.
+ */
+pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
+  pdfDoc = pdfDoc_;
+  document.getElementById('page_count').textContent = pdfDoc.numPages;
+
+  // Initial/first page rendering
+  renderPage(pageNum);
+});
+
+$(document).keydown(function(e) { // add arrow key support
+            switch(e.which) {
+                case 37: // left
+                    onPrevPage()
+                break;
+
+                case 38: // up
+                    window.scrollTo({
+                      top: window.scrollY-window.innerHeight*.7,
+                      left: 0,
+                      behavior: 'smooth'
+                    });
+                break;
+
+                case 39: // right
+                    onNextPage()
+                break;
+
+                case 40: // down
+                    window.scrollTo({
+                      top: window.scrollY+window.innerHeight*.7,
+                      left: 0,
+                      behavior: 'smooth'
+                    });
+                break;
+
+                default: return; // exit this handler for other keys
+            }
+            e.preventDefault(); // prevent the default action (scroll / move caret)
+        });
+
+        var hammertime = new Hammer(document.getElementById('the-canvas'), {});
+        hammertime.on('swipeleft', function (ev) {
+            onNextPage()
+        })
+        hammertime.on('swiperight', function (ev) {
+            onPrevPage()
+        })
+        hammertime.on('tap', function (ev) {
+            onNextPage()
+        })
+    </script>
+{% endblock %}
