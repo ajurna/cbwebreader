@@ -146,7 +146,6 @@ def generate_directory(user, directory=False):
         files.append(df)
         dir_list.remove(directory_obj.name)
 
-
     for file_obj in file_list_obj:
         df = DirFile()
         df.populate_comic(file_obj, user)
