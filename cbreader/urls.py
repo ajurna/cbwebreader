@@ -15,6 +15,8 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+from django.conf import settings
+
 
 import comic.views
 import comic_auth.views
@@ -28,3 +30,5 @@ urlpatterns = [
     url(r"^admin/", admin.site.urls),
     # url(r'^silk/', include('silk.urls', namespace='silk'))
 ]
+if settings.SILK_ENABLED:
+    urlpatterns += [url(r'^silk/', include('silk.urls', namespace='silk'))]
