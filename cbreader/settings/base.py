@@ -113,3 +113,5 @@ RECAPTCHA_PRIVATE_KEY = os.getenv("DJANGO_RECAPTCHA_PRIVATE_KEY", '')
 RECAPTCHA_PUBLIC_KEY = os.getenv("DJANGO_RECAPTCHA_PUBLIC_KEY", '')
 
 COMIC_DIR = "/media/comics"
+
+from .logger import LOGGING
