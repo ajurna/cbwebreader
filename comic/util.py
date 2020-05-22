@@ -1,11 +1,10 @@
 from collections import OrderedDict
 from os import listdir, path
 
-from django.db.models import Count, Q
-from django.db.transaction import atomic
+from django.db.models import Count, Q, F
 from django.utils.http import urlsafe_base64_encode
 
-from .models import ComicBook, ComicStatus, Directory, Setting
+from .models import ComicBook, Directory, Setting
 
 
 def generate_title_from_path(file_path):
@@ -109,12 +108,9 @@ class DirFile:
         else:
             self.icon = "fa-book"
             self.name = comic.file_name
-            status, created = ComicStatus.objects.get_or_create(comic=comic, user=user)
-            if created:
-                status.save()
             self.selector = urlsafe_base64_encode(comic.selector.bytes)
             self.location = "/comic/read/{0}/".format(self.selector)
-            self.label = generate_label(comic, status)
+            self.label = generate_label(comic)
             self.type = "book"
 
     def __repr__(self):
@@ -146,6 +142,8 @@ def generate_directory(user, directory=False):
                                          total_read=Count('comicbook__comicstatus',
                                                           Q(comicbook__comicstatus__finished=True,
                                                             comicbook__comicstatus__user=user)))
+    file_list_obj = file_list_obj.annotate(total_pages=Count('comicpage')).annotate(
+        last_read_page=F('comicstatus__last_read_page')).annotate(finished=F('comicstatus__finished')).annotate(unread=F('comicstatus__unread'))
 
     for directory_obj in dir_list_obj:
         df = DirFile()
@@ -158,6 +156,7 @@ def generate_directory(user, directory=False):
         df.populate_comic(file_obj, user)
         files.append(df)
         file_list.remove(file_obj.file_name)
+
     for directory_name in dir_list:
         if directory:
             directory_obj = Directory(name=directory_name, parent=directory)
@@ -181,15 +180,18 @@ def generate_directory(user, directory=False):
     return files
 
 
-def generate_label(book, status):
-    if status.unread:
-        label_text = '<center><span class="label label-default">Unread</span></center>'
-    elif (status.last_read_page + 1) == book.page_count:
+def generate_label(book):
+    unread_text = '<center><span class="label label-default">Unread</span></center>'
+    if not hasattr(book, 'unread'):
+        label_text = unread_text
+    elif book.unread or book.unread is None:
+        label_text = unread_text
+    elif book.finished:
         label_text = '<center><span class="label label-success">Read</span></center>'
     else:
         label_text = '<center><span class="label label-primary">%s/%s</span></center>' % (
-            status.last_read_page + 1,
-            book.page_count,
+            book.last_read_page + 1,
+            book.total_pages,
         )
     return label_text
 
