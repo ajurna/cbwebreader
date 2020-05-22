@@ -146,27 +146,28 @@ def generate_directory(user, directory=False):
         files.append(df)
         dir_list.remove(directory_obj.name)
 
-    with atomic():
-        for file_obj in file_list_obj:
+
+    for file_obj in file_list_obj:
+        df = DirFile()
+        df.populate_comic(file_obj, user)
+        files.append(df)
+        file_list.remove(file_obj.file_name)
+    for directory_name in dir_list:
+        if directory:
+            directory_obj = Directory(name=directory_name, parent=directory)
+        else:
+            directory_obj = Directory(name=directory_name)
+        directory_obj.save()
+        df = DirFile()
+        df.populate_directory(directory_obj, user)
+        files.append(df)
+
+    for file_name in file_list:
+        if file_name.lower()[-4:] in [".rar", ".zip", ".cbr", ".cbz", ".pdf"]:
+            book = ComicBook.process_comic_book(file_name, directory)
             df = DirFile()
-            df.populate_comic(file_obj, user)
+            df.populate_comic(book, user)
             files.append(df)
-            file_list.remove(file_obj.file_name)
-        for directory_name in dir_list:
-            if directory:
-                directory_obj = Directory(name=directory_name, parent=directory)
-            else:
-                directory_obj = Directory(name=directory_name)
-            directory_obj.save()
-            df = DirFile()
-            df.populate_directory(directory_obj, user)
-            files.append(df)
-        for file_name in file_list:
-            if file_name.lower()[-4:] in [".rar", ".zip", ".cbr", ".cbz", ".pdf"]:
-                book = ComicBook.process_comic_book(file_name, directory)
-                df = DirFile()
-                df.populate_comic(book, user)
-                files.append(df)
     files.sort(key=lambda x: x.name)
     files.sort(key=lambda x: x.type, reverse=True)
     return files
