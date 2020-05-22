@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from os import listdir, path
 
+from django.db.models import Count, Q
 from django.db.transaction import atomic
 from django.utils.http import urlsafe_base64_encode
 
@@ -94,7 +95,7 @@ class DirFile:
         self.icon = "fa-folder-open"
         self.selector = urlsafe_base64_encode(directory.selector.bytes)
         self.location = "/comic/{0}/".format(self.selector)
-        self.label = generate_dir_status(user, directory)
+        self.label = generate_dir_status(directory.total, directory.total_read)
         self.type = "directory"
 
     def populate_comic(self, comic, user):
@@ -140,6 +141,12 @@ def generate_directory(user, directory=False):
     else:
         dir_list_obj = Directory.objects.filter(name__in=dir_list, parent__isnull=True)
         file_list_obj = ComicBook.objects.filter(file_name__in=file_list, directory__isnull=True)
+
+    dir_list_obj = dir_list_obj.annotate(total=Count('comicbook'),
+                                         total_read=Count('comicbook__comicstatus',
+                                                          Q(comicbook__comicstatus__finished=True,
+                                                            comicbook__comicstatus__user=user)))
+
     for directory_obj in dir_list_obj:
         df = DirFile()
         df.populate_directory(directory_obj, user)
@@ -157,6 +164,8 @@ def generate_directory(user, directory=False):
         else:
             directory_obj = Directory(name=directory_name)
         directory_obj.save()
+        directory_obj.total = 0
+        directory_obj.total_read = 0
         df = DirFile()
         df.populate_directory(directory_obj, user)
         files.append(df)
@@ -185,17 +194,14 @@ def generate_label(book, status):
     return label_text
 
 
-def generate_dir_status(user, directory):
-    cb_list = ComicBook.objects.filter(directory=directory)
-    total = cb_list.count()
-    total_read = ComicStatus.objects.filter(user=user, comic__in=cb_list, finished=True).count()
+def generate_dir_status(total, total_read):
     if total == 0:
         return '<center><span class="label label-default">Empty</span></center>'
     elif total == total_read:
         return '<center><span class="label label-success">All Read</span></center>'
     elif total_read == 0:
         return '<center><span class="label label-default">Unread</span></center>'
-    return '<center><span class="label label-primary">{0}/{1}</span></center>'.format(total_read, total)
+    return f'<center><span class="label label-primary">{total_read}/{total}</span></center>'
 
 
 def get_ordered_dir_list(folder):

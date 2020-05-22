@@ -7,7 +7,9 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.transaction import atomic
 from django.utils.http import urlsafe_base64_encode
-from PyPDF4 import PdfFileReader
+import PyPDF4
+import PyPDF4.utils
+
 
 from comic import rarfile
 
@@ -30,6 +32,9 @@ class Directory(models.Model):
     name = models.CharField(max_length=100)
     parent = models.ForeignKey("Directory", null=True, blank=True, on_delete=models.CASCADE)
     selector = models.UUIDField(unique=True, default=uuid.uuid4, db_index=True)
+
+    class Meta:
+        ordering = ['name']
 
     def __str__(self):
         return "Directory: {0}; {1}".format(self.name, self.parent)
@@ -263,10 +268,12 @@ class ComicBook(models.Model):
                 cbx = zipfile.ZipFile(comic_full_path)
             except zipfile.BadZipFile:
                 cbx = None
+        pdf_file = None
         if not cbx:
-            pdf_file = PdfFileReader(comic_full_path)
-        else:
-            pdf_file = None
+            try:
+                pdf_file = PyPDF4.PdfFileReader(comic_full_path)
+            except PyPDF4.utils.PyPdfError:
+                pass
         if not pdf_file and not cbx:
             return comic_file_name
 
