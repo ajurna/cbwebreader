@@ -89,12 +89,5 @@
                 Reveal.prev();
             }
         })
-        hammertime.on('tap', function (ev) {
-            if (Reveal.isLastSlide()){
-                window.location = "{% url "read_comic" nav.next_path %}"
-            } else {
-                Reveal.next()
-            }
-        })
     </script>
 {% endblock %}
