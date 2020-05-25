@@ -29,4 +29,4 @@ class RecentComics(Feed):
 
     # item_link is only needed if NewsItem has no get_absolute_url method.
     def item_link(self, item: ComicBook) -> str:
-        return "/comic/read/{0}/0/".format(urlsafe_base64_encode(item.selector.bytes))
+        return f"/comic/read/{urlsafe_base64_encode(item.selector.bytes)}/"
