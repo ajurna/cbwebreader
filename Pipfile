@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 django-silk = "*"
 v = {editable = true,version = "*"}
+mysqlclient = "*"
 
 [packages]
 django = "*"

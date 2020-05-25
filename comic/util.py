@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from os import listdir, path
 
-from django.db.models import Count, Q, F
+from django.db.models import Count, Q, F, Max, ExpressionWrapper, Prefetch
 from django.utils.http import urlsafe_base64_encode
 
 from .models import ComicBook, Directory, Setting
@@ -142,8 +142,9 @@ def generate_directory(user, directory=False):
                                          total_read=Count('comicbook__comicstatus',
                                                           Q(comicbook__comicstatus__finished=True,
                                                             comicbook__comicstatus__user=user)))
-    file_list_obj = file_list_obj.annotate(total_pages=Count('comicpage')).annotate(
-        last_read_page=F('comicstatus__last_read_page')).annotate(finished=F('comicstatus__finished')).annotate(unread=F('comicstatus__unread'))
+    file_list_obj = file_list_obj.filter(comicstatus__user=user).annotate(total_pages=Count('comicpage')).annotate(
+        last_read_page=F('comicstatus__last_read_page')).annotate(
+        finished=F('comicstatus__finished')).annotate(unread=F('comicstatus__unread'))
 
     for directory_obj in dir_list_obj:
         df = DirFile()
