@@ -182,6 +182,15 @@ def generate_directory(user, directory=False):
 
 
 def generate_label(book):
+    """
+    book need to be annotated with the following from ComicStatus
+        * unread
+        * finished
+        * last_read_page
+        * total_pages
+    :param book: ComicBook
+    :return: str
+    """
     unread_text = '<center><span class="label label-default">Unread</span></center>'
     if not hasattr(book, 'unread'):
         label_text = unread_text

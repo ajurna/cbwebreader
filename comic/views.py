@@ -8,7 +8,7 @@ from os import path
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
-from django.db.models import Max
+from django.db.models import Max, Count
 from django.db.transaction import atomic
 from django.http import HttpResponse, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -110,7 +110,7 @@ def recent_comics_json(request):
     start = int(request.POST["start"])
     end = start + int(request.POST["length"])
     icon = '<span class="fa fa-book"></span>'
-    comics = ComicBook.objects.all()
+    comics = ComicBook.objects.all().annotate(total_pages=Count('comicpage'))
     response_data = dict()
     response_data["recordsTotal"] = comics.count()
     if request.POST["search[value]"]:
@@ -132,6 +132,9 @@ def recent_comics_json(request):
         status, created = ComicStatus.objects.get_or_create(comic=book, user=request.user)
         if created:
             status.save()
+        book.unread = status.unread
+        book.finished = status.finished
+        book.last_read_page = status.last_read_page
         response_data["data"].append(
             {
                 "selector": urlsafe_base64_encode(book.selector.bytes),
@@ -139,7 +142,7 @@ def recent_comics_json(request):
                 "type": "book",
                 "name": book.file_name,
                 "date": book.date_added.strftime("%d/%m/%y-%H:%M"),
-                "label": generate_label(book, status),
+                "label": generate_label(book),
                 "url": "/comic/read/{0}/".format(urlsafe_base64_encode(book.selector.bytes)),
             }
         )
