@@ -117,3 +117,7 @@ COMIC_DIR = "/media/comics"
 from .logger import LOGGING
 
 SILK_ENABLED = False
+
+USE_X_FORWARDED_HOST = os.getenv('USE_X_FORWARDED_HOST', False) == 'True'
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
