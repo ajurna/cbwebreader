@@ -1,1 +1,1 @@
-*/15    *       *       *       *       python /src/manage.py scan_comics
+*/15    *       *       *       *       python /src/manage.py scan_comics --settings=cbreader.settings.base
