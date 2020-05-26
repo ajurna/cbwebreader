@@ -22,9 +22,10 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        self.scan_directory(options=options)
+        self.OUTPUT = True if options['out'] else False
+        self.scan_directory()
 
-    def scan_directory(self, directory=False, **options):
+    def scan_directory(self, directory=False):
 
         """
 
@@ -43,7 +44,7 @@ class Command(BaseCommand):
                 book.delete()
         for file in os.listdir(comic_dir):
             if isdir(os.path.join(comic_dir, file)):
-                if options['out']:
+                if self.OUTPUT:
                     logger.info(f"Scanning Directory {file}")
                 if directory:
                     next_directory, created = Directory.objects.get_or_create(name=file, parent=directory)
@@ -53,7 +54,7 @@ class Command(BaseCommand):
                     next_directory.save()
                 self.scan_directory(next_directory)
             else:
-                if options['out']:
+                if self.OUTPUT:
                     logger.info(f"Scanning File {file}")
                 try:
                     if directory:
