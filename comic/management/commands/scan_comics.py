@@ -4,7 +4,7 @@ from loguru import logger
 
 from django.core.management.base import BaseCommand
 
-from comic.models import ComicBook, Directory, Setting
+from comic.models import ComicBook, Directory, Setting, ComicStatus
 
 
 class Command(BaseCommand):
@@ -58,7 +58,14 @@ class Command(BaseCommand):
                     logger.info(f"Scanning File {file}")
                 try:
                     if directory:
-                        book = ComicBook.objects.get(file_name=file, directory=directory)
+                        try:
+                            book = ComicBook.objects.get(file_name=file, directory=directory)
+                        except ComicBook.MultipleObjectsReturned:
+                            logger.error(f'Duplicate Record {file}')
+                            books = ComicBook.objects.filter(file_name=file, directory=directory).order_by('id')
+                            book = books.first()
+                            extra_books = books.exclude(id=book.id)
+                            extra_books.delete()
                         if book.version == 0:
                             book.version = 1
                             book.save()
