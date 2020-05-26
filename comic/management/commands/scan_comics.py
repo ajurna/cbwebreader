@@ -42,7 +42,7 @@ class Command(BaseCommand):
         for book in books:
             if not os.path.isfile(os.path.join(comic_dir, book.file_name)):
                 book.delete()
-        for file in os.listdir(comic_dir):
+        for file in sorted(os.listdir(comic_dir)):
             if isdir(os.path.join(comic_dir, file)):
                 if self.OUTPUT:
                     logger.info(f"Scanning Directory {file}")
