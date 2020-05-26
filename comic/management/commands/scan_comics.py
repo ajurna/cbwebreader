@@ -15,10 +15,6 @@ class Command(BaseCommand):
         self.base_dir = Setting.objects.get(name="BASE_DIR").value
 
     def add_arguments(self, parser):
-        # Positional arguments
-        parser.add_argument('poll_ids', nargs='+', type=int)
-
-        # Named (optional) arguments
         parser.add_argument(
             '--out',
             action='store_true',
