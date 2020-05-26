@@ -16,6 +16,7 @@ django-bootstrap4 = "*"
 dj-database-url = "*"
 pypdf4 = "*"
 python-dotenv = "*"
+loguru = "*"
 
 [requires]
 python_version = "3.8"

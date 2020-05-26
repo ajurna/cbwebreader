@@ -1,5 +1,6 @@
 import os
 from os.path import isdir
+from loguru import logger
 
 from django.core.management.base import BaseCommand
 
@@ -13,10 +14,21 @@ class Command(BaseCommand):
         super().__init__()
         self.base_dir = Setting.objects.get(name="BASE_DIR").value
 
-    def handle(self, *args, **options):
-        self.scan_directory()
+    def add_arguments(self, parser):
+        # Positional arguments
+        parser.add_argument('poll_ids', nargs='+', type=int)
 
-    def scan_directory(self, directory=False):
+        # Named (optional) arguments
+        parser.add_argument(
+            '--out',
+            action='store_true',
+            help='Output to console',
+        )
+
+    def handle(self, *args, **options):
+        self.scan_directory(options=options)
+
+    def scan_directory(self, directory=False, **options):
 
         """
 
@@ -35,6 +47,8 @@ class Command(BaseCommand):
                 book.delete()
         for file in os.listdir(comic_dir):
             if isdir(os.path.join(comic_dir, file)):
+                if options['out']:
+                    logger.info(f"Scanning Directory {file}")
                 if directory:
                     next_directory, created = Directory.objects.get_or_create(name=file, parent=directory)
                 else:
@@ -43,6 +57,8 @@ class Command(BaseCommand):
                     next_directory.save()
                 self.scan_directory(next_directory)
             else:
+                if options['out']:
+                    logger.info(f"Scanning File {file}")
                 try:
                     if directory:
                         book = ComicBook.objects.get(file_name=file, directory=directory)
