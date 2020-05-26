@@ -4,11 +4,12 @@ Django settings for cbreader project.
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-
+from dotenv import load_dotenv
 import dj_database_url
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+load_dotenv(BASE_DIR)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/

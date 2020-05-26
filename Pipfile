@@ -15,6 +15,7 @@ django-recaptcha2 = "*"
 django-bootstrap4 = "*"
 dj-database-url = "*"
 pypdf4 = "*"
+python-dotenv = "*"
 
 [requires]
 python_version = "3.8"
