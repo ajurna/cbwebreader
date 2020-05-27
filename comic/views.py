@@ -8,7 +8,7 @@ from os import path
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
-from django.db.models import Max, Count
+from django.db.models import Max, Count, F
 from django.db.transaction import atomic
 from django.http import HttpResponse, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -126,15 +126,14 @@ def recent_comics_json(request):
     else:
         order_string += "date_added"
     comics = comics.order_by(order_string)
+    comics = comics.filter(comicstatus__user=request.user).annotate(
+        unread=F('comicstatus__unread'),
+        finished=F('comicstatus__finished'),
+        last_read_page=F('comicstatus__last_read_page')
+    )
     response_data["recordsFiltered"] = comics.count()
     response_data["data"] = list()
     for book in comics[start:end]:
-        status, created = ComicStatus.objects.get_or_create(comic=book, user=request.user)
-        if created:
-            status.save()
-        book.unread = status.unread
-        book.finished = status.finished
-        book.last_read_page = status.last_read_page
         response_data["data"].append(
             {
                 "selector": urlsafe_base64_encode(book.selector.bytes),
