@@ -46,10 +46,21 @@ class Command(BaseCommand):
             if isdir(os.path.join(comic_dir, file)):
                 if self.OUTPUT:
                     logger.info(f"Scanning Directory {file}")
-                if directory:
-                    next_directory, created = Directory.objects.get_or_create(name=file, parent=directory)
-                else:
-                    next_directory, created = Directory.objects.get_or_create(name=file, parent__isnull=True)
+                try:
+                    if directory:
+                        next_directory, created = Directory.objects.get_or_create(name=file, parent=directory)
+                    else:
+                        next_directory, created = Directory.objects.get_or_create(name=file, parent__isnull=True)
+                except Directory.MultipleObjectsReturned:
+                    if directory:
+                        next_directories = Directory.objects.filter(name=file, parent=directory)
+                    else:
+                        next_directories = Directory.objects.filter(name=file, parent__isnull=True)
+                    next_directories = next_directories.order_by('id')
+                    next_directory = next_directories.first()
+                    next_directories.exclude(id=next_directory.id).delete()
+                    logger.error(f'Duplicate Directory {file}')
+                    created = False
                 if created:
                     next_directory.save()
                 self.scan_directory(next_directory)
@@ -61,7 +72,7 @@ class Command(BaseCommand):
                         try:
                             book = ComicBook.objects.get(file_name=file, directory=directory)
                         except ComicBook.MultipleObjectsReturned:
-                            logger.error(f'Duplicate Record {file}')
+                            logger.error(f'Duplicate Comic {file}')
                             books = ComicBook.objects.filter(file_name=file, directory=directory).order_by('id')
                             book = books.first()
                             extra_books = books.exclude(id=book.id)
