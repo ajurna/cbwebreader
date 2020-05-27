@@ -205,6 +205,14 @@ class ComicBook(models.Model):
                     book = ComicBook.process_comic_book(next_comic, self.directory)
                 else:
                     book = ComicBook.process_comic_book(next_comic)
+            except ComicBook.MultipleObjectsReturned:
+                if self.directory:
+                    books = ComicBook.objects.filter(file_name=next_comic, directory=self.directory).order_by('id')
+                else:
+                    books = ComicBook.objects.get(file_name=next_comic, directory__isnull=True).order_by('id')
+                book = books.first()
+                books = books.exclude(id=book.id)
+                books.delete()
             if type(book) is str:
                 raise IndexError
             comic_path = urlsafe_base64_encode(book.selector.bytes)
