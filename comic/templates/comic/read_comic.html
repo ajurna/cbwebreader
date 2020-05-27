@@ -7,7 +7,7 @@
         <div class="reveal" id="comic_box">
 			<div class="slides">
                 {% for page in pages %}
-				<section><img data-src="{% url "get_image" nav.cur_path page.index %}" class=" w-100" onclick="Reveal.next()"></section>
+				<section><img data-src="{% url "get_image" nav.cur_path page.index %}" class=" w-100" onclick="nextPage()"></section>
                 {% endfor %}
 			</div>
 		</div>
@@ -38,11 +38,7 @@
         $(document).keydown(function(e) {
             switch(e.which) {
                 case 37: // left
-                    if (Reveal.isFirstSlide()){
-                        window.location = "{% url "read_comic" nav.prev_path %}"
-                    } else {
-                        Reveal.prev();
-                    }
+                    prevPage()
                 break;
 
                 case 38: // up
@@ -54,11 +50,7 @@
                 break;
 
                 case 39: // right
-                    if (Reveal.isLastSlide()){
-                        window.location = "{% url "read_comic" nav.next_path %}"
-                    } else {
-                        Reveal.next()
-                    }
+                    nextPage()
                 break;
 
                 case 40: // down
@@ -89,5 +81,19 @@
                 Reveal.prev();
             }
         })
+    function prevPage() {
+        if (Reveal.isFirstSlide()){
+            window.location = "{% url "read_comic" nav.prev_path %}"
+        } else {
+            Reveal.prev();
+        }
+    }
+    function nextPage() {
+        if (Reveal.isLastSlide()){
+            window.location = "{% url "read_comic" nav.next_path %}"
+        } else {
+            Reveal.next()
+        }
+    }
     </script>
 {% endblock %}
