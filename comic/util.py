@@ -138,13 +138,16 @@ def generate_directory(user, directory=False):
         dir_list_obj = Directory.objects.filter(name__in=dir_list, parent__isnull=True)
         file_list_obj = ComicBook.objects.filter(file_name__in=file_list, directory__isnull=True)
 
-    dir_list_obj = dir_list_obj.annotate(total=Count('comicbook'),
-                                         total_read=Count('comicbook__comicstatus',
-                                                          Q(comicbook__comicstatus__finished=True,
-                                                            comicbook__comicstatus__user=user)))
-    file_list_obj = file_list_obj.filter(comicstatus__user=user).annotate(total_pages=Count('comicpage')).annotate(
-        last_read_page=F('comicstatus__last_read_page')).annotate(
-        finished=F('comicstatus__finished')).annotate(unread=F('comicstatus__unread'))
+    dir_list_obj = dir_list_obj.filter(comicbook__comicstatus__user=user).annotate(
+        total=Count('comicbook'),
+        total_read=Count('comicbook__comicstatus', Q(comicbook__comicstatus__finished=True))
+    )
+    file_list_obj = file_list_obj.filter(comicstatus__user=user).annotate(
+        total_pages=Count('comicpage'),
+        last_read_page=F('comicstatus__last_read_page'),
+        finished=F('comicstatus__finished'),
+        unread=F('comicstatus__unread')
+    )
 
     for directory_obj in dir_list_obj:
         df = DirFile()
