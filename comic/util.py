@@ -3,8 +3,8 @@ from os import listdir, path
 
 from django.db.models import Count, Q, F, Max, ExpressionWrapper, Prefetch
 from django.utils.http import urlsafe_base64_encode
-
-from .models import ComicBook, Directory, Setting
+from collections import Counter
+from .models import ComicBook, Directory, Setting, ComicStatus
 
 
 def generate_title_from_path(file_path):
@@ -143,6 +143,13 @@ def generate_directory(user, directory=False):
         total_read=Count('comicbook__comicstatus', Q(comicbook__comicstatus__finished=True,
                                                      comicbook__comicstatus__user=user), distinct=True)
     )
+
+    # Create Missing Status
+    status_list = [x.comic for x in
+                   ComicStatus.objects.filter(comic__in=file_list_obj, user=user).select_related('comic')]
+    new_status = [ComicStatus(comic=file, user=user) for file in file_list_obj if file not in status_list]
+    ComicStatus.objects.bulk_create(new_status)
+
     file_list_obj = file_list_obj.annotate(
         total_pages=Count('comicpage', distinct=True),
         last_read_page=F('comicstatus__last_read_page'),
