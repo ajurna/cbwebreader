@@ -1,2 +1,28 @@
 [tool.black]
 line_length = 119
+
+[tool.poetry]
+name = "cbwebreader"
+version = "0.1.0"
+description = "CBR/Z Web Reader"
+authors = ["ajurna <ajurna@gmail.com>"]
+license = "Creative Commons Attribution-ShareAlike 4.0 International License"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+Django = "^3.1.2"
+gunicorn = "^20.0.4"
+django-recaptcha2 = "^1.4.1"
+django-bootstrap4 = "^2.3.1"
+dj-database-url = "^0.5.0"
+PyPDF4 = "^1.27.0"
+python-dotenv = "^0.15.0"
+loguru = "^0.5.3"
+django-silk = "^4.1.0"
+mysqlclient = "1.4.6"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
