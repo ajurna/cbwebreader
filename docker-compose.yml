@@ -1,33 +1,51 @@
 version: "3.7"
 
 services:
-  app:
+
+  cbwebreader:
     build: .
-    environment:
-      - DATABASE_URL=postgres://admin:password@database:5432/cbwebreader
-      - TEST_DATABASE_URL=postgres://admin:password@database:5432/cbwebreader_test
-      - DJANGO_SETTINGS_MODULE=cbreader.settings.base
-      - DJANGO_ALLOWED_HOSTS=*
+    env_file: .env
     links:
       - database
     depends_on:
       - database
-    ports:
-      - "8000:8000"
+    expose:
+      - 8000
     volumes:
-      - ./cbreader:/src/cbreader
-      - ./comic:/src/comic
-      - ./comic_auth:/src/comic_auth
       - ${COMIC_BOOK_VOLUME}:/data
-    command: python manage.py runserver 0.0.0.0:8000
+      - static_files:/static
+    command:  /bin/bash entrypoint.sh
+
+  cbwebreader-cron:
+    build: .
+    env_file: .env
+    links:
+      - database
+    depends_on:
+      - database
+    volumes:
+      - ${COMIC_BOOK_VOLUME}:/data
+    command: /bin/bash entrypoint-cron.sh
 
   database:
     image: postgres:11.4-alpine
-    ports:
-      - 5432:5432
+    expose:
+      - 5432
     volumes:
       - /var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=cbwebreader
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_DATABASE}
+
+  nginx:
+    image: nginx
+    volumes:
+      - static_files:/static
+      - ./cbreader/settings/nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - 1337:80
+    depends_on:
+      - cbwebreader
+volumes:
+  static_files:

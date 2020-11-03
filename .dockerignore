@@ -6,6 +6,9 @@
 !cbreader
 !comic
 !comic_auth
+!static
 !manage.py
 !pyproject.toml
 !setup.cfg
+!entrypoint.sh
+!entrypoint-cron.sh

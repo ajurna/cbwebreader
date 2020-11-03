@@ -105,6 +105,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
+STATIC_ROOT = os.getenv('STATIC_ROOT', None)
+
 LOGIN_REDIRECT_URL = "/comic/"
 
 LOGIN_URL = "/login/"

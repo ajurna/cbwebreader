@@ -19,7 +19,8 @@ PyPDF4 = "^1.27.0"
 python-dotenv = "^0.15.0"
 loguru = "^0.5.3"
 django-silk = "^4.1.0"
-mysqlclient = "1.4.6"
+mysqlclient = "^2.0.1"
+psycopg2 = "^2.8.6"
 
 [tool.poetry.dev-dependencies]
 
