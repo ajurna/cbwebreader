@@ -1,9 +1,5 @@
-try:
-    import ujson as json
-except ImportError:
-    import json
+import json
 import uuid
-from os import path
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -32,12 +28,14 @@ from .util import (
 @ensure_csrf_cookie
 @login_required
 def comic_list(request, directory_selector=False):
-    try:
-        base_dir = Setting.objects.get(name="BASE_DIR").value
-    except Setting.DoesNotExist:
+    if User.objects.all().count() == 0:
         return redirect("/comic/settings/")
-    if not path.isdir(base_dir):
-        return redirect("/comic/settings/")
+    # try:
+    #     base_dir = Setting.objects.get(name="BASE_DIR").value
+    # except Setting.DoesNotExist:
+    #     return redirect("/comic/settings/")
+    # if not path.isdir(base_dir):
+    #     return redirect("/comic/settings/")
 
     if directory_selector:
         selector = uuid.UUID(bytes=urlsafe_base64_decode(directory_selector))
@@ -311,7 +309,7 @@ def read_comic(request, comic_selector):
         "book": book,
         "pages": pages,
         # "orig_file_name": book.page_name(page),
-        "nav": book.nav(0, request.user),
+        "nav": book.nav(request.user),
         "status": status,
         "breadcrumbs": generate_breadcrumbs_from_path(book.directory, book),
         "menu": Menu(request.user),
@@ -369,9 +367,6 @@ def initial_setup(request):
             )
             user.set_password(form.cleaned_data["password"])
             user.save()
-            base_dir, _ = Setting.objects.get_or_create(name="BASE_DIR")
-            base_dir.value = form.cleaned_data["base_dir"]
-            base_dir.save()
             user = authenticate(username=form.cleaned_data["username"], password=form.cleaned_data["password"])
             login(request, user)
             return redirect("/comic/")

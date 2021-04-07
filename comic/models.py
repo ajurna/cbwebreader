@@ -1,6 +1,10 @@
 import uuid
 import zipfile
-from os import listdir, path
+from dataclasses import dataclass
+from functools import reduce
+from os import listdir
+from pathlib import Path
+from typing import Optional, List
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -11,7 +15,7 @@ import PyPDF4
 import PyPDF4.utils
 
 
-from comic import rarfile
+import rarfile
 
 if settings.UNRAR_TOOL:
     rarfile.UNRAR_TOOL = settings.UNRAR_TOOL
@@ -40,15 +44,18 @@ class Directory(models.Model):
         return "Directory: {0}; {1}".format(self.name, self.parent)
 
     @property
-    def path(self):
+    def path(self) -> Path:
         return self.get_path()
 
-    def get_path(self):
+    def get_path(self) -> Path:
         path_items = self.get_path_items()
         path_items.reverse()
-        return path.sep.join(path_items)
+        if len(path_items) >= 2:
+            return reduce(lambda x, y: Path(x, y), path_items)
+        else:
+            return Path(path_items[0])
 
-    def get_path_items(self, p=None):
+    def get_path_items(self, p: Optional[List] = None) -> List[str]:
         if p is None:
             p = []
         p.append(self.name)
@@ -64,14 +71,14 @@ class Directory(models.Model):
             self.parent.get_path_objects(p)
         return p
 
-    @staticmethod
-    def get_dir_from_path(file_path):
-        file_path = file_path.split(path.sep)
-        print(file_path)
-        for d in Directory.objects.filter(name=file_path[-1]):
-            print(d)
-            if d.get_path_items() == file_path:
-                return d
+    # @staticmethod
+    # def get_dir_from_path(file_path):
+    #     file_path = file_path.split(os_path.sep)
+    #     print(file_path)
+    #     for d in Directory.objects.filter(name=file_path[-1]):
+    #         print(d)
+    #         if d.get_path_items() == file_path:
+    #             return d
 
 
 class ComicBook(models.Model):
@@ -89,15 +96,15 @@ class ComicBook(models.Model):
         return urlsafe_base64_encode(self.selector.bytes)
 
     def get_pdf(self):
-        base_dir = Setting.objects.get(name="BASE_DIR").value
-        return path.join(base_dir, self.directory.get_path(), self.file_name)
+        base_dir = settings.COMIC_BOOK_VOLUME
+        return Path(base_dir, self.directory.get_path(), self.file_name)
 
     def get_image(self, page):
-        base_dir = Setting.objects.get(name="BASE_DIR").value
+        base_dir = settings.COMIC_BOOK_VOLUME
         if self.directory:
-            archive_path = path.join(base_dir, self.directory.path, self.file_name)
+            archive_path = Path(base_dir, self.directory.path, self.file_name)
         else:
-            archive_path = path.join(base_dir, self.file_name)
+            archive_path = Path(base_dir, self.file_name)
         try:
             archive = rarfile.RarFile(archive_path)
         except rarfile.NotRarFile:
@@ -117,39 +124,23 @@ class ComicBook(models.Model):
     def page_count(self):
         return ComicPage.objects.filter(Comic=self).count()
 
+    @dataclass
     class Navigation:
-        next_index = 0
-        next_path = ""
-        prev_index = 0
-        prev_path = ""
-        cur_index = 0
-        cur_path = ""
-        q_prev_to_directory = False
-        q_next_to_directory = False
+        next_path: str
+        prev_path: str
+        cur_path: str
 
-        def __init__(self, **kwargs):
-            for arg in kwargs:
-                setattr(self, arg, kwargs[arg])
+    def nav(self, user):
+        return self.Navigation(
+            next_path=self.nav_get_next_comic(user),
+            prev_path=self.nav_get_prev_comic(user),
+            cur_path=urlsafe_base64_encode(self.selector.bytes)
+        )
 
-    def nav(self, page, user):
-        out = self.Navigation(cur_index=page, cur_path=urlsafe_base64_encode(self.selector.bytes))
-        if page == 0:
-            out.prev_path, out.prev_index = self.nav_get_prev_comic(user)
-            if out.prev_index == -1:
-                out.q_prev_to_directory = True
-        else:
-            out.prev_index = page - 1
-            out.prev_path = out.cur_path
-
-        out.next_path, out.next_index = self.nav_get_next_comic(user)
-        if out.next_index == -1:
-            out.q_next_to_directory = True
-        return out
-
-    def nav_get_prev_comic(self, user):
-        base_dir = Setting.objects.get(name="BASE_DIR").value
+    def nav_get_prev_comic(self, user) -> str:
+        base_dir = settings.COMIC_BOOK_VOLUME
         if self.directory:
-            folder = path.join(base_dir, self.directory.path)
+            folder = Path(base_dir, self.directory.path)
         else:
             folder = base_dir
         dir_list = ComicBook.get_ordered_dir_list(folder)
@@ -159,11 +150,15 @@ class ComicBook(models.Model):
                 comic_path = urlsafe_base64_encode(self.directory.selector.bytes)
             else:
                 comic_path = ""
-            index = -1
         else:
             prev_comic = dir_list[comic_index - 1]
 
-            if not path.isdir(path.join(folder, prev_comic)):
+            if Path(folder, prev_comic).is_dir():
+                if self.directory:
+                    comic_path = urlsafe_base64_encode(self.directory.selector.bytes)
+                else:
+                    comic_path = ""
+            else:
                 try:
                     if self.directory:
                         book = ComicBook.objects.get(file_name=prev_comic, directory=self.directory)
@@ -175,20 +170,14 @@ class ComicBook(models.Model):
                     else:
                         book = ComicBook.process_comic_book(prev_comic)
                 cs, _ = ComicStatus.objects.get_or_create(comic=book, user=user)
-                index = cs.last_read_page
                 comic_path = urlsafe_base64_encode(book.selector.bytes)
-            else:
-                if self.directory:
-                    comic_path = urlsafe_base64_encode(self.directory.selector.bytes)
-                else:
-                    comic_path = ""
-                index = -1
-        return comic_path, index
+
+        return comic_path
 
     def nav_get_next_comic(self, user):
-        base_dir = Setting.objects.get(name="BASE_DIR").value
+        base_dir = settings.COMIC_BOOK_VOLUME
         if self.directory:
-            folder = path.join(base_dir, self.directory.path)
+            folder = Path(base_dir, self.directory.path)
         else:
             folder = base_dir
         dir_list = ComicBook.get_ordered_dir_list(folder)
@@ -216,15 +205,12 @@ class ComicBook(models.Model):
             if type(book) is str:
                 raise IndexError
             comic_path = urlsafe_base64_encode(book.selector.bytes)
-            cs, _ = ComicStatus.objects.get_or_create(comic=book, user=user)
-            index = cs.last_read_page
         except IndexError:
             if self.directory:
                 comic_path = urlsafe_base64_encode(self.directory.selector.bytes)
             else:
                 comic_path = ""
-            index = -1
-        return comic_path, index
+        return comic_path
 
     class DirFile:
         def __init__(self):
@@ -261,11 +247,11 @@ class ComicBook(models.Model):
             return book
         except ComicBook.DoesNotExist:
             pass
-        base_dir = Setting.objects.get(name="BASE_DIR").value
+        base_dir = settings.COMIC_BOOK_VOLUME
         if directory:
-            comic_full_path = path.join(base_dir, directory.get_path(), comic_file_name)
+            comic_full_path = Path(base_dir, directory.get_path(), comic_file_name)
         else:
-            comic_full_path = path.join(base_dir, comic_file_name)
+            comic_full_path = Path(base_dir, comic_file_name)
 
         try:
             cbx = rarfile.RarFile(comic_full_path)
@@ -327,7 +313,7 @@ class ComicBook(models.Model):
         directories = []
         files = []
         for item in listdir(folder):
-            if path.isdir(path.join(folder, item)):
+            if Path(folder, item).is_dir():
                 directories.append(item)
             else:
                 files.append(item)

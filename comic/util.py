@@ -1,16 +1,18 @@
 from collections import OrderedDict
-from os import listdir, path
+from os import listdir
+from pathlib import Path
 
-from django.db.models import Count, Q, F, Max, ExpressionWrapper, Prefetch
+from django.conf import settings
+from django.db.models import Count, Q, F
 from django.utils.http import urlsafe_base64_encode
-from collections import Counter
-from .models import ComicBook, Directory, Setting, ComicStatus
+
+from .models import ComicBook, Directory, ComicStatus
 
 
-def generate_title_from_path(file_path):
-    if file_path == "":
+def generate_title_from_path(file_path: Path):
+    if file_path == "Home":
         return "CBWebReader"
-    return "CBWebReader - " + " - ".join(file_path.split(path.sep))
+    return f'CBWebReader - {" - ".join(p for p in file_path.parts)}'
 
 
 class Menu:
@@ -122,21 +124,23 @@ def generate_directory(user, directory=False):
     :type user: User
     :type directory: Directory
     """
-    base_dir = Setting.objects.get(name="BASE_DIR").value
+    base_dir = settings.COMIC_BOOK_VOLUME
     files = []
     if directory:
-        ordered_dir_list = listdir(path.join(base_dir, directory.path))
-        dir_list = [x for x in ordered_dir_list if path.isdir(path.join(base_dir, directory.path, x))]
+        dir_path = Path(base_dir, directory.path)
+        # ordered_dir_list = sorted(dir_path.glob('*'))
+        dir_list = [x for x in sorted(dir_path.glob('*')) if Path(base_dir, directory.path, x).is_dir()]
     else:
-        ordered_dir_list = listdir(base_dir)
-        dir_list = [x for x in ordered_dir_list if path.isdir(path.join(base_dir, x))]
-    file_list = [x for x in ordered_dir_list if x not in dir_list]
+        dir_path = base_dir
+        # ordered_dir_list = base_dir.glob('*')
+        dir_list = [x for x in sorted(dir_path.glob('*')) if Path(base_dir, x).is_dir()]
+    file_list = [x for x in sorted(dir_path.glob('*')) if x.is_file()]
     if directory:
-        dir_list_obj = Directory.objects.filter(name__in=dir_list, parent=directory)
-        file_list_obj = ComicBook.objects.filter(file_name__in=file_list, directory=directory)
+        dir_list_obj = Directory.objects.filter(name__in=[x.name for x in dir_list], parent=directory)
+        file_list_obj = ComicBook.objects.filter(file_name__in=[x.name for x in file_list], directory=directory)
     else:
-        dir_list_obj = Directory.objects.filter(name__in=dir_list, parent__isnull=True)
-        file_list_obj = ComicBook.objects.filter(file_name__in=file_list, directory__isnull=True)
+        dir_list_obj = Directory.objects.filter(name__in=[x.name for x in dir_list], parent__isnull=True)
+        file_list_obj = ComicBook.objects.filter(file_name__in=[x.name for x in file_list], directory__isnull=True)
 
     dir_list_obj = dir_list_obj.annotate(
         total=Count('comicbook', distinct=True),
@@ -162,19 +166,19 @@ def generate_directory(user, directory=False):
         df = DirFile()
         df.populate_directory(directory_obj, user)
         files.append(df)
-        dir_list.remove(directory_obj.name)
+        dir_list.remove(Path(dir_path, directory_obj.name))
 
     for file_obj in file_list_obj:
         df = DirFile()
         df.populate_comic(file_obj, user)
         files.append(df)
-        file_list.remove(file_obj.file_name)
+        file_list.remove(Path(dir_path, file_obj.file_name))
 
     for directory_name in dir_list:
         if directory:
-            directory_obj = Directory(name=directory_name, parent=directory)
+            directory_obj = Directory(name=directory_name.name, parent=directory)
         else:
-            directory_obj = Directory(name=directory_name)
+            directory_obj = Directory(name=directory_name.name)
         directory_obj.save()
         directory_obj.total = 0
         directory_obj.total_read = 0
@@ -183,8 +187,8 @@ def generate_directory(user, directory=False):
         files.append(df)
 
     for file_name in file_list:
-        if file_name.lower()[-4:] in [".rar", ".zip", ".cbr", ".cbz", ".pdf"]:
-            book = ComicBook.process_comic_book(file_name, directory)
+        if file_name.suffix.lower() in [".rar", ".zip", ".cbr", ".cbz", ".pdf"]:
+            book = ComicBook.process_comic_book(file_name.name, directory)
             df = DirFile()
             df.populate_comic(book, user)
             files.append(df)
@@ -226,14 +230,3 @@ def generate_dir_status(total, total_read):
     elif total_read == 0:
         return '<center><span class="label label-default">Unread</span></center>'
     return f'<center><span class="label label-primary">{total_read}/{total}</span></center>'
-
-
-def get_ordered_dir_list(folder):
-    directories = []
-    files = []
-    for item in listdir(folder):
-        if path.isdir(path.join(folder, item)):
-            directories.append(item)
-        else:
-            files.append(item)
-    return sorted(directories) + sorted(files)

@@ -13,13 +13,6 @@ class InitialSetupForm(forms.Form):
     password_confirm = forms.CharField(
         widget=forms.PasswordInput(attrs={"class": "form-control"})
     )
-    base_dir = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
-
-    def clean_base_dir(self):
-        data = self.cleaned_data["base_dir"]
-        if not path.isdir(data):
-            raise forms.ValidationError("This is not a valid Directory")
-        return data
 
     def clean(self):
         form_data = self.cleaned_data

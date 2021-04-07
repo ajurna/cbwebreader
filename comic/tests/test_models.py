@@ -1,10 +1,12 @@
 import json
 import os
-from os import path
+# from os import path
 
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.utils.http import urlsafe_base64_encode
+from django.conf import settings
+from pathlib import Path
 
 from comic.models import ComicBook, ComicPage, ComicStatus, Directory, Setting
 from comic.util import generate_directory
@@ -12,7 +14,7 @@ from comic.util import generate_directory
 
 class ComicBookTests(TestCase):
     def setUp(self):
-        Setting.objects.create(name="BASE_DIR", value=path.join(os.getcwd(), "comic", "test"))
+        settings.COMIC_BOOK_VOLUME = Path(Path.cwd(), 'test_comics')
         User.objects.create_user("test", "test@test.com", "test")
         user = User.objects.first()
         ComicBook.process_comic_book("test1.rar")
@@ -53,73 +55,48 @@ class ComicBookTests(TestCase):
         self.assertEqual(content_type, "image/jpeg")
         self.assertEqual(img.read(), b"img1.jpg")
 
-    def test_nav_first_page_with_folder_above(self):
+    def test_nav_with_folder_above(self):
+        user = User.objects.get(username="test")
+        generate_directory(user)
         book = ComicBook.objects.get(file_name="test1.rar")
-        user = User.objects.get(username="test")
-        nav = book.nav(0, user)
-        self.assertEqual(nav.next_index, 1)
-        self.assertEqual(nav.next_path, urlsafe_base64_encode(book.selector.bytes))
-        self.assertEqual(nav.prev_index, -1)
+
+        nav = book.nav(user)
+
         self.assertEqual(nav.prev_path, "")
-        self.assertEqual(nav.cur_index, 0)
         self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
-        self.assertEqual(nav.q_prev_to_directory, True)
-        self.assertEqual(nav.q_next_to_directory, False)
 
-    def test_nav_first_page_with_comic_above(self):
-        prev_book = ComicBook.objects.get(file_name="test1.rar")
+    def test_nav_with_comic_above(self):
+        user = User.objects.get(username="test")
+        generate_directory(user)
+        prev_book = ComicBook.objects.get(file_name="test1.rar", directory__isnull=True)
         book = ComicBook.objects.get(file_name="test2.rar", directory__isnull=True)
-        user = User.objects.get(username="test")
+        next_book = ComicBook.objects.get(file_name="test3.rar", directory__isnull=True)
 
-        nav = book.nav(0, user)
-        self.assertEqual(nav.next_index, 1)
-        self.assertEqual(nav.next_path, urlsafe_base64_encode(book.selector.bytes))
-        self.assertEqual(nav.prev_index, 0)
+
+        nav = book.nav(user)
+
         self.assertEqual(nav.prev_path, urlsafe_base64_encode(prev_book.selector.bytes))
-        self.assertEqual(nav.cur_index, 0)
         self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
-        self.assertEqual(nav.q_prev_to_directory, False)
-        self.assertEqual(nav.q_next_to_directory, False)
+        self.assertEqual(nav.next_path, urlsafe_base64_encode(next_book.selector.bytes))
 
-    def test_nav_last_page_with_comic_below(self):
+    def test_nav_with_comic_below(self):
         user = User.objects.get(username="test")
+        generate_directory(user)
         book = ComicBook.objects.get(file_name="test1.rar", directory__isnull=True)
         next_book = ComicBook.objects.get(file_name="test2.rar", directory__isnull=True)
-        nav = book.nav(3, user)
-        self.assertEqual(nav.next_index, 2)
+        nav = book.nav(user)
+
+        self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
         self.assertEqual(nav.next_path, urlsafe_base64_encode(next_book.selector.bytes))
-        self.assertEqual(nav.prev_index, 2)
-        self.assertEqual(nav.prev_path, urlsafe_base64_encode(book.selector.bytes))
-        self.assertEqual(nav.cur_index, 3)
-        self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
-        self.assertEqual(nav.q_prev_to_directory, False)
-        self.assertEqual(nav.q_next_to_directory, False)
 
-    def test_nav_last_page_with_nothing_below(self):
+    def test_nav_with_nothing_below(self):
         user = User.objects.get(username="test")
+        generate_directory(user)
         book = ComicBook.objects.get(file_name="test4.rar")
-        nav = book.nav(3, user)
-        self.assertEqual(nav.next_index, -1)
-        self.assertEqual(nav.next_path, "")
-        self.assertEqual(nav.prev_index, 2)
-        self.assertEqual(nav.prev_path, urlsafe_base64_encode(book.selector.bytes))
-        self.assertEqual(nav.cur_index, 3)
-        self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
-        self.assertEqual(nav.q_prev_to_directory, False)
-        self.assertEqual(nav.q_next_to_directory, True)
+        nav = book.nav(user)
 
-    def test_nav_in_comic(self):
-        user = User.objects.get(username="test")
-        book = ComicBook.objects.get(file_name="test1.rar", directory__isnull=True)
-        nav = book.nav(1, user)
-        self.assertEqual(nav.next_index, 2)
-        self.assertEqual(nav.next_path, urlsafe_base64_encode(book.selector.bytes))
-        self.assertEqual(nav.prev_index, 0)
-        self.assertEqual(nav.prev_path, urlsafe_base64_encode(book.selector.bytes))
-        self.assertEqual(nav.cur_index, 1)
         self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
-        self.assertEqual(nav.q_prev_to_directory, False)
-        self.assertEqual(nav.q_next_to_directory, False)
+        self.assertEqual(nav.next_path, "")
 
     def test_generate_directory(self):
         user = User.objects.get(username="test")
@@ -127,7 +104,7 @@ class ComicBookTests(TestCase):
         dir1 = folders[0]
         self.assertEqual(dir1.name, "test_folder")
         self.assertEqual(dir1.type, "directory")
-        self.assertEqual(dir1.icon, "glyphicon-folder-open")
+        self.assertEqual("fa-folder-open", dir1.icon)
         d = Directory.objects.get(name="test_folder", parent__isnull=True)
         location = "/comic/{0}/".format(urlsafe_base64_encode(d.selector.bytes))
         self.assertEqual(dir1.location, location)
@@ -136,27 +113,27 @@ class ComicBookTests(TestCase):
         dir2 = folders[1]
         self.assertEqual(dir2.name, "test1.rar")
         self.assertEqual(dir2.type, "book")
-        self.assertEqual(dir2.icon, "glyphicon-book")
+        self.assertEqual("fa-book", dir2.icon)
         c = ComicBook.objects.get(file_name="test1.rar", directory__isnull=True)
-        location = "/comic/read/{0}/{1}/".format(urlsafe_base64_encode(c.selector.bytes), "0")
+        location = "/comic/read/{0}/".format(urlsafe_base64_encode(c.selector.bytes))
         self.assertEqual(dir2.location, location)
         self.assertEqual(dir2.label, '<center><span class="label label-default">Unread</span></center>')
 
         dir3 = folders[2]
         self.assertEqual(dir3.name, "test2.rar")
         self.assertEqual(dir3.type, "book")
-        self.assertEqual(dir3.icon, "glyphicon-book")
+        self.assertEqual("fa-book", dir3.icon)
         c = ComicBook.objects.get(file_name="test2.rar", directory__isnull=True)
-        location = "/comic/read/{0}/{1}/".format(urlsafe_base64_encode(c.selector.bytes), "2")
+        location = "/comic/read/{0}/".format(urlsafe_base64_encode(c.selector.bytes))
         self.assertEqual(dir3.location, location)
         self.assertEqual(dir3.label, '<center><span class="label label-primary">3/4</span></center>')
 
         dir4 = folders[3]
         self.assertEqual(dir4.name, "test3.rar")
         self.assertEqual(dir4.type, "book")
-        self.assertEqual(dir3.icon, "glyphicon-book")
+        self.assertEqual("fa-book", dir3.icon)
         c = ComicBook.objects.get(file_name="test3.rar", directory__isnull=True)
-        location = "/comic/read/{0}/{1}/".format(urlsafe_base64_encode(c.selector.bytes), "0")
+        location = "/comic/read/{0}/".format(urlsafe_base64_encode(c.selector.bytes))
         self.assertEqual(dir4.location, location)
         self.assertEqual(dir4.label, '<center><span class="label label-default">Unread</span></center>')
 
@@ -217,8 +194,8 @@ class ComicBookTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
         c.login(username="test", password="test")
-        generate_directory(User.objects.first())
-        ComicStatus.objects.all().delete()
+        user = User.objects.get(username="test")
+        folders = generate_directory(user)
 
         req_data = {"start": "0", "length": "10", "search[value]": "", "order[0][dir]": "desc"}
         response = c.post("/comic/recent/json/", req_data)
@@ -234,12 +211,12 @@ class ComicBookTests(TestCase):
                 "data": [
                     {
                         "date": book.date_added.strftime("%d/%m/%y-%H:%M"),
-                        "icon": '<span class="glyphicon glyphicon-book"></span>',
+                        "icon": '<span class="fa fa-book"></span>',
                         "label": '<center><span class="label ' 'label-default">Unread</span></center>',
                         "name": "test1.rar",
                         "selector": urlsafe_base64_encode(book.selector.bytes),
                         "type": "book",
-                        "url": f"/comic/read/" f"{urlsafe_base64_encode(book.selector.bytes)}/0/",
+                        "url": f"/comic/read/" f"{urlsafe_base64_encode(book.selector.bytes)}/",
                     }
                 ],
                 "recordsFiltered": 1,
@@ -250,17 +227,6 @@ class ComicBookTests(TestCase):
         req_data["order[0][dir]"] = 3
         response = c.post("/comic/recent/json/", req_data)
 
-        self.assertListEqual(
-            [x["name"] for x in json.loads(response.content)["data"]],
-            ["test1.rar", "test2.rar", "test4.rar", "test3.rar"],
-        )
-
-        req_data["order[0][dir]"] = 2
-        response = c.post("/comic/recent/json/", req_data)
-        self.assertListEqual(
-            [x["name"] for x in json.loads(response.content)["data"]],
-            ["test1.rar", "test2.rar", "test4.rar", "test3.rar"],
-        )
 
     def test_comic_edit(self):
         c = Client()
