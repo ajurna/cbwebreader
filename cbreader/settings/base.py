@@ -9,7 +9,7 @@ from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = Path(__file__).parent.parent.parent
 
 load_dotenv(Path(BASE_DIR, '.env'))
 
@@ -20,7 +20,7 @@ load_dotenv(Path(BASE_DIR, '.env'))
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "9!u#3b@%&vhmh2f89l+tl6r30ce_c&e22bc3l8jx_7#mybxbdq")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', False) == 'True'
+DEBUG = os.getenv('DJANGO_DEBUG', False) == 'True'
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
 
@@ -102,7 +102,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
+    Path(BASE_DIR, "static")
 ]
 
 STATIC_ROOT = os.getenv('STATIC_ROOT', None)
@@ -126,3 +126,5 @@ SILK_ENABLED = False
 USE_X_FORWARDED_HOST = os.getenv('USE_X_FORWARDED_HOST', False) == 'True'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
