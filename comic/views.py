@@ -301,6 +301,7 @@ def read_comic(request, comic_selector):
     except Directory.DoesNotExist:
         return HttpResponse(status=404)
     book = get_object_or_404(ComicBook, selector=selector)
+
     pages = ComicPage.objects.filter(Comic=book)
 
     status, _ = ComicStatus.objects.get_or_create(comic=book, user=request.user)

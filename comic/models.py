@@ -99,7 +99,7 @@ class ComicBook(models.Model):
         base_dir = settings.COMIC_BOOK_VOLUME
         return Path(base_dir, self.directory.get_path(), self.file_name)
 
-    def get_image(self, page):
+    def get_image(self, page: int):
         base_dir = settings.COMIC_BOOK_VOLUME
         if self.directory:
             archive_path = Path(base_dir, self.directory.path, self.file_name)
@@ -112,7 +112,12 @@ class ComicBook(models.Model):
         except zipfile.BadZipfile:
             return False
         page_obj = ComicPage.objects.get(Comic=self, index=page)
-        out = (archive.open(page_obj.page_file_name), page_obj.content_type)
+        try:
+            out = (archive.open(page_obj.page_file_name), page_obj.content_type)
+        except rarfile.NoRarEntry:
+            ComicPage.objects.filter(Comic=self).delete()
+            self.process_comic_pages(archive, self)
+            out = self.get_image(page)
         return out
 
     def is_last_page(self, page):
@@ -271,42 +276,49 @@ class ComicBook(models.Model):
         if not pdf_file and not cbx:
             return comic_file_name
 
-        with atomic():
-            if directory:
-                book = ComicBook(file_name=comic_file_name, directory=directory)
-            else:
-                book = ComicBook(file_name=comic_file_name)
-            book.save()
-            page_index = 0
-            if cbx:
-                for page_file_name in sorted([str(x) for x in cbx.namelist()], key=str.lower):
-                    try:
-                        dot_index = page_file_name.rindex(".") + 1
-                    except ValueError:
-                        continue
-                    ext = page_file_name.lower()[dot_index:]
-                    if ext in ["jpg", "jpeg"]:
-                        content_type = "image/jpeg"
-                    elif ext == "png":
-                        content_type = "image/png"
-                    elif ext == "bmp":
-                        content_type = "image/bmp"
-                    elif ext == "gif":
-                        content_type = "image/gif"
-                    else:
-                        content_type = "text/plain"
-                    page = ComicPage(
-                        Comic=book, index=page_index, page_file_name=page_file_name, content_type=content_type
-                    )
-                    page.save()
-                    page_index += 1
-            elif pdf_file:
+
+        if directory:
+            book = ComicBook(file_name=comic_file_name, directory=directory)
+        else:
+            book = ComicBook(file_name=comic_file_name)
+        book.save()
+        page_index = 0
+        if cbx:
+            ComicBook.process_comic_pages(cbx, book)
+        elif pdf_file:
+            with atomic():
                 for page_index in range(pdf_file.getNumPages()):
                     page = ComicPage(
                         Comic=book, index=page_index, page_file_name=page_index+1, content_type='application/pdf'
                     )
                     page.save()
         return book
+
+    @staticmethod
+    def process_comic_pages(cbx, book):
+        with atomic():
+            page_index = 0
+            for page_file_name in sorted([str(x) for x in cbx.namelist()], key=str.lower):
+                try:
+                    dot_index = page_file_name.rindex(".") + 1
+                except ValueError:
+                    continue
+                ext = page_file_name.lower()[dot_index:]
+                if ext in ["jpg", "jpeg"]:
+                    content_type = "image/jpeg"
+                elif ext == "png":
+                    content_type = "image/png"
+                elif ext == "bmp":
+                    content_type = "image/bmp"
+                elif ext == "gif":
+                    content_type = "image/gif"
+                else:
+                    content_type = "text/plain"
+                page = ComicPage(
+                    Comic=book, index=page_index, page_file_name=page_file_name, content_type=content_type
+                )
+                page.save()
+                page_index += 1
 
     @staticmethod
     def get_ordered_dir_list(folder):

@@ -280,3 +280,15 @@ class ComicBookTests(TestCase):
 
         response = c.get("/comic/account/")
         self.assertEqual(response.status_code, 200)
+
+    def test_file_not_in_archive(self):
+        c = Client()
+        user = User.objects.get(username="test")
+        book = ComicBook.objects.get(file_name='test1.rar')
+        page = ComicPage.objects.get(Comic=book, index=0)
+        page.page_file_name = 'doesnt_exist'
+        page.save()
+        generate_directory(user)
+        c.login(username="test", password="test")
+        response = c.get(f"/comic/read/{urlsafe_base64_encode(book.selector.bytes)}/0/img")
+        self.assertEqual(response.status_code, 200)
