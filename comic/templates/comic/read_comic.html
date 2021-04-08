@@ -35,14 +35,16 @@
             touch: false,
             transition: 'slide',
             plugins: [ RevealMenu ]
-        }).then(() => {Reveal.slide({{ status.last_read_page }})} );
+        }).then(() => {
+            Reveal.slide({{ status.last_read_page }})
 
-        Reveal.addEventListener( 'slidetransitionend', function( event ) {
-            // event.previousSlide, event.currentSlide, event.indexh, event.indexv
-            document.getElementsByClassName('present')[0].scrollIntoView({behavior: 'smooth'})
+        });
+        
+        Reveal.on( 'slidechanged', event => {
+            console.log( event.currentSlide );
+            document.getElementsByClassName('slides')[0].scrollIntoView({behavior: 'smooth'})
             $.ajax({url: "/comic/set_page/{{nav.cur_path}}/" + event.indexh + "/"})
-         } );
-
+        });
 
         const hammertime = new Hammer(document.getElementById('comic_box'), {});
         hammertime.on('swipeleft', function (ev) {
