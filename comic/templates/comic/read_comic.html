@@ -7,7 +7,7 @@
         <div class="reveal" id="comic_box">
 			<div class="slides">
                 {% for page in pages %}
-				<section><img data-src="{% url "get_image" nav.cur_path page.index %}" class=" w-100" onclick="nextPage()"></section>
+				<section><img data-src="{% url "get_image" nav.cur_path page.index %}" class=" w-100" onclick="nextPage()" ></section>
                 {% endfor %}
 			</div>
 		</div>
@@ -25,62 +25,40 @@
             minScale: 1,
             maxScale: 1,
             disableLayout: true,
-            keyboard: false,
+            progress: true,
+            keyboard: {
+                37: () => {prevPage()},
+                39: () => {nextPage()},
+                38: () => {window.scrollTo({ top: window.scrollY-window.innerHeight*.6, left: 0, behavior: 'smooth' })},
+                40: () => {window.scrollTo({ top: window.scrollY+window.innerHeight*.6, left: 0, behavior: 'smooth' })},
+              },
             touch: false,
             transition: 'slide',
-        });
-        Reveal.setState({indexh: {{ status.last_read_page }} });
+        }).then(() => {Reveal.slide({{ status.last_read_page }})} );
+
         Reveal.addEventListener( 'slidechanged', function( event ) {
             // event.previousSlide, event.currentSlide, event.indexh, event.indexv
             document.getElementsByClassName('present')[0].scrollIntoView({behavior: 'smooth'})
             $.ajax({url: "/comic/set_page/{{nav.cur_path}}/" + event.indexh + "/"})
-        } );
-        $(document).keydown(function(e) {
-            switch(e.which) {
-                case 37: // left
-                    prevPage()
-                break;
+         } );
 
-                case 38: // up
-                    window.scrollTo({
-                      top: window.scrollY-window.innerHeight*.7,
-                      left: 0,
-                      behavior: 'smooth'
-                    });
-                break;
 
-                case 39: // right
-                    nextPage()
-                break;
-
-                case 40: // down
-                    window.scrollTo({
-                      top: window.scrollY+window.innerHeight*.7,
-                      left: 0,
-                      behavior: 'smooth'
-                    });
-                break;
-
-                default: return; // exit this handler for other keys
-            }
-            e.preventDefault(); // prevent the default action (scroll / move caret)
-        });
-
-        var hammertime = new Hammer(document.getElementById('comic_box'), {});
+        const hammertime = new Hammer(document.getElementById('comic_box'), {});
         hammertime.on('swipeleft', function (ev) {
             if (Reveal.isLastSlide()){
                 window.location = "{% url "read_comic" nav.next_path %}"
             } else {
                 Reveal.next()
             }
-        })
+        });
         hammertime.on('swiperight', function (ev) {
             if (Reveal.isFirstSlide()){
                 window.location = "{% url "read_comic" nav.prev_path %}"
             } else {
                 Reveal.prev();
             }
-        })
+        });
+
     function prevPage() {
         if (Reveal.isFirstSlide()){
             window.location = "{% url "read_comic" nav.prev_path %}"
