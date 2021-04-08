@@ -9,7 +9,7 @@
         <div class="btn-group" role="group" aria-label="Basic example">
 
             <button id="prev" class="btn btn-secondary">Previous</button>
-            <button id="pages" class="btn btn-secondary"><span id="page_num"></span> / <span id="page_count"></button>
+            <button id="pages" class="btn btn-secondary"><span id="page_num"></span> / <span id="page_count"></span></button>
 
             <button id="next" class="btn btn-secondary">Next</button>
 
@@ -52,12 +52,9 @@ function renderPage(num) {
   pageRendering = true;
   // Using promise to fetch the page
   pdfDoc.getPage(num).then(function(page) {
-    let viewport = page.getViewport({scale: (window.innerWidth *.95) / page.getViewport(1.0).width});
+    let viewport = page.getViewport({scale: (window.innerWidth *.95) / page.getViewport({scale:1.0}).width});
     canvas.height = viewport.height;
     canvas.width = viewport.width;
-
-    document.getElementById('the-canvas').scrollIntoView({behavior: 'smooth'})
-    $.ajax({url: "/comic/set_page/{{nav.cur_path}}/" + (pageNum - 1) + "/"})
 
     // Render PDF page into canvas context
     let renderContext = {
@@ -160,13 +157,13 @@ $(document).keydown(function(e) { // add arrow key support
         });
 
         var hammertime = new Hammer(document.getElementById('the-canvas'), {});
-        hammertime.on('swipeleft', function (ev) {
+        hammertime.on('swipeleft', function () {
             onNextPage()
         })
-        hammertime.on('swiperight', function (ev) {
+        hammertime.on('swiperight', function () {
             onPrevPage()
         })
-        hammertime.on('tap', function (ev) {
+        hammertime.on('tap', function () {
             onNextPage()
         })
     </script>

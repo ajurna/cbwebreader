@@ -265,7 +265,7 @@ class ComicBook(models.Model):
         pdf_file = None
         if not cbx:
             try:
-                pdf_file = PyPDF4.PdfFileReader(comic_full_path)
+                pdf_file = PyPDF4.PdfFileReader(str(comic_full_path))
             except PyPDF4.utils.PyPdfError:
                 pass
         if not pdf_file and not cbx:
