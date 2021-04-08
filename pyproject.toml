@@ -23,6 +23,7 @@ mysqlclient = "^2.0.1"
 psycopg2 = "^2.8.6"
 rarfile = "^4.0"
 coverage = "^5.5"
+django-db-mutex = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
 

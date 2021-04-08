@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'bootstrap4',
     "comic",
     "comic_auth",
+    'db_mutex',
 )
 
 MIDDLEWARE = [

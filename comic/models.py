@@ -13,7 +13,8 @@ from django.db.transaction import atomic
 from django.utils.http import urlsafe_base64_encode
 import PyPDF4
 import PyPDF4.utils
-
+from db_mutex import DBMutexError, DBMutexTimeoutError
+from db_mutex.db_mutex import db_mutex
 
 import rarfile
 
@@ -114,15 +115,17 @@ class ComicBook(models.Model):
         try:
             page_obj = ComicPage.objects.get(Comic=self, index=page)
         except ComicPage.MultipleObjectsReturned:
-            ComicPage.objects.filter(Comic=self).delete()
-            self.process_comic_pages(archive, self)
-            page_obj = ComicPage.objects.get(Comic=self, index=page)
+            with db_mutex('comicpage'):
+                ComicPage.objects.filter(Comic=self).delete()
+                self.process_comic_pages(archive, self)
+                page_obj = ComicPage.objects.get(Comic=self, index=page)
         try:
             out = (archive.open(page_obj.page_file_name), page_obj.content_type)
         except rarfile.NoRarEntry:
-            ComicPage.objects.filter(Comic=self).delete()
-            self.process_comic_pages(archive, self)
-            out = self.get_image(page)
+            with db_mutex('comicpage'):
+                ComicPage.objects.filter(Comic=self).delete()
+                self.process_comic_pages(archive, self)
+                out = self.get_image(page)
         return out
 
     def is_last_page(self, page):
