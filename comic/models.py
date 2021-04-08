@@ -119,6 +119,11 @@ class ComicBook(models.Model):
                 ComicPage.objects.filter(Comic=self).delete()
                 self.process_comic_pages(archive, self)
                 page_obj = ComicPage.objects.get(Comic=self, index=page)
+        except ComicPage.DoesNotExist:
+            with db_mutex('comicpage'):
+                ComicPage.objects.filter(Comic=self).delete()
+                self.process_comic_pages(archive, self)
+                page_obj = ComicPage.objects.get(Comic=self, index=page)
         try:
             out = (archive.open(page_obj.page_file_name), page_obj.content_type)
         except rarfile.NoRarEntry:
