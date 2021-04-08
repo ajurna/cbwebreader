@@ -39,9 +39,8 @@
             Reveal.slide({{ status.last_read_page }})
 
         });
-        
+
         Reveal.on( 'slidechanged', event => {
-            console.log( event.currentSlide );
             document.getElementsByClassName('slides')[0].scrollIntoView({behavior: 'smooth'})
             $.ajax({url: "/comic/set_page/{{nav.cur_path}}/" + event.indexh + "/"})
         });
