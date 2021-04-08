@@ -71,6 +71,9 @@ function renderPage(num) {
         renderPage(pageNumPending);
         pageNumPending = null;
       }
+    }).then(function () {
+        document.getElementById('the-canvas').scrollIntoView({behavior: 'smooth'})
+        $.ajax({url: "/comic/set_page/{{nav.cur_path}}/" + (num-1) + "/"})
     });
   });
 
