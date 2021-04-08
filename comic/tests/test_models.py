@@ -292,3 +292,16 @@ class ComicBookTests(TestCase):
         c.login(username="test", password="test")
         response = c.get(f"/comic/read/{urlsafe_base64_encode(book.selector.bytes)}/0/img")
         self.assertEqual(response.status_code, 200)
+
+    def test_duplicate_pages(self):
+        c = Client()
+        user = User.objects.get(username="test")
+        generate_directory(user)
+        book = ComicBook.objects.get(file_name='test1.rar')
+        page = ComicPage.objects.get(Comic=book, index=0)
+        dup_page = ComicPage(Comic=book, index=0, page_file_name=page.page_file_name, content_type=page.content_type)
+        dup_page.save()
+
+        c.login(username="test", password="test")
+        response = c.get(f"/comic/read/{urlsafe_base64_encode(book.selector.bytes)}/0/img")
+        self.assertEqual(response.status_code, 200)

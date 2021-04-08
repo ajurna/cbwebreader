@@ -111,7 +111,12 @@ class ComicBook(models.Model):
             archive = zipfile.ZipFile(archive_path)
         except zipfile.BadZipfile:
             return False
-        page_obj = ComicPage.objects.get(Comic=self, index=page)
+        try:
+            page_obj = ComicPage.objects.get(Comic=self, index=page)
+        except ComicPage.MultipleObjectsReturned:
+            ComicPage.objects.filter(Comic=self).delete()
+            self.process_comic_pages(archive, self)
+            page_obj = ComicPage.objects.get(Comic=self, index=page)
         try:
             out = (archive.open(page_obj.page_file_name), page_obj.content_type)
         except rarfile.NoRarEntry:
