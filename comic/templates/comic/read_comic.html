@@ -7,7 +7,7 @@
         <div class="reveal" id="comic_box">
 			<div class="slides">
                 {% for page in pages %}
-				<section><img data-src="{% url "get_image" nav.cur_path page.index %}" class=" w-100" onclick="nextPage()" ></section>
+				<section data-menu-title="{{ page.page_file_name }}"><img data-src="{% url "get_image" nav.cur_path page.index %}" class=" w-100" onclick="nextPage()" ></section>
                 {% endfor %}
 			</div>
 		</div>
@@ -34,6 +34,7 @@
               },
             touch: false,
             transition: 'slide',
+            plugins: [ RevealMenu ]
         }).then(() => {Reveal.slide({{ status.last_read_page }})} );
 
         Reveal.addEventListener( 'slidechanged', function( event ) {
