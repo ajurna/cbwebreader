@@ -37,7 +37,7 @@
             plugins: [ RevealMenu ]
         }).then(() => {Reveal.slide({{ status.last_read_page }})} );
 
-        Reveal.addEventListener( 'slidechanged', function( event ) {
+        Reveal.addEventListener( 'slidetransitionend', function( event ) {
             // event.previousSlide, event.currentSlide, event.indexh, event.indexv
             document.getElementsByClassName('present')[0].scrollIntoView({behavior: 'smooth'})
             $.ajax({url: "/comic/set_page/{{nav.cur_path}}/" + event.indexh + "/"})
