@@ -111,7 +111,7 @@ $(document).ready(function() {
         }
         $('table tr td:first-child input').each(function(chkbx) {
             row = $(this);
-            if (row.prop('checked') != cb.prop('checked')){
+            if (row.prop('checked') !== cb.prop('checked')){
                 row.click();
             }
         });
