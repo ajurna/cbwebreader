@@ -265,7 +265,7 @@ class ComicBook(models.Model):
     def process_comic_pages(cbx, book):
         with atomic():
             page_index = 0
-            for page_file_name in sorted([str(x) for x in cbx.namelist()], key=str.lower):
+            for page_file_name in sorted([str(x) for x in cbx.namelist() if not x.endswith('/')], key=str.lower):
                 page = ComicPage(
                     Comic=book,
                     index=page_index,
