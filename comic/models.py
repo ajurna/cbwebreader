@@ -1,10 +1,12 @@
+import mimetypes
 import uuid
 import zipfile
 from dataclasses import dataclass
 from functools import reduce
+from itertools import zip_longest
 from os import listdir
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Union, Tuple
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -13,10 +15,10 @@ from django.db.transaction import atomic
 from django.utils.http import urlsafe_base64_encode
 import PyPDF4
 import PyPDF4.utils
-from db_mutex import DBMutexError, DBMutexTimeoutError
-from db_mutex.db_mutex import db_mutex
 
 import rarfile
+
+from comic.errors import NotCompatibleArchive
 
 if settings.UNRAR_TOOL:
     rarfile.UNRAR_TOOL = settings.UNRAR_TOOL
@@ -72,15 +74,6 @@ class Directory(models.Model):
             self.parent.get_path_objects(p)
         return p
 
-    # @staticmethod
-    # def get_dir_from_path(file_path):
-    #     file_path = file_path.split(os_path.sep)
-    #     print(file_path)
-    #     for d in Directory.objects.filter(name=file_path[-1]):
-    #         print(d)
-    #         if d.get_path_items() == file_path:
-    #             return d
-
 
 class ComicBook(models.Model):
     file_name = models.TextField()
@@ -112,25 +105,9 @@ class ComicBook(models.Model):
             archive = zipfile.ZipFile(archive_path)
         except zipfile.BadZipfile:
             return False
-        try:
-            page_obj = ComicPage.objects.get(Comic=self, index=page)
-        except ComicPage.MultipleObjectsReturned:
-            with db_mutex('comicpage'):
-                ComicPage.objects.filter(Comic=self).delete()
-                self.process_comic_pages(archive, self)
-                page_obj = ComicPage.objects.get(Comic=self, index=page)
-        except ComicPage.DoesNotExist:
-            with db_mutex('comicpage'):
-                ComicPage.objects.filter(Comic=self).delete()
-                self.process_comic_pages(archive, self)
-                page_obj = ComicPage.objects.get(Comic=self, index=page)
-        try:
-            out = (archive.open(page_obj.page_file_name), page_obj.content_type)
-        except rarfile.NoRarEntry:
-            with db_mutex('comicpage'):
-                ComicPage.objects.filter(Comic=self).delete()
-                self.process_comic_pages(archive, self)
-                out = self.get_image(page)
+
+        page_obj = ComicPage.objects.get(Comic=self, index=page)
+        out = (archive.open(page_obj.page_file_name), page_obj.content_type)
         return out
 
     def is_last_page(self, page):
@@ -251,7 +228,7 @@ class ComicBook(models.Model):
         return ComicPage.objects.get(Comic=self, index=index).page_file_name
 
     @staticmethod
-    def process_comic_book(comic_file_name, directory=False):
+    def process_comic_book(comic_file_name: Path, directory: "Directory" = False) -> Union["ComicBook", Path]:
         """
 
         :type comic_file_name: str
@@ -265,42 +242,19 @@ class ComicBook(models.Model):
             return book
         except ComicBook.DoesNotExist:
             pass
-        base_dir = settings.COMIC_BOOK_VOLUME
-        if directory:
-            comic_full_path = Path(base_dir, directory.get_path(), comic_file_name)
-        else:
-            comic_full_path = Path(base_dir, comic_file_name)
 
+        book = ComicBook(file_name=comic_file_name, directory=directory if directory else None)
+        book.save()
         try:
-            cbx = rarfile.RarFile(comic_full_path)
-        except rarfile.NotRarFile:
-            cbx = None
-        if not cbx:
-            try:
-                cbx = zipfile.ZipFile(comic_full_path)
-            except zipfile.BadZipFile:
-                cbx = None
-        pdf_file = None
-        if not cbx:
-            try:
-                pdf_file = PyPDF4.PdfFileReader(str(comic_full_path))
-            except PyPDF4.utils.PyPdfError:
-                pass
-        if not pdf_file and not cbx:
+            archive, archive_type = book.get_archive()
+        except NotCompatibleArchive:
             return comic_file_name
 
-
-        if directory:
-            book = ComicBook(file_name=comic_file_name, directory=directory)
-        else:
-            book = ComicBook(file_name=comic_file_name)
-        book.save()
-        page_index = 0
-        if cbx:
-            ComicBook.process_comic_pages(cbx, book)
-        elif pdf_file:
+        if archive_type == 'archive':
+            ComicBook.process_comic_pages(archive, book)
+        elif archive_type == 'pdf':
             with atomic():
-                for page_index in range(pdf_file.getNumPages()):
+                for page_index in range(archive.getNumPages()):
                     page = ComicPage(
                         Comic=book, index=page_index, page_file_name=page_index+1, content_type='application/pdf'
                     )
@@ -312,23 +266,11 @@ class ComicBook(models.Model):
         with atomic():
             page_index = 0
             for page_file_name in sorted([str(x) for x in cbx.namelist()], key=str.lower):
-                try:
-                    dot_index = page_file_name.rindex(".") + 1
-                except ValueError:
-                    continue
-                ext = page_file_name.lower()[dot_index:]
-                if ext in ["jpg", "jpeg"]:
-                    content_type = "image/jpeg"
-                elif ext == "png":
-                    content_type = "image/png"
-                elif ext == "bmp":
-                    content_type = "image/bmp"
-                elif ext == "gif":
-                    content_type = "image/gif"
-                else:
-                    content_type = "text/plain"
                 page = ComicPage(
-                    Comic=book, index=page_index, page_file_name=page_file_name, content_type=content_type
+                    Comic=book,
+                    index=page_index,
+                    page_file_name=page_file_name,
+                    content_type=mimetypes.guess_type(page_file_name)[0]
                 )
                 page.save()
                 page_index += 1
@@ -343,6 +285,65 @@ class ComicBook(models.Model):
             else:
                 files.append(item)
         return sorted(directories) + sorted(files)
+
+    @property
+    def get_archive_path(self):
+        if self.directory:
+            return Path(settings.COMIC_BOOK_VOLUME, self.directory.get_path(), self.file_name)
+        else:
+            return Path(settings.COMIC_BOOK_VOLUME, self.file_name)
+
+    def get_archive(self) -> Tuple[Union[rarfile.RarFile, zipfile.ZipFile, PyPDF4.PdfFileReader], str]:
+        archive_path = self.get_archive_path
+        try:
+            return rarfile.RarFile(archive_path), 'archive'
+        except rarfile.NotRarFile:
+            pass
+        try:
+            return zipfile.ZipFile(archive_path), 'archive'
+        except zipfile.BadZipFile:
+            pass
+
+        try:
+            return PyPDF4.PdfFileReader(str(archive_path)), 'pdf'
+        except PyPDF4.utils.PyPdfError:
+            pass
+        raise NotCompatibleArchive
+
+    def verify_pages(self, pages: Optional["ComicPage"] = None):
+        if not pages:
+            pages = ComicPage.objects.filter(Comic=self)
+
+        archive, archive_type = self.get_archive()
+        if archive_type == 'pdf':
+            return
+        archive_files = [(x, mimetypes.guess_type(x)[0]) for x in sorted(archive.namelist()) if not x.endswith('/')]
+        index = 0
+        print(archive_files)
+        for a_file, db_file in zip_longest(archive_files, pages):
+            print(a_file, db_file.page_file_name, db_file.content_type)
+            if not a_file:
+                db_file.delete()
+                continue
+            if not db_file:
+                ComicPage(
+                    Comic=self,
+                    page_file_name=a_file[0],
+                    index=index,
+                    content_type=a_file[1]
+                ).save()
+                index += 1
+                continue
+            changed = False
+            if a_file[0] != db_file.page_file_name:
+                db_file.page_file_name = a_file[0]
+                changed = True
+            if a_file[1] != db_file.content_type:
+                db_file.content_type = a_file[1]
+                changed = True
+            if changed:
+                db_file.save()
+            index += 1
 
 
 class ComicPage(models.Model):

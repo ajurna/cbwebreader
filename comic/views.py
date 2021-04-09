@@ -9,6 +9,7 @@ from django.db.transaction import atomic
 from django.http import HttpResponse, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
@@ -290,8 +291,10 @@ def settings_page(request):
     return render(request, "comic/settings_page.html", context)
 
 
+
 @login_required
 def read_comic(request, comic_selector):
+
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
     try:
         book = ComicBook.objects.get(selector=selector)
@@ -309,7 +312,6 @@ def read_comic(request, comic_selector):
     context = {
         "book": book,
         "pages": pages,
-        # "orig_file_name": book.page_name(page),
         "nav": book.nav(request.user),
         "status": status,
         "breadcrumbs": generate_breadcrumbs_from_path(book.directory, book),
@@ -320,6 +322,8 @@ def read_comic(request, comic_selector):
         context['status'].last_read_page += 1
         return render(request, "comic/read_comic_pdf.html", context)
     else:
+        book.verify_pages(pages)
+        context['pages'] = ComicPage.objects.filter(Comic=book)
         return render(request, "comic/read_comic.html", context)
 
 
@@ -339,6 +343,7 @@ def set_read_page(request, comic_selector, page):
     return HttpResponse(status=200)
 
 
+@xframe_options_sameorigin
 @login_required
 def get_image(_, comic_selector, page):
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))

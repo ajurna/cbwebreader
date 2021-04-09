@@ -4,6 +4,7 @@ import os
 
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
+from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode
 from django.conf import settings
 from pathlib import Path
@@ -17,11 +18,11 @@ class ComicBookTests(TestCase):
         settings.COMIC_BOOK_VOLUME = Path(Path.cwd(), 'test_comics')
         User.objects.create_user("test", "test@test.com", "test")
         user = User.objects.first()
-        ComicBook.process_comic_book("test1.rar")
-        book = ComicBook.process_comic_book("test2.rar")
+        ComicBook.process_comic_book(Path("test1.rar"))
+        book = ComicBook.process_comic_book(Path("test2.rar"))
         status = ComicStatus(user=user, comic=book, last_read_page=2, unread=False)
         status.save()
-        ComicBook.process_comic_book("test4.rar")
+        ComicBook.process_comic_book(Path("test4.rar"))
 
     def test_comic_processing(self):
         book = ComicBook.objects.get(file_name="test1.rar")
@@ -290,6 +291,10 @@ class ComicBookTests(TestCase):
         page.save()
         generate_directory(user)
         c.login(username="test", password="test")
+        print(reverse('get_image', args=[book.selector_string, 0]))
+        response = c.get(reverse('read_comic', args=[book.selector_string]))
+        self.assertEqual(response.status_code, 200)
+
         response = c.get(f"/comic/read/{urlsafe_base64_encode(book.selector.bytes)}/0/img")
         self.assertEqual(response.status_code, 200)
 
@@ -301,7 +306,7 @@ class ComicBookTests(TestCase):
         page = ComicPage.objects.get(Comic=book, index=0)
         dup_page = ComicPage(Comic=book, index=0, page_file_name=page.page_file_name, content_type=page.content_type)
         dup_page.save()
-
         c.login(username="test", password="test")
+        response = c.get(f"/comic/read/{urlsafe_base64_encode(book.selector.bytes)}/")
         response = c.get(f"/comic/read/{urlsafe_base64_encode(book.selector.bytes)}/0/img")
         self.assertEqual(response.status_code, 200)

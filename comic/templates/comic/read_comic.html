@@ -5,9 +5,15 @@
 
 
         <div class="reveal" id="comic_box">
-			<div class="slides">
+			<div class="slides" onclick="nextPage()">
                 {% for page in pages %}
-				<section data-menu-title="{{ page.page_file_name }}"><img data-src="{% url "get_image" nav.cur_path page.index %}" class=" w-100" onclick="nextPage()" ></section>
+				<section data-menu-title="{{ page.page_file_name }}">
+                    {% if page.content_type|first in 'image' %}
+                        <img data-src="{% url "get_image" nav.cur_path page.index %}" class=" w-100"  alt="{{ page.page_file_name }}">
+                    {% else %}
+                        <p><embed type="{{ page.content_type }}" src="{% url "get_image" nav.cur_path page.index %}" onclick="nextPage()"></p>
+                    {% endif %}
+                </section>
                 {% endfor %}
 			</div>
 		</div>

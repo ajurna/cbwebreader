@@ -112,17 +112,6 @@ django = ">=2.2,<4.0"
 docs = ["sphinx (>=2.4,<3.0)", "sphinx_rtd_theme (>=0.4.3,<0.5.0)", "m2r2 (>=0.2.5,<0.3.0)"]
 
 [[package]]
-name = "django-db-mutex"
-version = "2.0.0"
-description = "Acquire a mutex via the DB in Django"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-Django = ">=2.2"
-
-[[package]]
 name = "django-recaptcha2"
 version = "1.4.1"
 description = "Django reCaptcha v2 field/widget"
@@ -374,7 +363,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "a4bc175a3b3f8918926aae3b74d4d5fee3111ddc61dcb3b37c353c0e99edc277"
+content-hash = "2cf2bf8371f6fa6dcc2a9d8d889387667eed3a994e46797c5113f8ea7e7ffd95"
 
 [metadata.files]
 asgiref = [
@@ -467,10 +456,6 @@ django = [
 django-bootstrap4 = [
     {file = "django-bootstrap4-2.3.1.tar.gz", hash = "sha256:2c199020ac38866cdf8d1c5561ce7468116b9685b455a29843c0225ef8568879"},
     {file = "django_bootstrap4-2.3.1-py3-none-any.whl", hash = "sha256:b68f073b647b20ec7894a252a0ca4e06b7b8dafdbad995cb0cdc783d0bb4629d"},
-]
-django-db-mutex = [
-    {file = "django-db-mutex-2.0.0.tar.gz", hash = "sha256:b8f3466611ac0045ec4d07f47ded159d08a3780ebc95c48c86af3c909fb2e3e6"},
-    {file = "django_db_mutex-2.0.0-py2.py3-none-any.whl", hash = "sha256:6d41176f4094c7a32c0ad6d157a0c268f23ca747ee5f32eadf7a18efe369715e"},
 ]
 django-recaptcha2 = [
     {file = "django-recaptcha2-1.4.1.tar.gz", hash = "sha256:c0b43851b05c6bf6ebb5ecc890c13ccedacd9bb33d64b4291c74dd6fcbc89366"},

@@ -1,0 +1,2 @@
+class NotCompatibleArchive(Exception):
+    pass
