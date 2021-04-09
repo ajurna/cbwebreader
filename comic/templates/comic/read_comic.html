@@ -47,7 +47,7 @@
         });
 
         Reveal.on( 'slidechanged', event => {
-            document.getElementsByClassName('slides')[0].scrollIntoView({behavior: 'smooth'})
+            setTimeout(() =>{document.getElementsByClassName('slides')[0].scrollIntoView({behavior: 'smooth'})}, 100)
             $.ajax({url: "/comic/set_page/{{nav.cur_path}}/" + event.indexh + "/"})
         });
 
