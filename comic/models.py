@@ -251,7 +251,7 @@ class ComicBook(models.Model):
             return comic_file_name
 
         if archive_type == 'archive':
-            ComicBook.process_comic_pages(archive, book)
+            book.verify_pages()
         elif archive_type == 'pdf':
             with atomic():
                 for page_index in range(archive.getNumPages()):
@@ -260,20 +260,6 @@ class ComicBook(models.Model):
                     )
                     page.save()
         return book
-
-    @staticmethod
-    def process_comic_pages(cbx, book):
-        with atomic():
-            page_index = 0
-            for page_file_name in sorted([str(x) for x in cbx.namelist() if not x.endswith('/')], key=str.lower):
-                page = ComicPage(
-                    Comic=book,
-                    index=page_index,
-                    page_file_name=page_file_name,
-                    content_type=mimetypes.guess_type(page_file_name)[0]
-                )
-                page.save()
-                page_index += 1
 
     @staticmethod
     def get_ordered_dir_list(folder):
@@ -310,6 +296,13 @@ class ComicBook(models.Model):
             pass
         raise NotCompatibleArchive
 
+    @staticmethod
+    def get_archive_files(archive):
+        return [
+            (x, mimetypes.guess_type(x)[0]) for x in sorted(archive.namelist())
+            if not x.endswith('/') and mimetypes.guess_type(x)[0]
+        ]
+
     def verify_pages(self, pages: Optional["ComicPage"] = None):
         if not pages:
             pages = ComicPage.objects.filter(Comic=self)
@@ -317,11 +310,9 @@ class ComicBook(models.Model):
         archive, archive_type = self.get_archive()
         if archive_type == 'pdf':
             return
-        archive_files = [(x, mimetypes.guess_type(x)[0]) for x in sorted(archive.namelist()) if not x.endswith('/')]
+        archive_files = self.get_archive_files(archive)
         index = 0
-        print(archive_files)
         for a_file, db_file in zip_longest(archive_files, pages):
-            print(a_file, db_file.page_file_name, db_file.content_type)
             if not a_file:
                 db_file.delete()
                 continue
