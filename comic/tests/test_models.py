@@ -3,8 +3,8 @@ import os
 # from os import path
 
 from django.contrib.auth.models import User
-from django.test import Client, TestCase
-from django.urls import reverse
+from django.test import Client, TestCase, override_settings
+from django.urls import reverse, NoReverseMatch
 from django.utils.http import urlsafe_base64_encode
 from django.conf import settings
 from pathlib import Path
@@ -291,10 +291,7 @@ class ComicBookTests(TestCase):
         page.save()
         generate_directory(user)
         c.login(username="test", password="test")
-        print(reverse('get_image', args=[book.selector_string, 0]))
-        response = c.get(reverse('read_comic', args=[book.selector_string]))
-        self.assertEqual(response.status_code, 200)
-
+        book.verify_pages()
         response = c.get(f"/comic/read/{urlsafe_base64_encode(book.selector.bytes)}/0/img")
         self.assertEqual(response.status_code, 200)
 
@@ -307,6 +304,6 @@ class ComicBookTests(TestCase):
         dup_page = ComicPage(Comic=book, index=0, page_file_name=page.page_file_name, content_type=page.content_type)
         dup_page.save()
         c.login(username="test", password="test")
-        response = c.get(f"/comic/read/{urlsafe_base64_encode(book.selector.bytes)}/")
+        book.verify_pages()
         response = c.get(f"/comic/read/{urlsafe_base64_encode(book.selector.bytes)}/0/img")
         self.assertEqual(response.status_code, 200)
