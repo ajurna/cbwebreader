@@ -128,3 +128,5 @@ USE_X_FORWARDED_HOST = os.getenv('USE_X_FORWARDED_HOST', False) == 'True'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+MYLAR_API_KEY = os.getenv('MYLAR_API_KEY', None)

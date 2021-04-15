@@ -9,5 +9,4 @@ setup(
     author="Ajurna",
     author_email="ajurna@gmail.com",
     description="Comic Book Web Reader",
-    requires=["django-recaptcha", "django", "ujson"],
 )

@@ -1,16 +1,16 @@
 import json
-import os
-# from os import path
-
-from django.contrib.auth.models import User
-from django.test import Client, TestCase, override_settings
-from django.urls import reverse, NoReverseMatch
-from django.utils.http import urlsafe_base64_encode
-from django.conf import settings
 from pathlib import Path
 
-from comic.models import ComicBook, ComicPage, ComicStatus, Directory, Setting
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.test import Client, TestCase
+from django.utils.http import urlsafe_base64_encode
+
+from comic.models import ComicBook, ComicPage, ComicStatus, Directory
 from comic.util import generate_directory
+
+
+# from os import path
 
 
 class ComicBookTests(TestCase):
@@ -72,7 +72,6 @@ class ComicBookTests(TestCase):
         prev_book = ComicBook.objects.get(file_name="test1.rar", directory__isnull=True)
         book = ComicBook.objects.get(file_name="test2.rar", directory__isnull=True)
         next_book = ComicBook.objects.get(file_name="test3.rar", directory__isnull=True)
-
 
         nav = book.nav(user)
 
@@ -227,7 +226,7 @@ class ComicBookTests(TestCase):
         req_data["search[value]"] = ""
         req_data["order[0][dir]"] = 3
         response = c.post("/comic/recent/json/", req_data)
-
+        self.assertEqual(response.status_code, 200)
 
     def test_comic_edit(self):
         c = Client()
