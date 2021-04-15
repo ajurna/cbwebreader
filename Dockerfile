@@ -21,14 +21,11 @@ RUN apk add --no-cache --virtual .build-deps mariadb-dev build-base \
     && apk add --virtual .runtime-deps mariadb-connector-c-dev mariadb-connector-c \
     && apk del .build-deps
 
-RUN pip install "poetry==1.1.4"
+COPY requirements.txt /src
+
+RUN pip install -r requirements.txt
 
 ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /src
-
-COPY pyproject.toml /src
-
-RUN poetry config virtualenvs.create false \
-  && poetry install --no-interaction --no-ansi
 
 COPY entrypoint.sh /src
 

@@ -12,3 +12,4 @@
 !setup.cfg
 !entrypoint.sh
 !entrypoint-cron.sh
+!requirements.txt
