@@ -13,8 +13,8 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
-from .forms import AccountForm, AddUserForm, EditUserForm, InitialSetupForm, SettingsForm
-from .models import ComicBook, ComicPage, ComicStatus, Directory, Setting, UserMisc
+from .forms import AccountForm, AddUserForm, EditUserForm, InitialSetupForm
+from .models import ComicBook, ComicPage, ComicStatus, Directory, UserMisc
 from .util import (
     Menu,
     generate_breadcrumbs_from_menu,
@@ -266,30 +266,6 @@ def user_add_page(request):
         "title": "CBWebReader - Add User",
     }
     return render(request, "comic/settings_page.html", context)
-
-
-@user_passes_test(lambda u: u.is_superuser)
-def settings_page(request):
-    success_message = []
-    crumbs = [("Settings", "/comic/settings/")]
-    if request.POST:
-        form = SettingsForm(request.POST)
-        if form.is_valid():
-            base_dir = Setting.objects.get(name="BASE_DIR")
-            base_dir.value = form.cleaned_data["base_dir"]
-            base_dir.save()
-            success_message.append("Settings updated.")
-    form = SettingsForm(initial=SettingsForm.get_initial_values())
-    context = {
-        "error_message": form.errors,
-        "success_message": "</br>".join(success_message),
-        "form": form,
-        "menu": Menu(request.user, "Settings"),
-        "title": "CBWebReader - Settings",
-        "breadcrumbs": generate_breadcrumbs_from_menu(crumbs),
-    }
-    return render(request, "comic/settings_page.html", context)
-
 
 
 @login_required

@@ -1,11 +1,6 @@
 from django.contrib import admin
 
-from comic.models import ComicBook, ComicPage, ComicStatus, Directory, Setting
-
-
-@admin.register(Setting)
-class SettingAdmin(admin.ModelAdmin):
-    list_display = ("name", "value")
+from comic.models import ComicBook, ComicPage, ComicStatus, Directory
 
 
 @admin.register(ComicBook)

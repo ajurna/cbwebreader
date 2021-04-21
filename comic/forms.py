@@ -3,8 +3,6 @@ from os import path
 from django import forms
 from django.contrib.auth.models import User
 
-from comic.models import Setting
-
 
 class InitialSetupForm(forms.Form):
     username = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
@@ -114,20 +112,3 @@ class EditUserForm(forms.Form):
         if len(data) < 8 & len(data) != 0:
             raise forms.ValidationError("Password is too short")
         return data
-
-
-class SettingsForm(forms.Form):
-    base_dir = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
-
-    def clean_base_dir(self):
-        data = self.cleaned_data["base_dir"]
-        if not path.isdir(data):
-            raise forms.ValidationError("This is not a valid Directory")
-        return data
-
-    @staticmethod
-    def get_initial_values():
-        base_dir, _ = Setting.objects.get_or_create(name="BASE_DIR")
-
-        initial = {"base_dir": base_dir.value}
-        return initial

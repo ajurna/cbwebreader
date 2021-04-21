@@ -5,7 +5,6 @@ from . import feeds, views
 
 urlpatterns = [
     path("", views.comic_list, name="index"),
-    path("settings/", views.settings_page, name="settings"),
     path("settings/users/", views.users_page, name="users"),
     path("settings/users/<int:user_id>/", views.user_config_page, name="user_details"),
     path("settings/users/add/", views.user_add_page, name="add_users"),

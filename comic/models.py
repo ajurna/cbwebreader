@@ -24,17 +24,6 @@ if settings.UNRAR_TOOL:
     rarfile.UNRAR_TOOL = settings.UNRAR_TOOL
 
 
-class Setting(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    value = models.TextField()
-
-    def __str__(self):
-        return '"%s":"%s"' % (self.name, self.value)
-
-    def __unicode__(self):
-        return self.__str__()
-
-
 class Directory(models.Model):
     name = models.CharField(max_length=100)
     parent = models.ForeignKey("Directory", null=True, blank=True, on_delete=models.CASCADE)

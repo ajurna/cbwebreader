@@ -26,7 +26,6 @@ class Menu:
         self.menu_items["Recent"] = "/comic/recent/"
         self.menu_items["Account"] = "/comic/account/"
         if user.is_superuser:
-            self.menu_items["Settings"] = "/comic/settings/"
             self.menu_items["Users"] = "/comic/settings/users/"
         self.menu_items["Logout"] = "/logout/"
         self.current_page = page
