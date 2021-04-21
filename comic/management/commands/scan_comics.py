@@ -1,10 +1,13 @@
 import os
 from os.path import isdir
+from pathlib import Path
+
 from loguru import logger
 
 from django.core.management.base import BaseCommand
+from django.conf import settings
 
-from comic.models import ComicBook, Directory, Setting, ComicStatus
+from comic.models import ComicBook, Directory, ComicStatus
 
 
 class Command(BaseCommand):
@@ -12,7 +15,6 @@ class Command(BaseCommand):
 
     def __init__(self):
         super().__init__()
-        self.base_dir = Setting.objects.get(name="BASE_DIR").value
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -32,30 +34,31 @@ class Command(BaseCommand):
         :type directory: Directory
         """
         if not directory:
-            comic_dir = self.base_dir
+            comic_dir = settings.COMIC_BOOK_VOLUME
         else:
-            comic_dir = os.path.join(self.base_dir, directory.path)
+            comic_dir = Path(settings.COMIC_BOOK_VOLUME, directory.path)
         if directory:
             books = ComicBook.objects.filter(directory=directory)
         else:
             books = ComicBook.objects.filter(directory__isnull=True)
         for book in books:
-            if not os.path.isfile(os.path.join(comic_dir, book.file_name)):
+            Path(comic_dir, book.file_name).is_file()
+            if not Path(comic_dir, book.file_name).is_file():
                 book.delete()
-        for file in sorted(os.listdir(comic_dir)):
-            if isdir(os.path.join(comic_dir, file)):
+        for file in sorted(comic_dir.glob('*')):
+            if file.is_dir():
                 if self.OUTPUT:
                     logger.info(f"Scanning Directory {file}")
                 try:
                     if directory:
-                        next_directory, created = Directory.objects.get_or_create(name=file, parent=directory)
+                        next_directory, created = Directory.objects.get_or_create(name=file.name, parent=directory)
                     else:
-                        next_directory, created = Directory.objects.get_or_create(name=file, parent__isnull=True)
+                        next_directory, created = Directory.objects.get_or_create(name=file.name, parent__isnull=True)
                 except Directory.MultipleObjectsReturned:
                     if directory:
-                        next_directories = Directory.objects.filter(name=file, parent=directory)
+                        next_directories = Directory.objects.filter(name=file.name, parent=directory)
                     else:
-                        next_directories = Directory.objects.filter(name=file, parent__isnull=True)
+                        next_directories = Directory.objects.filter(name=file.name, parent__isnull=True)
                     next_directories = next_directories.order_by('id')
                     next_directory = next_directories.first()
                     next_directories.exclude(id=next_directory.id).delete()
@@ -70,10 +73,10 @@ class Command(BaseCommand):
                 try:
                     if directory:
                         try:
-                            book = ComicBook.objects.get(file_name=file, directory=directory)
+                            book = ComicBook.objects.get(file_name=file.name, directory=directory)
                         except ComicBook.MultipleObjectsReturned:
                             logger.error(f'Duplicate Comic {file}')
-                            books = ComicBook.objects.filter(file_name=file, directory=directory).order_by('id')
+                            books = ComicBook.objects.filter(file_name=file.name, directory=directory).order_by('id')
                             book = books.first()
                             extra_books = books.exclude(id=book.id)
                             extra_books.delete()
@@ -81,7 +84,7 @@ class Command(BaseCommand):
                             book.version = 1
                             book.save()
                     else:
-                        book = ComicBook.objects.get(file_name=file, directory__isnull=True)
+                        book = ComicBook.objects.get(file_name=file.name, directory__isnull=True)
                         if book.version == 0:
                             if directory:
                                 book.directory = directory
