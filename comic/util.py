@@ -1,6 +1,7 @@
 from collections import OrderedDict
-from os import listdir
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Union
 
 from django.conf import settings
 from django.db.models import Count, Q, F
@@ -78,44 +79,30 @@ def generate_breadcrumbs_from_menu(paths):
     return output
 
 
+@dataclass
 class DirFile:
-    def __init__(self):
-        self.name = ""
-        self.icon = ""
-        self.location = ""
-        self.label = ""
-        self.type = ""
-        self.selector = ""
+    obj: Union[Directory, ComicBook]
+    name: str = ''
+    item_type: str = ''
+    percent: int = 0
+    selector: str = ''
 
-    def __str__(self):
-        return self.name
-
-    def populate_directory(self, directory, user):
-        self.name = directory.name
-        self.icon = "fa-folder-open"
-        self.selector = urlsafe_base64_encode(directory.selector.bytes)
-        self.location = "/comic/{0}/".format(self.selector)
-        self.label = generate_dir_status(directory.total, directory.total_read)
-        self.type = "directory"
-
-    def populate_comic(self, comic, user):
-        if type(comic) == str:
-            self.icon = "fa-exclamation-circle"
-            self.name = comic
-            self.selector = "0"
-            self.location = "/"
-            self.label = '<center><span class="label label-danger">Error</span></center>'
-            self.type = "book"
-        else:
-            self.icon = "fa-book"
-            self.name = comic.file_name
-            self.selector = urlsafe_base64_encode(comic.selector.bytes)
-            self.location = "/comic/read/{0}/".format(self.selector)
-            self.label = generate_label(comic)
-            self.type = "book"
-
-    def __repr__(self):
-        return f"<DirFile: {self.name}: {self.type}>"
+    def __post_init__(self):
+        self.item_type = type(self.obj).__name__
+        if hasattr(self.obj, 'total') and hasattr(self.obj, 'total_read'):
+            # because pages count from zero.
+            total_adjustment = 1
+            if isinstance(self.obj, Directory):
+                total_adjustment = 0
+            try:
+                self.percent = int((self.obj.total_read / (self.obj.total - total_adjustment)) * 100)
+            except ZeroDivisionError:
+                self.percent = 0
+        self.selector = self.obj.url_safe_selector
+        if isinstance(self.obj, Directory):
+            self.name = self.obj.name
+        elif isinstance(self.obj, ComicBook):
+            self.name = self.obj.file_name
 
 
 def generate_directory(user, directory=False):
@@ -127,11 +114,9 @@ def generate_directory(user, directory=False):
     files = []
     if directory:
         dir_path = Path(base_dir, directory.path)
-        # ordered_dir_list = sorted(dir_path.glob('*'))
         dir_list = [x for x in sorted(dir_path.glob('*')) if Path(base_dir, directory.path, x).is_dir()]
     else:
         dir_path = base_dir
-        # ordered_dir_list = base_dir.glob('*')
         dir_list = [x for x in sorted(dir_path.glob('*')) if Path(base_dir, x).is_dir()]
     file_list = [x for x in sorted(dir_path.glob('*')) if x.is_file()]
     if directory:
@@ -154,23 +139,19 @@ def generate_directory(user, directory=False):
     ComicStatus.objects.bulk_create(new_status)
 
     file_list_obj = file_list_obj.annotate(
-        total_pages=Count('comicpage', distinct=True),
-        last_read_page=F('comicstatus__last_read_page'),
+        total=Count('comicpage', distinct=True),
+        total_read=F('comicstatus__last_read_page'),
         finished=F('comicstatus__finished'),
         unread=F('comicstatus__unread'),
         user=F('comicstatus__user')
     ).filter(Q(user__isnull=True) | Q(user=user.id))
 
     for directory_obj in dir_list_obj:
-        df = DirFile()
-        df.populate_directory(directory_obj, user)
-        files.append(df)
+        files.append(DirFile(directory_obj))
         dir_list.remove(Path(dir_path, directory_obj.name))
 
     for file_obj in file_list_obj:
-        df = DirFile()
-        df.populate_comic(file_obj, user)
-        files.append(df)
+        files.append(DirFile(file_obj))
         file_list.remove(Path(dir_path, file_obj.file_name))
 
     for directory_name in dir_list:
@@ -181,18 +162,14 @@ def generate_directory(user, directory=False):
         directory_obj.save()
         directory_obj.total = 0
         directory_obj.total_read = 0
-        df = DirFile()
-        df.populate_directory(directory_obj, user)
-        files.append(df)
+        files.append(DirFile(directory_obj))
 
     for file_name in file_list:
         if file_name.suffix.lower() in [".rar", ".zip", ".cbr", ".cbz", ".pdf"]:
-            book = ComicBook.process_comic_book(file_name.name, directory)
-            df = DirFile()
-            df.populate_comic(book, user)
-            files.append(df)
+            book = ComicBook.process_comic_book(file_name, directory)
+            files.append(DirFile(book))
     files.sort(key=lambda x: x.name)
-    files.sort(key=lambda x: x.type, reverse=True)
+    files.sort(key=lambda x: x.item_type, reverse=True)
     return files
 
 

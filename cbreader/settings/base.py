@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     "comic",
     "comic_auth",
     'django_extensions',
+    'imagekit',
 )
 
 MIDDLEWARE = [
@@ -107,6 +108,11 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = os.getenv('STATIC_ROOT', None)
+
+
+MEDIA_ROOT = os.getenv('MEDIA_ROOT', None)
+
+MEDIA_URL = '/media/'
 
 LOGIN_REDIRECT_URL = "/comic/"
 

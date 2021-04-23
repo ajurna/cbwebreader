@@ -1,13 +1,11 @@
-import os
-from os.path import isdir
 from pathlib import Path
 
+from PIL import UnidentifiedImageError
+from django.conf import settings
+from django.core.management.base import BaseCommand
 from loguru import logger
 
-from django.core.management.base import BaseCommand
-from django.conf import settings
-
-from comic.models import ComicBook, Directory, ComicStatus
+from comic.models import ComicBook, Directory
 
 
 class Command(BaseCommand):
@@ -15,6 +13,7 @@ class Command(BaseCommand):
 
     def __init__(self):
         super().__init__()
+        self.OUTPUT = False
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -91,4 +90,10 @@ class Command(BaseCommand):
                             book.version = 1
                             book.save()
                 except ComicBook.DoesNotExist:
-                    ComicBook.process_comic_book(file, directory)
+                    book = ComicBook.process_comic_book(file, directory)
+                    try:
+                        book.generate_thumbnail()
+                    except UnidentifiedImageError:
+                        book.generate_thumbnail(1)
+                    except:
+                        pass
