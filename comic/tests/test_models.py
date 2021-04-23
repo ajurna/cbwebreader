@@ -103,43 +103,23 @@ class ComicBookTests(TestCase):
         folders = generate_directory(user)
         dir1 = folders[0]
         self.assertEqual(dir1.name, "test_folder")
-        self.assertEqual(dir1.type, "directory")
-        self.assertEqual("fa-folder-open", dir1.icon)
-        d = Directory.objects.get(name="test_folder", parent__isnull=True)
-        location = "/comic/{0}/".format(urlsafe_base64_encode(d.selector.bytes))
-        self.assertEqual(dir1.location, location)
-        self.assertEqual(dir1.label, '<center><span class="label label-default">Empty</span></center>')
+        self.assertEqual(dir1.item_type, "Directory")
 
         dir2 = folders[1]
         self.assertEqual(dir2.name, "test1.rar")
-        self.assertEqual(dir2.type, "book")
-        self.assertEqual("fa-book", dir2.icon)
-        c = ComicBook.objects.get(file_name="test1.rar", directory__isnull=True)
-        location = "/comic/read/{0}/".format(urlsafe_base64_encode(c.selector.bytes))
-        self.assertEqual(dir2.location, location)
-        self.assertEqual(dir2.label, '<center><span class="label label-default">Unread</span></center>')
+        self.assertEqual(dir2.item_type, "ComicBook")
 
         dir3 = folders[2]
         self.assertEqual(dir3.name, "test2.rar")
-        self.assertEqual(dir3.type, "book")
-        self.assertEqual("fa-book", dir3.icon)
-        c = ComicBook.objects.get(file_name="test2.rar", directory__isnull=True)
-        location = "/comic/read/{0}/".format(urlsafe_base64_encode(c.selector.bytes))
-        self.assertEqual(dir3.location, location)
-        self.assertEqual(dir3.label, '<center><span class="label label-primary">3/4</span></center>')
+        self.assertEqual(dir2.item_type, "ComicBook")
 
         dir4 = folders[3]
         self.assertEqual(dir4.name, "test3.rar")
-        self.assertEqual(dir4.type, "book")
-        self.assertEqual("fa-book", dir3.icon)
-        c = ComicBook.objects.get(file_name="test3.rar", directory__isnull=True)
-        location = "/comic/read/{0}/".format(urlsafe_base64_encode(c.selector.bytes))
-        self.assertEqual(dir4.location, location)
-        self.assertEqual(dir4.label, '<center><span class="label label-default">Unread</span></center>')
+        self.assertEqual(dir4.item_type, "ComicBook")
 
     def test_pages(self):
         book = ComicBook.objects.get(file_name="test1.rar")
-        pages = book.pages
+        pages = [cp for cp in ComicPage.objects.filter(Comic=book).order_by("index")]
         self.assertEqual(pages[0].page_file_name, "img1.jpg")
         self.assertEqual(pages[0].index, 0)
         self.assertEqual(pages[1].page_file_name, "img2.png")
@@ -149,9 +129,6 @@ class ComicBookTests(TestCase):
         self.assertEqual(pages[3].page_file_name, "img4.bmp")
         self.assertEqual(pages[3].index, 3)
 
-    def test_page_name(self):
-        book = ComicBook.objects.get(file_name="test1.rar")
-        self.assertEqual(book.page_name(0), "img1.jpg")
 
     def test_comic_list(self):
         c = Client()
@@ -164,18 +141,6 @@ class ComicBookTests(TestCase):
         generate_directory(user)
         directory = Directory.objects.first()
         response = c.get(f"/comic/{urlsafe_base64_encode(directory.selector.bytes)}/")
-        self.assertEqual(response.status_code, 200)
-
-    def test_comic_list_json(self):
-        c = Client()
-        response = c.post("/comic/list_json/")
-        self.assertEqual(response.status_code, 302)
-
-        c.login(username="test", password="test")
-        response = c.post("/comic/list_json/")
-        self.assertEqual(response.status_code, 200)
-        directory = Directory.objects.first()
-        response = c.post(f"/comic/list_json/{urlsafe_base64_encode(directory.selector.bytes)}/")
         self.assertEqual(response.status_code, 200)
 
     def test_recent_comics(self):
@@ -240,7 +205,7 @@ class ComicBookTests(TestCase):
         response = c.get("/comic/edit/")
         self.assertEqual(response.status_code, 405)
 
-        req_data = {"comic_list_length": 10, "func": "unread", "selected": book.selector_string}
+        req_data = {"comic_list_length": 10, "func": "unread", "selected": book.url_safe_selector}
         response = c.post("/comic/edit/", req_data)
         self.assertEqual(response.status_code, 200)
 

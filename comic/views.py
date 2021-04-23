@@ -1,9 +1,11 @@
 import json
 import uuid
 
+from PIL import Image
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db.models import Max, Count, F
 from django.db.transaction import atomic
 from django.http import HttpResponse, FileResponse
@@ -31,60 +33,55 @@ from .util import (
 def comic_list(request, directory_selector=False):
     if User.objects.all().count() == 0:
         return redirect("/comic/settings/")
-    # try:
-    #     base_dir = Setting.objects.get(name="BASE_DIR").value
-    # except Setting.DoesNotExist:
-    #     return redirect("/comic/settings/")
-    # if not path.isdir(base_dir):
-    #     return redirect("/comic/settings/")
 
+    directory = None
     if directory_selector:
         selector = uuid.UUID(bytes=urlsafe_base64_decode(directory_selector))
         directory = Directory.objects.get(selector=selector)
-    else:
-        directory = False
 
     if directory:
         title = generate_title_from_path(directory.path)
         breadcrumbs = generate_breadcrumbs_from_path(directory)
-        json_url = "/comic/list_json/{0}/".format(directory_selector)
     else:
         title = generate_title_from_path("Home")
         breadcrumbs = generate_breadcrumbs_from_path()
-        json_url = "/comic/list_json/"
+
+    files = generate_directory(request.user, directory)
 
     return render(
         request,
         "comic/comic_list.html",
-        {"breadcrumbs": breadcrumbs, "menu": Menu(request.user, "Browse"), "title": title, "json_url": json_url},
+        {
+            "breadcrumbs": breadcrumbs,
+            "menu": Menu(request.user, "Browse"),
+            "title": title,
+            "files": files,
+            "selector": directory_selector if directory_selector else 'None'
+        },
     )
 
 
 @login_required
-@require_POST
-def comic_list_json(request, directory_selector=False):
-    icon_str = '<span class="fa {0}"></span>'
-    if directory_selector:
-        directory_selector = uuid.UUID(bytes=urlsafe_base64_decode(directory_selector))
-        directory = Directory.objects.get(selector=directory_selector)
-    else:
-        directory = False
-    files = generate_directory(request.user, directory)
-    response_data = dict()
-    response_data["data"] = []
-    for file in files:
-        response_data["data"].append(
-            {
-                "blank": "",
-                "selector": file.selector,
-                "type": file.type,
-                "icon": icon_str.format(file.icon),
-                "name": file.name,
-                "label": file.label,
-                "url": file.location,
-            }
-        )
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+def perform_action(request, operation, item_type, selector):
+    if operation not in ['mark_read', 'mark_unread', 'mark_previous']:
+        return HttpResponse(400)
+    elif operation == 'mark_previous' and item_type == 'Directory':
+        return HttpResponse(422)
+    try:
+        selector_uuid = uuid.UUID(bytes=urlsafe_base64_decode(selector))
+    except ValueError:
+        if item_type == 'Directory':
+            for book in ComicBook.objects.filter(directory__isnull=True):
+                getattr(book, operation)(request.user)
+            return HttpResponse(204)
+    if item_type == 'ComicBook':
+        book = get_object_or_404(ComicBook, selector=selector_uuid)
+        getattr(book, operation)(request.user)
+        return HttpResponse(204)
+    elif item_type == 'Directory':
+        directory = get_object_or_404(Directory, selector=selector_uuid)
+        getattr(directory, operation)(request.user)
+        return HttpResponse(204)
 
 
 @login_required
@@ -326,6 +323,22 @@ def get_image(_, comic_selector, page):
     book = ComicBook.objects.get(selector=selector)
     img, content = book.get_image(int(page))
     return FileResponse(img, content_type=content)
+
+
+@xframe_options_sameorigin
+@login_required
+def comic_thumbnail(_, comic_selector):
+    selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
+    book = ComicBook.objects.get(selector=selector)
+    return redirect(book.get_thumbnail_url())
+
+
+@xframe_options_sameorigin
+@login_required
+def directory_thumbnail(_, directory_selector):
+    selector = uuid.UUID(bytes=urlsafe_base64_decode(directory_selector))
+    folder = Directory.objects.get(selector=selector)
+    return redirect(folder.get_thumbnail_url())
 
 
 @login_required

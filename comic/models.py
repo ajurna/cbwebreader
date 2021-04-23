@@ -8,15 +8,18 @@ from os import listdir
 from pathlib import Path
 from typing import Optional, List, Union, Tuple
 
+import PyPDF4
+import PyPDF4.utils
+import rarfile
+from PIL import Image
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
 from django.db.transaction import atomic
 from django.utils.http import urlsafe_base64_encode
-import PyPDF4
-import PyPDF4.utils
-
-import rarfile
+from imagekit.models import ProcessedImageField
+from imagekit.processors import ResizeToFill
 
 from comic.errors import NotCompatibleArchive
 
@@ -28,12 +31,54 @@ class Directory(models.Model):
     name = models.CharField(max_length=100)
     parent = models.ForeignKey("Directory", null=True, blank=True, on_delete=models.CASCADE)
     selector = models.UUIDField(unique=True, default=uuid.uuid4, db_index=True)
+    thumbnail = ProcessedImageField(upload_to='thumbs',
+                                    processors=[ResizeToFill(200, 300)],
+                                    format='JPEG',
+                                    options={'quality': 60},
+                                    null=True)
+    thumbnail_issue = models.ForeignKey("ComicBook", null=True,
+                                        on_delete=models.SET_NULL,
+                                        related_name='directory_thumbnail_issue')
+    thumbnail_index = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ['name']
 
     def __str__(self):
         return "Directory: {0}; {1}".format(self.name, self.parent)
+
+    def mark_read(self, user):
+        books = ComicBook.objects.filter(directory=self)
+        for book in books:
+            book.mark_read(user)
+
+    def mark_unread(self, user):
+        books = ComicBook.objects.filter(directory=self)
+        for book in books:
+            book.mark_unread(user)
+
+    def get_thumbnail_url(self):
+        if self.thumbnail:
+            return self.thumbnail.url
+        else:
+            self.generate_thumbnail()
+            return self.thumbnail.url
+
+    def generate_thumbnail(self):
+        book = ComicBook.objects.filter(directory=self).order_by('file_name').first()
+        if not book:
+            return
+        img, content_type = book.get_image(0)
+        pil_data = Image.open(img)
+        self.thumbnail = InMemoryUploadedFile(
+            img,
+            None,
+            f'{self.name}.jpg',
+            content_type,
+            pil_data.tell(),
+            None
+        )
+        self.save()
 
     @property
     def path(self) -> Path:
@@ -63,6 +108,10 @@ class Directory(models.Model):
             self.parent.get_path_objects(p)
         return p
 
+    @property
+    def url_safe_selector(self):
+        return urlsafe_base64_encode(self.selector.bytes)
+
 
 class ComicBook(models.Model):
     file_name = models.TextField()
@@ -70,12 +119,33 @@ class ComicBook(models.Model):
     directory = models.ForeignKey(Directory, blank=True, null=True, on_delete=models.CASCADE)
     selector = models.UUIDField(unique=True, default=uuid.uuid4, db_index=True)
     version = models.IntegerField(default=1)
+    thumbnail = ProcessedImageField(upload_to='thumbs',
+                                    processors=[ResizeToFill(200, 300)],
+                                    format='JPEG',
+                                    options={'quality': 60},
+                                    null=True)
+    thumbnail_index = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.file_name
 
+    def mark_read(self, user: User):
+        status, _ = ComicStatus.objects.get_or_create(comic=self, user=user)
+        status.mark_read()
+
+    def mark_unread(self, user: User):
+        status, _ = ComicStatus.objects.get_or_create(comic=self, user=user)
+        status.mark_unread()
+
+    def mark_previous(self, user):
+        books = ComicBook.objects.filter(directory=self.directory).order_by('file_name')
+        for book in books:
+            if book == self:
+                break
+            book.mark_read(user)
+
     @property
-    def selector_string(self):
+    def url_safe_selector(self):
         return urlsafe_base64_encode(self.selector.bytes)
 
     def get_pdf(self):
@@ -98,6 +168,26 @@ class ComicBook(models.Model):
         page_obj = ComicPage.objects.get(Comic=self, index=page)
         out = (archive.open(page_obj.page_file_name), page_obj.content_type)
         return out
+
+    def get_thumbnail_url(self):
+        if self.thumbnail:
+            return self.thumbnail.url
+        else:
+            self.generate_thumbnail()
+            return self.thumbnail.url
+
+    def generate_thumbnail(self, page_index: int = 0):
+        img, content_type = self.get_image(page_index)
+        pil_data = Image.open(img)
+        self.thumbnail = InMemoryUploadedFile(
+            img,
+            None,
+            f'{self.file_name}.jpg',
+            content_type,
+            pil_data.tell(),
+            None
+        )
+        self.save()
 
     def is_last_page(self, page):
         if (self.page_count - 1) == page:
@@ -209,22 +299,15 @@ class ComicBook(models.Model):
         def __str__(self):
             return self.name
 
-    @property
-    def pages(self):
-        return [cp for cp in ComicPage.objects.filter(Comic=self).order_by("index")]
-
-    def page_name(self, index):
-        return ComicPage.objects.get(Comic=self, index=index).page_file_name
-
     @staticmethod
-    def process_comic_book(comic_file_name: Path, directory: "Directory" = False) -> Union["ComicBook", Path]:
+    def process_comic_book(comic_file_path: Path, directory: "Directory" = False) -> Union["ComicBook", Path]:
         """
 
-        :type comic_file_name: str
+        :type comic_file_path: str
         :type directory: Directory
         """
         try:
-            book = ComicBook.objects.get(file_name=comic_file_name, version=0)
+            book = ComicBook.objects.get(file_name=comic_file_path.name, version=0)
             book.directory = directory
             book.version = 1
             book.save()
@@ -232,12 +315,12 @@ class ComicBook(models.Model):
         except ComicBook.DoesNotExist:
             pass
 
-        book = ComicBook(file_name=comic_file_name, directory=directory if directory else None)
+        book = ComicBook(file_name=comic_file_path.name, directory=directory if directory else None)
         book.save()
         try:
             archive, archive_type = book.get_archive()
         except NotCompatibleArchive:
-            return comic_file_name
+            return comic_file_path
 
         if archive_type == 'archive':
             book.verify_pages()
@@ -340,9 +423,18 @@ class ComicStatus(models.Model):
     unread = models.BooleanField(default=True)
     finished = models.BooleanField(default=False)
 
-    @property
-    def read(self):
-        return self.last_read_page
+    def mark_read(self):
+        page_count = ComicPage.objects.filter(Comic=self.comic).count()
+        self.unread = False
+        self.finished = True
+        self.last_read_page = page_count - 1
+        self.save()
+
+    def mark_unread(self):
+        self.unread = True
+        self.finished = False
+        self.last_read_page = 0
+        self.save()
 
     def __str__(self):
         return self.__repr__()
