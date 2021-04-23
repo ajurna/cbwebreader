@@ -14,6 +14,7 @@ class Command(BaseCommand):
     def __init__(self):
         super().__init__()
         self.OUTPUT = False
+        self.VERIFY_PAGES = False
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -21,8 +22,14 @@ class Command(BaseCommand):
             action='store_true',
             help='Output to console',
         )
+        parser.add_argument(
+            '--verify_pages',
+            action='store_true',
+            help='Output to console',
+        )
 
     def handle(self, *args, **options):
+        self.VERIFY_PAGES = True if options['verify_pages'] else False
         self.OUTPUT = True if options['out'] else False
         self.scan_directory()
 
@@ -89,6 +96,8 @@ class Command(BaseCommand):
                                 book.directory = directory
                             book.version = 1
                             book.save()
+                        if self.VERIFY_PAGES:
+                            book.verify_pages()
                 except ComicBook.DoesNotExist:
                     book = ComicBook.process_comic_book(file, directory)
                     try:
