@@ -29,8 +29,9 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        self.VERIFY_PAGES = True if options['verify_pages'] else False
-        self.OUTPUT = True if options['out'] else False
+        self.VERIFY_PAGES = options.get('verify_pages', False)
+        self.OUTPUT = options.get('out', False)
+        print(options)
         self.scan_directory()
 
     def scan_directory(self, directory=False):
@@ -39,6 +40,7 @@ class Command(BaseCommand):
 
         :type directory: Directory
         """
+        a=1
         if not directory:
             comic_dir = settings.COMIC_BOOK_VOLUME
         else:
@@ -89,6 +91,9 @@ class Command(BaseCommand):
                         if book.version == 0:
                             book.version = 1
                             book.save()
+                        if self.VERIFY_PAGES:
+                            logger.info(f'Verifing pages: {book}')
+                            book.verify_pages()
                     else:
                         book = ComicBook.objects.get(file_name=file.name, directory__isnull=True)
                         if book.version == 0:
@@ -97,6 +102,7 @@ class Command(BaseCommand):
                             book.version = 1
                             book.save()
                         if self.VERIFY_PAGES:
+                            logger.info(f'Verifing pages: {book}')
                             book.verify_pages()
                 except ComicBook.DoesNotExist:
                     book = ComicBook.process_comic_book(file, directory)
