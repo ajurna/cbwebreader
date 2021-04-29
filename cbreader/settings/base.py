@@ -137,3 +137,11 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 MYLAR_API_KEY = os.getenv('MYLAR_API_KEY', None)
+
+BOOTSTRAP4 = {
+    "javascript_url": {
+        "url": "https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js",
+        "integrity": "sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns",
+        "crossorigin": "anonymous",
+    },
+}
