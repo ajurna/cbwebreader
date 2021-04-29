@@ -1,3 +1,4 @@
+import io
 import mimetypes
 import uuid
 import zipfile
@@ -8,15 +9,15 @@ from os import listdir
 from pathlib import Path
 from typing import Optional, List, Union, Tuple
 
-import PyPDF4
-import PyPDF4.utils
+import fitz
 import rarfile
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
 from django.db.transaction import atomic
+from django.templatetags.static import static
 from django.utils.http import urlsafe_base64_encode
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
@@ -62,22 +63,18 @@ class Directory(models.Model):
             return self.thumbnail.url
         else:
             self.generate_thumbnail()
-            return self.thumbnail.url
+            if self.thumbnail:
+                return self.thumbnail.url
+            else:
+                return static('img/placeholder.png')
 
     def generate_thumbnail(self):
-        book = ComicBook.objects.filter(directory=self).order_by('file_name').first()
+        book: ComicBook = ComicBook.objects.filter(directory=self).order_by('file_name').first()
         if not book:
             return
-        img, content_type = book.get_image(0)
-        pil_data = Image.open(img)
-        self.thumbnail = InMemoryUploadedFile(
-            img,
-            None,
-            f'{self.name}.jpg',
-            content_type,
-            pil_data.tell(),
-            None
-        )
+        if not book.thumbnail:
+            book.generate_thumbnail()
+        self.thumbnail = book.thumbnail
         self.save()
 
     @property
@@ -176,9 +173,32 @@ class ComicBook(models.Model):
             self.generate_thumbnail()
             return self.thumbnail.url
 
-    def generate_thumbnail(self, page_index: int = 0):
-        img, content_type = self.get_image(page_index)
-        pil_data = Image.open(img)
+    def generate_thumbnail(self, page_index: int = None):
+
+        if Path(self.file_name).suffix.lower() == '.pdf':
+            if page_index:
+                img, pil_data = self._get_pdf_image(page_index)
+            else:
+                img, pil_data = self._get_pdf_image(0)
+            content_type = 'Image/JPEG'
+        else:
+            if page_index:
+                img, content_type = self.get_image(page_index)
+                pil_data = Image.open(img)
+            else:
+                for x in range(ComicPage.objects.filter(Comic=self).count()):
+                    try:
+                        img, content_type = self.get_image(x)
+                        pil_data = Image.open(img)
+                        break
+                    except UnidentifiedImageError:
+                        continue
+                try:
+                    img
+                    content_type
+                    pil_data
+                except NameError:
+                    return
         self.thumbnail = InMemoryUploadedFile(
             img,
             None,
@@ -188,6 +208,18 @@ class ComicBook(models.Model):
             None
         )
         self.save()
+
+    def _get_pdf_image(self, page_index: int):
+        doc = fitz.open(self.get_pdf())
+        page = doc[page_index]
+        pix = page.get_pixmap()
+        mode = "RGBA" if pix.alpha else "RGB"
+        pil_data = Image.frombytes(mode, [pix.width, pix.height], pix.samples)
+        img = io.BytesIO()
+        pil_data.save(img, format="JPEG")
+        img.seek(0)
+        return img, pil_data
+
 
     def is_last_page(self, page):
         if (self.page_count - 1) == page:
@@ -351,7 +383,7 @@ class ComicBook(models.Model):
         else:
             return Path(settings.COMIC_BOOK_VOLUME, self.file_name)
 
-    def get_archive(self) -> Tuple[Union[rarfile.RarFile, zipfile.ZipFile, PyPDF4.PdfFileReader], str]:
+    def get_archive(self) -> Tuple[Union[rarfile.RarFile, zipfile.ZipFile, fitz.Document], str]:
         archive_path = self.get_archive_path
         try:
             return rarfile.RarFile(archive_path), 'archive'
@@ -363,8 +395,8 @@ class ComicBook(models.Model):
             pass
 
         try:
-            return PyPDF4.PdfFileReader(str(archive_path)), 'pdf'
-        except PyPDF4.utils.PyPdfError:
+            return fitz.open(str(archive_path)), 'pdf'
+        except RuntimeError:
             pass
         raise NotCompatibleArchive
 
