@@ -8,7 +8,7 @@
     <div class="row">
         <div class="input-group">
             <input type="text" id="quicksearch" class="form-control" placeholder="Search" aria-label="Search list of comics" aria-describedby="button-addon4">
-            <div id="filters" class="input-group-append" id="button-addon4">
+            <div id="filters" class="input-group-append">
                 <button class="btn btn-outline-secondary filters" type="button" data-filter="*">All</button>
                 <button class="btn btn-outline-secondary filters" type="button" data-filter=".read">Read</button>
                 <button class="btn btn-outline-secondary filters" type="button" data-filter=".unread">Unread</button>
@@ -17,8 +17,8 @@
                         Actions
                         </button>
                         <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                            <button type="button" class="btn btn-primary dropdown-item" title="Mark Un-Read"  onclick="comic_action('{{ selector }}', 'Directory', 'mark_unread')"><i class="fas fa-book">Mark Un-Read</i></button>
-                            <button type="button" class="btn btn-primary dropdown-item" title="Mark Read"  onclick="comic_action('{{ selector }}', 'Directory', 'mark_read')"><i class="fas fa-book-open">Mark Read</i></button>
+                            <button type="button" class="btn btn-primary dropdown-item comic_action" title="Mark Un-Read" selector="{{ selector }}" itemtype="Directory" comic_action="mark_unread"><i class="fas fa-book">Mark Un-Read</i></button>
+                            <button type="button" class="btn btn-primary dropdown-item comic_action" title="Mark Read" selector="{{ selector }}" itemtype="Directory" comic_action="mark_read"><i class="fas fa-book-open">Mark Read</i></button>
 {#                            <button type="button" class="btn btn-primary dropdown-item" title="Edit Comic"><i class="fas fa-edit">Edit Comic</i></button>#}
                         </div>
                       </div>
@@ -27,10 +27,10 @@
     </div>
 </div>
 <div class="container comic-container">
-    <div class="row grid">
+    <div class="row grid ">
         {% for file in files %}
         <div class="m-2 grid-item {% if file.percent == 100 %}read{% else %}unread{% endif %}">
-            <div class="card" style="width: 200px;">
+            <div class="card card_list_card">
                 {% if file.item_type == 'Directory' %}
                     <a href="{% url "comic_list" file.selector %}">
                 {% elif file.item_type == 'ComicBook' %}
@@ -58,28 +58,33 @@
                         </a>
                     </h5>
                     <p class="card-text">
+                        <figure class="text-center w-100 mb-0">{{ file.total_read }} / {{ file.total }}</figure>
                         <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: {{ file.percent }}%;" aria-valuenow="{{ file.percent }}" aria-valuemin="0" aria-valuemax="100">{{ file.percent }}%</div>
+                            <div class="progress-bar" role="progressbar"  aria-valuenow="{{ file.percent }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </p>
                 <div class="btn-group" role="group" aria-label="Comic Actions">
-                    <button type="button" class="btn btn-primary" title="Mark Un-Read" onclick="comic_action('{{ file.selector }}', '{{ file.item_type }}', 'mark_unread')"><i class="fas fa-book"></i></button>
-                    <button type="button" class="btn btn-primary" title="Mark Read" onclick="comic_action('{{ file.selector }}', '{{ file.item_type }}', 'mark_read')"><i class="fas fa-book-open"></i></button>
+                    <button type="button" class="btn btn-primary comic_action" title="Mark Un-Read" selector="{{ file.selector }}" itemtype="{{ file.item_type }}" comic_action="mark_unread"><i class="fas fa-book"></i></button>
+                    <button type="button" class="btn btn-primary comic_action" title="Mark Read" selector="{{ file.selector }}" itemtype="{{ file.item_type }}" comic_action="mark_read"><i class="fas fa-book-open"></i></button>
                     <div class="btn-group" role="group">
                         <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 
                         </button>
                         <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                            <button type="button" class="btn btn-primary dropdown-item" title="Mark Un-Read" onclick="comic_action('{{ file.selector }}', '{{ file.item_type }}', 'mark_unread')"><i class="fas fa-book">Mark Un-Read</i></button>
-                            <button type="button" class="btn btn-primary dropdown-item" title="Mark Read" onclick="comic_action('{{ file.selector }}', '{{ file.item_type }}', 'mark_read')"><i class="fas fa-book-open">Mark Read</i></button>
+                            <button type="button" class="btn btn-primary dropdown-item comic_action" title="Mark Un-Read"  selector="{{ file.selector }}" itemtype="{{ file.item_type }}" comic_action="mark_unread"><i class="fas fa-book">Mark Un-Read</i></button>
+                            <button type="button" class="btn btn-primary dropdown-item comic_action" title="Mark Read" selector="{{ file.selector }}" itemtype="{{ file.item_type }}" comic_action="mark_read"><i class="fas fa-book-open">Mark Read</i></button>
                             {% if file.item_type != 'Directory' %}
-                            <button type="button" class="btn btn-primary dropdown-item" title="Mark Previous Read"><i class="fas fa-book" onclick="comic_action('{{ file.selector }}', '{{ file.item_type }}', 'mark_previous')"><i class="fas fa-arrow-up">Mark Previous Read</i></i></button>
+                            <button type="button" class="btn btn-primary dropdown-item comic_action" title="Mark Previous Read" selector="{{ file.selector }}" itemtype="{{ file.item_type }}" comic_action="mark_previous"><i class="fas fa-book"><i class="fas fa-arrow-up">Mark Previous Read</i></i></button>
                             {% endif %}
 {#                            <button type="button" class="btn btn-primary dropdown-item" title="Edit Comic"><i class="fas fa-edit">Edit Comic</i></button>#}
                         </div>
                       </div>
 
                 </div>
+                {% if file.total_unread and file.item_type == 'Directory' %}
+                <span class="badge rounded-pill bg-primary card-badge">{{ file.total_unread }}</span>
+                {% endif %}
+
                 </div>
             </div>
         </div>

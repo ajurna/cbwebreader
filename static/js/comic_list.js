@@ -11,9 +11,13 @@ var buttonFilter;
       }
     });
     $('#filters').on( 'click', 'button', function() {
-      buttonFilter = $( this ).attr('data-filter');
-      sessionStorage.setItem(window.location.href+"button", buttonFilter);
-      $grid.isotope();
+        if (typeof $( this ).attr('data-filter') === "undefined") {
+
+        }else {
+            buttonFilter = $( this ).attr('data-filter');
+            sessionStorage.setItem(window.location.href+"button", buttonFilter);
+            $grid.isotope();
+        }
     });
 
     var $quicksearch = $('#quicksearch').keyup( debounce( function() {
@@ -65,3 +69,18 @@ function comic_action(selector, item_type, action) {
     })
 
 }
+
+$( ".progress-bar" ).each(function( index ) {
+    let bar = $(this)
+    bar.css('width', bar.attr('aria-valuenow') + '%')
+});
+
+let comic_action_elements = document.getElementsByClassName('comic_action')
+
+comic_action_elements.forEach(el => el.addEventListener('click', event => {
+    let target = $(event.target).closest('button')
+    let selector = target.attr('selector')
+    let item_type = target.attr('itemtype')
+    let action = target.attr('comic_action')
+    comic_action(selector, item_type, action)
+}));

@@ -146,6 +146,10 @@ BOOTSTRAP4 = {
         "crossorigin": "anonymous",
     },
 }
-CSP_DEFAULT_SRC = ("'self'", "'unsafe-inline'", 'cdn.jsdelivr.net', 'cdn.datatables.net', 'i.creativecommons.org',
-                   'code.jquery.com', 'licensebuttons.net', 'www.w3.org')
-CSP_IMG_SRC = ("'self'", 'i.creativecommons.org', 'licensebuttons.net')
+CSP_DEFAULT_SRC = ("'none'")
+CSP_STYLE_SRC = ("'self'", 'cdn.jsdelivr.net', 'cdn.datatables.net')
+CSP_IMG_SRC = ("'self'", "data:")
+CSP_FONT_SRC = ("'self'")
+CSP_SCRIPT_SRC = ("'self'", 'code.jquery.com', 'cdn.jsdelivr.net', 'cdn.datatables.net')
+CSP_CONNECT_SRC = ("'self'")
+CSP_INCLUDE_NONCE_IN = ['script-src']

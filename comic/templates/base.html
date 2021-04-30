@@ -11,13 +11,13 @@
     <meta name="author" content="Ajurna">
     <link rel="icon" href="{% static "favicon.ico" %}">
 
-    <title>{% block title %}CB Reader{% endblock %}</title>
+    <title>{% block title %}CB Web Reader{% endblock %}</title>
 
     <!-- Bootstrap core CSS -->
     {% bootstrap_css %}
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.21/b-1.6.2/b-colvis-1.6.2/r-2.2.4/datatables.min.css"/>
     <!-- Custom styles for this template -->
-    <link href="{% static "css/base.css" %}" rel="stylesheet">
+    <link href="{% static "css/base.min.css" %}" rel="stylesheet">
     <link href="{% static "font-awesome/css/all.css" %}" rel="stylesheet">
 
 {#    <link href="{% static "reveal.js/css/reveal.css" %}" rel="stylesheet">#}
@@ -28,7 +28,7 @@
 
   <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a  class="navbar-brand" href="/"><img src="{% static 'img/logo.svg' %}" class="d-inline-block align-top" height="35px"> Web Reader</a>
+        <a  class="navbar-brand" href="/"><img src="{% static 'img/logo.svg' %}" class="d-inline-block align-top" height="35px" alt="CB"> Web Reader</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -56,7 +56,7 @@
     <!-- /.container -->
     <footer class="footer mt-auto py-3">
       <div class="container text-center">
-        <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons Licence" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/InteractiveResource" property="dct:title" rel="dct:type">CBReader</span> by <span xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName">Ajurna</span> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.<br />Based on a work at <a xmlns:dct="http://purl.org/dc/terms/" href="https://github.com/ajurna/cbreader" rel="dct:source">https://github.com/ajurna/cbreader</a>.
+        <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons Licence"  src="{% static "img/ccbysa.png" %}" /></a><br /><span xmlns:dct="https://purl.org/dc/terms/" href="https://purl.org/dc/dcmitype/InteractiveResource" property="dct:title" rel="dct:type">CBReader</span> by <span xmlns:cc="https://creativecommons.org/ns#" property="cc:attributionName">Ajurna</span> is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.<br />Based on a work at <a xmlns:dct="https://purl.org/dc/terms/" href="https://github.com/ajurna/cbreader" rel="dct:source">https://github.com/ajurna/cbreader</a>.
       </div>
     </footer>
 

@@ -12,7 +12,7 @@ import fitz
 import rarfile
 from PIL import Image, UnidentifiedImageError
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AbstractUser
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
 from django.db.transaction import atomic
