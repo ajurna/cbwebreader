@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).parent.parent.parent
 
 load_dotenv(Path(BASE_DIR, '.env'))
 
-print(dotenv_values(Path(BASE_DIR, '.env')))
+print(dotenv_values())
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
