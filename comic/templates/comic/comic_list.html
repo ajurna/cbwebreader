@@ -38,12 +38,12 @@
                 {% endif %}
 
                     {% if file.obj.thumbnail %}
-                    <img src="{{file.obj.thumbnail.url}}" class="card-img-top" alt="{{ file.name }}" onerror="this.onerror=null;this.src='{% static "img/placeholder.png" %}';">
+                    <img src="{{file.obj.thumbnail.url}}" class="card-img-top" alt="{{ file.name }}" alt_src="{% static "/img/placeholder.png" %}" onerror="this.onerror=null;this.src=this.getAttribute('alt_src');">
                     {% else %}
                         {% if file.item_type == 'Directory' %}
-                            <img src="{% url 'directory_thumbnail' file.selector %}" class="card-img-top" alt="{{ file.name }}" onerror="this.onerror=null;this.src='{% static "img/placeholder.png" %}';">
+                            <img src="{% url 'directory_thumbnail' file.selector %}" class="card-img-top" alt="{{ file.name }}" alt_src="{% static "/img/placeholder.png" %}" onerror="this.onerror=null;this.src=this.getAttribute('alt_src');">
                         {% elif file.item_type == 'ComicBook' %}
-                            <img src="{% url 'comic_thumbnail' file.selector %}" class="card-img-top" alt="{{ file.name }}" onerror="this.onerror=null;this.src='{% static "img/placeholder.png" %}';">
+                            <img src="{% url 'comic_thumbnail' file.selector %}" class="card-img-top" alt="{{ file.name }}" alt_src="{% static "/img/placeholder.png" %}" onerror="this.onerror=null;this.src=this.getAttribute('alt_src');">
                         {% endif %}
                     {% endif %}
                 </a>

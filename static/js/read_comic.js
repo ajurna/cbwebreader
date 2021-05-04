@@ -60,3 +60,11 @@ function nextPage() {
         Reveal.next()
     }
 }
+let slides_div = document.getElementById('slides_div')
+slides_div.addEventListener('click', nextPage)
+
+let embeds = document.getElementsByClassName('comic_embed')
+
+embeds.forEach(function (embed){
+    embed.addEventListener('click', nextPage)
+})
