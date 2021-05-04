@@ -7,13 +7,12 @@ import os
 from pathlib import Path
 
 import dj_database_url
-from dotenv import load_dotenv, dotenv_values
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent.parent.parent
 
-load_dotenv( override=True)
-print(os.environ)
-print(dotenv_values())
+load_dotenv(override=True)
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
