@@ -21,7 +21,7 @@ RUN apk add --no-cache --virtual .build-deps mariadb-dev build-base \
     && apk add --virtual .runtime-deps mariadb-connector-c-dev mariadb-connector-c \
     && apk del .build-deps
 
-RUM pip install --upgrade pip
+RUN pip install --upgrade pip
 
 COPY requirements.txt /src
 
