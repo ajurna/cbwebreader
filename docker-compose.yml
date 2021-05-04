@@ -15,6 +15,7 @@ services:
       - ${COMIC_BOOK_VOLUME}:/data
       - static_files:/static
       - media_files:/media
+      - .env:/src/.env
     command:  /bin/bash entrypoint.sh
 
   cbwebreader-cron:
@@ -26,6 +27,8 @@ services:
       - database
     volumes:
       - ${COMIC_BOOK_VOLUME}:/data
+      - media_files:/media
+      - .env:/src/.env
     command: /bin/bash entrypoint-cron.sh
 
   database:
