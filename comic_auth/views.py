@@ -1,8 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
-from django.urls import reverse
-from django.utils.http import is_safe_url, url_has_allowed_host_and_scheme
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from comic_auth.forms import LoginForm
 
