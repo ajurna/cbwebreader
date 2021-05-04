@@ -15,7 +15,7 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
     PIP_NO_CACHE_DIR=1
 
 RUN apk update
-RUN apk add --no-cache tini bash unrar dcron postgresql-dev gcc python3-dev musl-dev libffi-dev
+RUN apk add --no-cache tini bash unrar dcron postgresql-dev gcc python3-dev musl-dev libffi-dev libjpeg
 
 RUN apk add --no-cache --virtual .build-deps mariadb-dev build-base \
     && apk add --virtual .runtime-deps mariadb-connector-c-dev mariadb-connector-c \
