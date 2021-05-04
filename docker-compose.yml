@@ -14,7 +14,7 @@ services:
     volumes:
       - ${COMIC_BOOK_VOLUME}:${COMIC_BOOK_VOLUME}
       - static_files:/static
-      - media_files:/media
+      - media_files:/media/thumbs
       - .env:/src/.env
     command:  /bin/bash entrypoint.sh
 
@@ -27,7 +27,7 @@ services:
       - database
     volumes:
       - ${COMIC_BOOK_VOLUME}:${COMIC_BOOK_VOLUME}
-      - media_files:/media
+      - media_files:/media/thumbs
       - .env:/src/.env
     command: /bin/bash entrypoint-cron.sh
 
@@ -46,7 +46,7 @@ services:
     image: nginx
     volumes:
       - static_files:/static
-      - media_files:/media
+      - media_files:/media/thumbs
       - ./cbreader/settings/nginx.conf:/etc/nginx/conf.d/default.conf
     ports:
       - 1337:80
