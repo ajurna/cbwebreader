@@ -18,14 +18,28 @@ RUN apk update
 RUN apk add --no-cache tini bash unrar dcron postgresql-dev gcc python3-dev musl-dev libffi-dev jpeg-dev
 
 RUN apk add --no-cache --virtual .build-deps mariadb-dev build-base \
-    && apk add --virtual .runtime-deps mariadb-connector-c-dev mariadb-connector-c \
-    && apk del .build-deps
+    && apk add --virtual .runtime-deps mariadb-connector-c-dev mariadb-connector-c 
+
+RUN apk add gcc g++ cmake make mupdf-dev freetype-dev
+ARG MUPDF=1.18.0
+RUN ln -s /usr/include/freetype2/ft2build.h /usr/include/ft2build.h \
+    && ln -s /usr/include/freetype2/freetype/ /usr/include/freetype \
+    && wget -c -q https://www.mupdf.com/downloads/archive/mupdf-${MUPDF}-source.tar.gz \
+    && tar xf mupdf-${MUPDF}-source.tar.gz \
+    && cd mupdf-${MUPDF}-source \
+    && make HAVE_X11=no HAVE_GLUT=no shared=yes prefix=/usr/local install \
+    && cd .. \
+    && rm -rf *.tar.gz mupdf-${MUPDF}-source
+
+RUN pip install PyMuPDF==1.18.12
 
 RUN pip install --upgrade pip
 
 COPY requirements.txt /src
 
 RUN pip install -r requirements.txt
+
+RUN apk del .build-deps
 
 ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /src
 
