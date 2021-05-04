@@ -18,7 +18,7 @@ RUN apk update
 RUN apk add --no-cache tini bash unrar dcron postgresql-dev gcc python3-dev musl-dev libffi-dev jpeg-dev
 
 RUN apk add --no-cache --virtual .build-deps mariadb-dev build-base \
-    && apk add --virtual .runtime-deps mariadb-connector-c-dev mariadb-connector-c 
+    && apk add --virtual .runtime-deps mariadb-connector-c-dev mariadb-connector-c
 
 RUN apk add gcc g++ cmake make mupdf-dev freetype-dev
 ARG MUPDF=1.18.0
@@ -31,9 +31,9 @@ RUN ln -s /usr/include/freetype2/ft2build.h /usr/include/ft2build.h \
     && cd .. \
     && rm -rf *.tar.gz mupdf-${MUPDF}-source
 
-RUN pip install PyMuPDF==1.18.12
-
 RUN pip install --upgrade pip
+
+RUN pip install PyMuPDF==1.18.12
 
 COPY requirements.txt /src
 
