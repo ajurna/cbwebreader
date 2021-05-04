@@ -11,8 +11,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent.parent.parent
 
-if os.environ.get("DJANGO_SECRET_KEY", False):
-    load_dotenv(Path(BASE_DIR, '.env'))
+load_dotenv(override=True)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/

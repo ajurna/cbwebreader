@@ -12,9 +12,10 @@ services:
     expose:
       - 8000
     volumes:
-      - ${COMIC_BOOK_VOLUME}:/data
+      - ${COMIC_BOOK_VOLUME}:${COMIC_BOOK_VOLUME}
       - static_files:/static
       - media_files:/media
+      - .env:/src/.env
     command:  /bin/bash entrypoint.sh
 
   cbwebreader-cron:
@@ -25,7 +26,9 @@ services:
     depends_on:
       - database
     volumes:
-      - ${COMIC_BOOK_VOLUME}:/data
+      - ${COMIC_BOOK_VOLUME}:${COMIC_BOOK_VOLUME}
+      - media_files:/media
+      - .env:/src/.env
     command: /bin/bash entrypoint-cron.sh
 
   database:
