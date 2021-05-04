@@ -12,7 +12,7 @@ from dotenv import load_dotenv, dotenv_values
 BASE_DIR = Path(__file__).parent.parent.parent
 
 load_dotenv(Path(BASE_DIR, '.env'))
-print(BASE_DIR)
+print(os.environ)
 print(dotenv_values())
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
