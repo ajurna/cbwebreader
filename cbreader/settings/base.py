@@ -11,7 +11,7 @@ from dotenv import load_dotenv, dotenv_values
 
 BASE_DIR = Path(__file__).parent.parent.parent
 
-load_dotenv(Path(BASE_DIR, '.env'), override=True)
+load_dotenv( override=True)
 print(os.environ)
 print(dotenv_values())
 # Quick-start development settings - unsuitable for production
