@@ -86,6 +86,9 @@ class DirFile:
     item_type: str = ''
     percent: int = 0
     selector: str = ''
+    total: int = None
+    total_read: int = None
+    total_unread: int = None
 
     def __post_init__(self):
         self.item_type = type(self.obj).__name__
@@ -94,10 +97,14 @@ class DirFile:
             total_adjustment = 1
             if isinstance(self.obj, Directory):
                 total_adjustment = 0
+            self.total = self.obj.total - total_adjustment
+            self.total_read = self.obj.total_read
+            self.total_unread = self.total - self.total_read
             try:
-                self.percent = int((self.obj.total_read / (self.obj.total - total_adjustment)) * 100)
+                self.percent = int((self.obj.total_read / self.total) * 100)
             except ZeroDivisionError:
                 self.percent = 0
+
         self.selector = self.obj.url_safe_selector
         if isinstance(self.obj, Directory):
             self.name = self.obj.name

@@ -2,7 +2,6 @@ import io
 import mimetypes
 import uuid
 import zipfile
-from dataclasses import dataclass
 from functools import reduce
 from itertools import zip_longest
 from os import listdir
@@ -13,7 +12,7 @@ import fitz
 import rarfile
 from PIL import Image, UnidentifiedImageError
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AbstractUser
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
 from django.db.transaction import atomic
@@ -230,18 +229,12 @@ class ComicBook(models.Model):
     def page_count(self):
         return ComicPage.objects.filter(Comic=self).count()
 
-    @dataclass
-    class Navigation:
-        next_path: str
-        prev_path: str
-        cur_path: str
-
     def nav(self, user):
-        return self.Navigation(
-            next_path=self.nav_get_next_comic(user),
-            prev_path=self.nav_get_prev_comic(user),
-            cur_path=urlsafe_base64_encode(self.selector.bytes)
-        )
+        return {
+            "next_path": self.nav_get_next_comic(user),
+            "prev_path": self.nav_get_prev_comic(user),
+            "cur_path": urlsafe_base64_encode(self.selector.bytes)
+        }
 
     def nav_get_prev_comic(self, user) -> str:
         base_dir = settings.COMIC_BOOK_VOLUME

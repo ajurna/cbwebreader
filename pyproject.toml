@@ -3,7 +3,7 @@ line_length = 119
 
 [tool.poetry]
 name = "cbwebreader"
-version = "0.2.1"
+version = "0.3.0"
 description = "CBR/Z Web Reader"
 authors = ["ajurna <ajurna@gmail.com>"]
 license = "Creative Commons Attribution-ShareAlike 4.0 International License"
@@ -26,6 +26,7 @@ Pillow = "^8.2.0"
 django-imagekit = "^4.0.2"
 PyMuPDF = "^1.18.12"
 django-bootstrap4 = "^3.0.0"
+django-csp = "^3.7"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.812"

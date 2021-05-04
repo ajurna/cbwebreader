@@ -1,17 +1,18 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
 
 
         <div class="reveal" id="comic_box">
-			<div class="slides" onclick="nextPage()">
+			<div id="slides_div" class="slides">
                 {% for page in pages %}
 				<section data-menu-title="{{ page.page_file_name }}">
                     {% if page.content_type|first in 'image' %}
                         <img data-src="{% url "get_image" nav.cur_path page.index %}" class=" w-100"  alt="{{ page.page_file_name }}">
                     {% else %}
-                        <p><embed type="{{ page.content_type }}" src="{% url "get_image" nav.cur_path page.index %}" onclick="nextPage()"></p>
+                        <p><embed class="comic_embed" type="{{ page.content_type }}" src="{% url "get_image" nav.cur_path page.index %}"></p>
                     {% endif %}
                 </section>
                 {% endfor %}
@@ -21,65 +22,7 @@
 {% endblock %}
 
 {% block script %}
-    <script>
-        Reveal.initialize({
-            controls: false,
-            hash: true,
-            width: "100%",
-            height: "100%",
-            margin: 0,
-            minScale: 1,
-            maxScale: 1,
-            disableLayout: true,
-            progress: true,
-            keyboard: {
-                37: () => {prevPage()},
-                39: () => {nextPage()},
-                38: () => {window.scrollTo({ top: window.scrollY-window.innerHeight*.6, left: 0, behavior: 'smooth' })},
-                40: () => {window.scrollTo({ top: window.scrollY+window.innerHeight*.6, left: 0, behavior: 'smooth' })},
-              },
-            touch: false,
-            transition: 'slide',
-            plugins: [ RevealMenu ]
-        }).then(() => {
-            Reveal.slide({{ status.last_read_page }})
-
-        });
-
-        Reveal.on( 'slidechanged', event => {
-            setTimeout(() =>{document.getElementsByClassName('slides')[0].scrollIntoView({behavior: 'smooth'})}, 100)
-            $.ajax({url: "/comic/set_page/{{nav.cur_path}}/" + event.indexh + "/"})
-        });
-
-        const hammertime = new Hammer(document.getElementById('comic_box'), {});
-        hammertime.on('swipeleft', function (ev) {
-            if (Reveal.isLastSlide()){
-                window.location = "{% url "read_comic" nav.next_path %}"
-            } else {
-                Reveal.next()
-            }
-        });
-        hammertime.on('swiperight', function (ev) {
-            if (Reveal.isFirstSlide()){
-                window.location = "{% url "read_comic" nav.prev_path %}"
-            } else {
-                Reveal.prev();
-            }
-        });
-
-    function prevPage() {
-        if (Reveal.isFirstSlide()){
-            window.location = "{% url "read_comic" nav.prev_path %}"
-        } else {
-            Reveal.prev();
-        }
-    }
-    function nextPage() {
-        if (Reveal.isLastSlide()){
-            window.location = "{% url "read_comic" nav.next_path %}"
-        } else {
-            Reveal.next()
-        }
-    }
-    </script>
+    {{ nav|json_script:"nav" }}
+    {{ status.last_read_page|json_script:"last_read_page" }}
+    <script type="text/javascript" src="{% static "js/read_comic.min.js" %}"></script>
 {% endblock %}

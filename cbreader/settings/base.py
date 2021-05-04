@@ -50,6 +50,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'csp.middleware.CSPMiddleware',
 ]
 
 ROOT_URLCONF = "cbreader.urls"
@@ -145,3 +146,11 @@ BOOTSTRAP4 = {
         "crossorigin": "anonymous",
     },
 }
+CSP_DEFAULT_SRC = ("'none'")
+CSP_STYLE_SRC = ("'self'", 'cdn.jsdelivr.net', 'cdn.datatables.net')
+CSP_IMG_SRC = ("'self'", "data:")
+CSP_FONT_SRC = ("'self'")
+CSP_SCRIPT_SRC = ("'self'", 'code.jquery.com', 'cdn.jsdelivr.net', 'cdn.datatables.net')
+CSP_CONNECT_SRC = ("'self'")
+CSP_INCLUDE_NONCE_IN = ['script-src']
+CSP_SCRIPT_SRC_ATTR = ("'self'", "'unsafe-inline'")

@@ -8,7 +8,7 @@
     <div class="row">
         <div class="input-group">
             <input type="text" id="quicksearch" class="form-control" placeholder="Search" aria-label="Search list of comics" aria-describedby="button-addon4">
-            <div id="filters" class="input-group-append" id="button-addon4">
+            <div id="filters" class="input-group-append">
                 <button class="btn btn-outline-secondary filters" type="button" data-filter="*">All</button>
                 <button class="btn btn-outline-secondary filters" type="button" data-filter=".read">Read</button>
                 <button class="btn btn-outline-secondary filters" type="button" data-filter=".unread">Unread</button>
@@ -17,8 +17,8 @@
                         Actions
                         </button>
                         <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                            <button type="button" class="btn btn-primary dropdown-item" title="Mark Un-Read"  onclick="comic_action('{{ selector }}', 'Directory', 'mark_unread')"><i class="fas fa-book">Mark Un-Read</i></button>
-                            <button type="button" class="btn btn-primary dropdown-item" title="Mark Read"  onclick="comic_action('{{ selector }}', 'Directory', 'mark_read')"><i class="fas fa-book-open">Mark Read</i></button>
+                            <button type="button" class="btn btn-primary dropdown-item comic_action" title="Mark Un-Read" selector="{{ selector }}" itemtype="Directory" comic_action="mark_unread"><i class="fas fa-book">Mark Un-Read</i></button>
+                            <button type="button" class="btn btn-primary dropdown-item comic_action" title="Mark Read" selector="{{ selector }}" itemtype="Directory" comic_action="mark_read"><i class="fas fa-book-open">Mark Read</i></button>
 {#                            <button type="button" class="btn btn-primary dropdown-item" title="Edit Comic"><i class="fas fa-edit">Edit Comic</i></button>#}
                         </div>
                       </div>
@@ -27,10 +27,10 @@
     </div>
 </div>
 <div class="container comic-container">
-    <div class="row grid">
+    <div class="row grid ">
         {% for file in files %}
         <div class="m-2 grid-item {% if file.percent == 100 %}read{% else %}unread{% endif %}">
-            <div class="card" style="width: 200px;">
+            <div class="card card_list_card">
                 {% if file.item_type == 'Directory' %}
                     <a href="{% url "comic_list" file.selector %}">
                 {% elif file.item_type == 'ComicBook' %}
@@ -38,12 +38,12 @@
                 {% endif %}
 
                     {% if file.obj.thumbnail %}
-                    <img src="{{file.obj.thumbnail.url}}" class="card-img-top" alt="{{ file.name }}" onerror="this.onerror=null;this.src='{% static "img/placeholder.png" %}';">
+                    <img src="{{file.obj.thumbnail.url}}" class="card-img-top" alt="{{ file.name }}" alt_src="{% static "/img/placeholder.png" %}" onerror="this.onerror=null;this.src=this.getAttribute('alt_src');">
                     {% else %}
                         {% if file.item_type == 'Directory' %}
-                            <img src="{% url 'directory_thumbnail' file.selector %}" class="card-img-top" alt="{{ file.name }}" onerror="this.onerror=null;this.src='{% static "img/placeholder.png" %}';">
+                            <img src="{% url 'directory_thumbnail' file.selector %}" class="card-img-top" alt="{{ file.name }}" alt_src="{% static "/img/placeholder.png" %}" onerror="this.onerror=null;this.src=this.getAttribute('alt_src');">
                         {% elif file.item_type == 'ComicBook' %}
-                            <img src="{% url 'comic_thumbnail' file.selector %}" class="card-img-top" alt="{{ file.name }}" onerror="this.onerror=null;this.src='{% static "img/placeholder.png" %}';">
+                            <img src="{% url 'comic_thumbnail' file.selector %}" class="card-img-top" alt="{{ file.name }}" alt_src="{% static "/img/placeholder.png" %}" onerror="this.onerror=null;this.src=this.getAttribute('alt_src');">
                         {% endif %}
                     {% endif %}
                 </a>
@@ -58,28 +58,33 @@
                         </a>
                     </h5>
                     <p class="card-text">
+                        <figure class="text-center w-100 mb-0">{{ file.total_read }} / {{ file.total }}</figure>
                         <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: {{ file.percent }}%;" aria-valuenow="{{ file.percent }}" aria-valuemin="0" aria-valuemax="100">{{ file.percent }}%</div>
+                            <div class="progress-bar" role="progressbar"  aria-valuenow="{{ file.percent }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </p>
                 <div class="btn-group" role="group" aria-label="Comic Actions">
-                    <button type="button" class="btn btn-primary" title="Mark Un-Read" onclick="comic_action('{{ file.selector }}', '{{ file.item_type }}', 'mark_unread')"><i class="fas fa-book"></i></button>
-                    <button type="button" class="btn btn-primary" title="Mark Read" onclick="comic_action('{{ file.selector }}', '{{ file.item_type }}', 'mark_read')"><i class="fas fa-book-open"></i></button>
+                    <button type="button" class="btn btn-primary comic_action" title="Mark Un-Read" selector="{{ file.selector }}" itemtype="{{ file.item_type }}" comic_action="mark_unread"><i class="fas fa-book"></i></button>
+                    <button type="button" class="btn btn-primary comic_action" title="Mark Read" selector="{{ file.selector }}" itemtype="{{ file.item_type }}" comic_action="mark_read"><i class="fas fa-book-open"></i></button>
                     <div class="btn-group" role="group">
                         <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 
                         </button>
                         <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                            <button type="button" class="btn btn-primary dropdown-item" title="Mark Un-Read" onclick="comic_action('{{ file.selector }}', '{{ file.item_type }}', 'mark_unread')"><i class="fas fa-book">Mark Un-Read</i></button>
-                            <button type="button" class="btn btn-primary dropdown-item" title="Mark Read" onclick="comic_action('{{ file.selector }}', '{{ file.item_type }}', 'mark_read')"><i class="fas fa-book-open">Mark Read</i></button>
+                            <button type="button" class="btn btn-primary dropdown-item comic_action" title="Mark Un-Read"  selector="{{ file.selector }}" itemtype="{{ file.item_type }}" comic_action="mark_unread"><i class="fas fa-book">Mark Un-Read</i></button>
+                            <button type="button" class="btn btn-primary dropdown-item comic_action" title="Mark Read" selector="{{ file.selector }}" itemtype="{{ file.item_type }}" comic_action="mark_read"><i class="fas fa-book-open">Mark Read</i></button>
                             {% if file.item_type != 'Directory' %}
-                            <button type="button" class="btn btn-primary dropdown-item" title="Mark Previous Read"><i class="fas fa-book" onclick="comic_action('{{ file.selector }}', '{{ file.item_type }}', 'mark_previous')"><i class="fas fa-arrow-up">Mark Previous Read</i></i></button>
+                            <button type="button" class="btn btn-primary dropdown-item comic_action" title="Mark Previous Read" selector="{{ file.selector }}" itemtype="{{ file.item_type }}" comic_action="mark_previous"><i class="fas fa-book"><i class="fas fa-arrow-up">Mark Previous Read</i></i></button>
                             {% endif %}
 {#                            <button type="button" class="btn btn-primary dropdown-item" title="Edit Comic"><i class="fas fa-edit">Edit Comic</i></button>#}
                         </div>
                       </div>
 
                 </div>
+                {% if file.total_unread and file.item_type == 'Directory' %}
+                <span class="badge rounded-pill bg-primary card-badge">{{ file.total_unread }}</span>
+                {% endif %}
+
                 </div>
             </div>
         </div>
@@ -90,76 +95,5 @@
 {% endblock %}
 
 {% block script %}
-<script>
-
-var qsRegex;
-var buttonFilter;
-    var $grid = $('.comic-container').isotope({
-      itemSelector: '.grid-item',
-      layoutMode: 'fitRows',
-      filter: function() {
-        var $this = $(this);
-        var searchResult = qsRegex ? $this.text().match( qsRegex ) : true;
-        var buttonResult = buttonFilter ? $this.is( buttonFilter ) : true;
-        return searchResult && buttonResult;
-          {#return searchResult#}
-      }
-    });
-    $('#filters').on( 'click', 'button', function() {
-      buttonFilter = $( this ).attr('data-filter');
-      sessionStorage.setItem(window.location.href+"button", buttonFilter);
-      $grid.isotope();
-    });
-
-    var $quicksearch = $('#quicksearch').keyup( debounce( function() {
-         qsRegex = new RegExp($quicksearch.val(), 'gi');
-         sessionStorage.setItem(window.location.href+'text', $quicksearch.val());
-      $grid.isotope();
-    }) );
-
-    // debounce so filtering doesn't happen every millisecond
-    function debounce( fn, threshold ) {
-      var timeout;
-      threshold = threshold || 100;
-      return function debounced() {
-        clearTimeout( timeout );
-        var args = arguments;
-        var _this = this;
-        function delayed() {
-          fn.apply( _this, args );
-        }
-        timeout = setTimeout( delayed, threshold );
-      };
-    }
-setInterval(function (){
-    $grid.isotope();
-}, 1000)
-
-let field = document.getElementById("quicksearch");
-
-// See if we have an autosave value
-// (this will only happen if the page is accidentally refreshed)
-if (sessionStorage.getItem(window.location.href+'text') || sessionStorage.getItem(window.location.href+'button')) {
-  // Restore the contents of the text field
-  field.value = sessionStorage.getItem(window.location.href+'text');
-  qsRegex = new RegExp($quicksearch.val(), 'gi');
-  buttonFilter = sessionStorage.getItem(window.location.href+'button');
-  $grid.isotope();
-}
-
-// Listen for changes in the text field
-field.addEventListener("change", function() {
-  // And save the results into the session storage object
-
-});
-
-function comic_action(selector, item_type, action) {
-    $.ajax({
-        url: '/comic/action/' + action + '/' + item_type + '/' + selector + '/',
-        success: function (){window.location.reload()}
-    })
-
-}
-
-</script>
+<script type="text/javascript" src="{% static "js/comic_list.min.js" %}"></script>
 {% endblock %}
