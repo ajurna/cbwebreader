@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from comic_auth.forms import LoginForm
 
@@ -14,7 +15,10 @@ def comic_login(request):
                 if user.is_active:
                     login(request, user)
                     if "next" in request.GET:
-                        return redirect(request.GET["next"])
+                        if url_has_allowed_host_and_scheme(request.GET["next"], allowed_hosts=None):
+                            return redirect(request.GET["next"])
+                        else:
+                            return redirect("/comic/")
                     else:
                         return redirect("/comic/")
                 else:
