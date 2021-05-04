@@ -51,3 +51,4 @@ services:
       - cbwebreader
 volumes:
   static_files:
+  media_files:
