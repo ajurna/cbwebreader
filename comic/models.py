@@ -351,7 +351,7 @@ class ComicBook(models.Model):
             book.verify_pages()
         elif archive_type == 'pdf':
             with atomic():
-                for page_index in range(archive.getNumPages()):
+                for page_index in range(archive.page_count):
                     page = ComicPage(
                         Comic=book, index=page_index, page_file_name=page_index+1, content_type='application/pdf'
                     )
