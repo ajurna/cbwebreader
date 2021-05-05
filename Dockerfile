@@ -27,7 +27,7 @@ RUN apk add --no-cache --virtual .build-deps gcc build-base g++ cmake make musl-
     && wget -c -q https://www.mupdf.com/downloads/archive/mupdf-${MUPDF}-source.tar.gz \
     && tar xf mupdf-${MUPDF}-source.tar.gz \
     && cd mupdf-${MUPDF}-source \
-    && make HAVE_X11=no HAVE_GLUT=no shared=yes static=yes prefix=/usr/local install \
+    && make HAVE_X11=no HAVE_GLUT=no shared=yes prefix=/usr/local install \
     && cd .. \
     && rm -rf *.tar.gz mupdf-${MUPDF}-source \
     && pip install --upgrade pip \
