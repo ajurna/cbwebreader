@@ -33,7 +33,7 @@ COPY requirements.txt /src
 RUN apk add --no-cache --virtual .build-deps build-base postgresql-dev mariadb-dev mariadb-connector-c-dev postgresql-libs musl-dev python3-dev freetype-dev libffi-dev \
     && apk add --no-cache  tini bash unrar dcron python3 py3-pip mariadb-connector-c py3-wheel jpeg-dev postgresql-libs \
     && pip install --upgrade pip \
-    && pip install -r requirements.txt \
+    && pip install -r requirements.txt # \
     # && apk del .build-deps
 
 ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /src
