@@ -30,8 +30,8 @@ RUN ln -s /usr/include/freetype2/ft2build.h /usr/include/ft2build.h \
 
 COPY requirements.txt /src
 
-RUN apk add --no-cache --virtual .build-deps build-base postgresql-dev mariadb-dev mariadb-connector-c-dev jpeg-dev postgresql-libs musl-dev python3-dev freetype-dev libffi-dev \
-    && apk add --no-cache  tini bash unrar dcron python3 py3-pip mariadb-connector-c py3-wheel \
+RUN apk add --no-cache --virtual .build-deps build-base postgresql-dev mariadb-dev mariadb-connector-c-dev postgresql-libs musl-dev python3-dev freetype-dev libffi-dev \
+    && apk add --no-cache  tini bash unrar dcron python3 py3-pip mariadb-connector-c py3-wheel jpeg-dev \
     && pip install --upgrade pip \
     && pip install -r requirements.txt \
     && apk del .build-deps
