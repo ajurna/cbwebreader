@@ -63,8 +63,8 @@ class ComicBookTests(TestCase):
 
         nav = book.nav(user)
 
-        self.assertEqual(nav.prev_path, "")
-        self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav['prev_path'], "")
+        self.assertEqual(nav['cur_path'], urlsafe_base64_encode(book.selector.bytes))
 
     def test_nav_with_comic_above(self):
         user = User.objects.get(username="test")
@@ -75,9 +75,9 @@ class ComicBookTests(TestCase):
 
         nav = book.nav(user)
 
-        self.assertEqual(nav.prev_path, urlsafe_base64_encode(prev_book.selector.bytes))
-        self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
-        self.assertEqual(nav.next_path, urlsafe_base64_encode(next_book.selector.bytes))
+        self.assertEqual(nav['prev_path'], urlsafe_base64_encode(prev_book.selector.bytes))
+        self.assertEqual(nav['cur_path'], urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav['next_path'], urlsafe_base64_encode(next_book.selector.bytes))
 
     def test_nav_with_comic_below(self):
         user = User.objects.get(username="test")
@@ -86,8 +86,8 @@ class ComicBookTests(TestCase):
         next_book = ComicBook.objects.get(file_name="test2.rar", directory__isnull=True)
         nav = book.nav(user)
 
-        self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
-        self.assertEqual(nav.next_path, urlsafe_base64_encode(next_book.selector.bytes))
+        self.assertEqual(nav['cur_path'], urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav['next_path'], urlsafe_base64_encode(next_book.selector.bytes))
 
     def test_nav_with_nothing_below(self):
         user = User.objects.get(username="test")
@@ -95,8 +95,8 @@ class ComicBookTests(TestCase):
         book = ComicBook.objects.get(file_name="test4.rar")
         nav = book.nav(user)
 
-        self.assertEqual(nav.cur_path, urlsafe_base64_encode(book.selector.bytes))
-        self.assertEqual(nav.next_path, "")
+        self.assertEqual(nav['cur_path'], urlsafe_base64_encode(book.selector.bytes))
+        self.assertEqual(nav['next_path'], "")
 
     def test_generate_directory(self):
         user = User.objects.get(username="test")

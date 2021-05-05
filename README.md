@@ -39,8 +39,7 @@ export COMIC_BOOK_VOLUME=some_path_to_comics_directory
 Build and run the project using docker-compose:
 
 ```bash
-docker-compose build
-docker-compose up
+docker-compose up --build -d
 ```
 
 ## Running Tests
