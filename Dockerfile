@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM python:3-alpine
 
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONHASHSEED=random \
