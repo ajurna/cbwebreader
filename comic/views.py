@@ -1,11 +1,9 @@
 import json
 import uuid
 
-from PIL import Image
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db.models import Max, Count, F
 from django.db.transaction import atomic
 from django.http import HttpResponse, FileResponse
@@ -74,6 +72,8 @@ def perform_action(request, operation, item_type, selector):
             for book in ComicBook.objects.filter(directory__isnull=True):
                 getattr(book, operation)(request.user)
             return HttpResponse(204)
+        else:
+            return HttpResponse(400)
     if item_type == 'ComicBook':
         book = get_object_or_404(ComicBook, selector=selector_uuid)
         getattr(book, operation)(request.user)
@@ -269,15 +269,7 @@ def user_add_page(request):
 def read_comic(request, comic_selector):
 
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
-    try:
-        book = ComicBook.objects.get(selector=selector)
-    except ComicBook.DoesNotExist:
-        Directory.objects.get(selector=selector)
-        return redirect('comic_list', directory_selector=comic_selector)
-    except Directory.DoesNotExist:
-        return HttpResponse(status=404)
     book = get_object_or_404(ComicBook, selector=selector)
-
     pages = ComicPage.objects.filter(Comic=book)
 
     status, _ = ComicStatus.objects.get_or_create(comic=book, user=request.user)
