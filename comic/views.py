@@ -1,22 +1,21 @@
 import json
 import uuid
 
-from PIL import Image
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db.models import Max, Count, F
 from django.db.transaction import atomic
 from django.http import HttpResponse, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
-from .forms import AccountForm, AddUserForm, EditUserForm, InitialSetupForm
-from .models import ComicBook, ComicPage, ComicStatus, Directory, UserMisc
+from .forms import AccountForm, AddUserForm, EditUserForm, InitialSetupForm, DirectoryEditForm
+from .models import ComicBook, ComicPage, ComicStatus, Directory
 from .util import (
     Menu,
     generate_breadcrumbs_from_menu,
@@ -47,6 +46,7 @@ def comic_list(request, directory_selector=False):
         breadcrumbs = generate_breadcrumbs_from_path()
 
     files = generate_directory(request.user, directory)
+    form = DirectoryEditForm()
 
     return render(
         request,
@@ -56,14 +56,18 @@ def comic_list(request, directory_selector=False):
             "menu": Menu(request.user, "Browse"),
             "title": title,
             "files": files,
-            "selector": directory_selector if directory_selector else 'None'
+            "form": form,
+            "selector": directory_selector if directory_selector else 'None',
+            'js_urls': {
+                "perform_action": reverse('perform_action', args=('operation', 'item_type', 'selector'))
+            }
         },
     )
 
 
 @login_required
 def perform_action(request, operation, item_type, selector):
-    if operation not in ['mark_read', 'mark_unread', 'mark_previous']:
+    if operation not in ['mark_read', 'mark_unread', 'mark_previous', 'set_classification']:
         return HttpResponse(400)
     elif operation == 'mark_previous' and item_type == 'Directory':
         return HttpResponse(422)
@@ -74,20 +78,29 @@ def perform_action(request, operation, item_type, selector):
             for book in ComicBook.objects.filter(directory__isnull=True):
                 getattr(book, operation)(request.user)
             return HttpResponse(204)
+        else:
+            return HttpResponse(400)
+    if operation == 'set_classification':
+        form = DirectoryEditForm(request.POST)
+        if form.is_valid() and item_type == 'Directory':
+            pass
+        else:
+            return HttpResponse(400)
     if item_type == 'ComicBook':
         book = get_object_or_404(ComicBook, selector=selector_uuid)
         getattr(book, operation)(request.user)
         return HttpResponse(204)
     elif item_type == 'Directory':
         directory = get_object_or_404(Directory, selector=selector_uuid)
-        getattr(directory, operation)(request.user)
+        if operation == 'set_classification':
+            getattr(directory, operation)(form.cleaned_data)
+        else:
+            getattr(directory, operation)(request.user)
         return HttpResponse(204)
 
 
 @login_required
 def recent_comics(request):
-    feed_id, _ = UserMisc.objects.get_or_create(user=request.user)
-
     return render(
         request,
         "comic/recent_comics.html",
@@ -95,7 +108,7 @@ def recent_comics(request):
             "breadcrumbs": generate_breadcrumbs_from_menu([("Recent", "/comic/recent/")]),
             "menu": Menu(request.user, "Recent"),
             "title": "Recent Comics",
-            "feed_id": urlsafe_base64_encode(feed_id.feed_id.bytes),
+            "feed_id": urlsafe_base64_encode(request.user.usermisc.feed_id.bytes),
         },
     )
 
@@ -197,7 +210,7 @@ def account_page(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def users_page(request):
-    users = User.objects.all()
+    users = User.objects.all().select_related('usermisc')
     crumbs = [("Users", "/comic/settings/users/")]
     context = {
         "users": users,
@@ -221,6 +234,8 @@ def user_config_page(request, user_id):
             if form.cleaned_data["email"] != user.email:
                 user.email = form.cleaned_data["email"]
                 success_message.append("Email Updated.</br>")
+            user.usermisc.allowed_to_read = form.cleaned_data['allowed_to_read']
+            user.usermisc.save()
             user.save()
     else:
         form = EditUserForm(initial=EditUserForm.get_initial_values(user))
@@ -248,7 +263,6 @@ def user_add_page(request):
             user = User(username=form.cleaned_data["username"], email=form.cleaned_data["email"])
             user.set_password(form.cleaned_data["password"])
             user.save()
-            UserMisc.objects.create(user=user)
             success_message = "User {} created.".format(user.username)
 
     else:
@@ -269,14 +283,10 @@ def user_add_page(request):
 def read_comic(request, comic_selector):
 
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
-    try:
-        book = ComicBook.objects.get(selector=selector)
-    except ComicBook.DoesNotExist:
-        Directory.objects.get(selector=selector)
-        return redirect('comic_list', directory_selector=comic_selector)
-    except Directory.DoesNotExist:
-        return HttpResponse(status=404)
     book = get_object_or_404(ComicBook, selector=selector)
+    if book.directory:
+        if book.directory.classification > request.user.usermisc.allowed_to_read:
+            return redirect('index')
 
     pages = ComicPage.objects.filter(Comic=book)
 
@@ -318,33 +328,42 @@ def set_read_page(request, comic_selector, page):
 
 @xframe_options_sameorigin
 @login_required
-def get_image(_, comic_selector, page):
+def get_image(request, comic_selector, page):
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
     book = ComicBook.objects.get(selector=selector)
+    if book.directory:
+        if book.directory.classification > request.user.usermisc.allowed_to_read:
+            return HttpResponse(status=401)
     img, content = book.get_image(int(page))
     return FileResponse(img, content_type=content)
 
 
 @xframe_options_sameorigin
 @login_required
-def comic_thumbnail(_, comic_selector):
+def comic_thumbnail(request, comic_selector):
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
     book = ComicBook.objects.get(selector=selector)
+    if book.directory.classification > request.user.usermisc.allowed_to_read:
+        return HttpResponse(status=401)
     return redirect(book.get_thumbnail_url())
 
 
 @xframe_options_sameorigin
 @login_required
-def directory_thumbnail(_, directory_selector):
+def directory_thumbnail(request, directory_selector):
     selector = uuid.UUID(bytes=urlsafe_base64_decode(directory_selector))
     folder = Directory.objects.get(selector=selector)
+    if folder.classification > request.user.usermisc.allowed_to_read:
+        return HttpResponse(status=401)
     return redirect(folder.get_thumbnail_url())
 
 
 @login_required
-def get_pdf(_, comic_selector):
+def get_pdf(request, comic_selector):
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
     book = ComicBook.objects.get(selector=selector)
+    if book.directory.classification > request.user.usermisc.allowed_to_read:
+        return HttpResponse(status=401)
     return FileResponse(open(book.get_pdf(), 'rb'), content_type='application/pdf')
 
 

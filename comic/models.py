@@ -3,8 +3,7 @@ import mimetypes
 import uuid
 import zipfile
 from functools import reduce
-from itertools import zip_longest
-from os import listdir
+from itertools import zip_longest, chain
 from pathlib import Path
 from typing import Optional, List, Union, Tuple
 
@@ -18,6 +17,7 @@ from django.db import models
 from django.db.transaction import atomic
 from django.templatetags.static import static
 from django.utils.http import urlsafe_base64_encode
+from django_boost.models.fields import AutoOneToOneField
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
 
@@ -28,6 +28,13 @@ if settings.UNRAR_TOOL:
 
 
 class Directory(models.Model):
+    class Classification(models.IntegerChoices):
+        C_G = 0, 'G'
+        C_PG = 1, 'PG'
+        C_12 = 2, '12'
+        C_15 = 3, '15'
+        C_18 = 4, '18'
+
     name = models.CharField(max_length=100)
     parent = models.ForeignKey("Directory", null=True, blank=True, on_delete=models.CASCADE)
     selector = models.UUIDField(unique=True, default=uuid.uuid4, db_index=True)
@@ -40,6 +47,7 @@ class Directory(models.Model):
                                         on_delete=models.SET_NULL,
                                         related_name='directory_thumbnail_issue')
     thumbnail_index = models.PositiveIntegerField(default=0)
+    classification = models.PositiveSmallIntegerField(choices=Classification.choices, default=Classification.C_18)
 
     class Meta:
         ordering = ['name']
@@ -108,6 +116,10 @@ class Directory(models.Model):
     def url_safe_selector(self):
         return urlsafe_base64_encode(self.selector.bytes)
 
+    def set_classification(self, form_data):
+        self.classification = form_data['classification']
+        self.save()
+
 
 class ComicBook(models.Model):
     file_name = models.TextField()
@@ -144,7 +156,7 @@ class ComicBook(models.Model):
     def url_safe_selector(self):
         return urlsafe_base64_encode(self.selector.bytes)
 
-    def get_pdf(self):
+    def get_pdf(self) -> Path:
         base_dir = settings.COMIC_BOOK_VOLUME
         return Path(base_dir, self.directory.get_path(), self.file_name)
 
@@ -209,6 +221,7 @@ class ComicBook(models.Model):
         self.save()
 
     def _get_pdf_image(self, page_index: int):
+        # noinspection PyTypeChecker
         doc = fitz.open(self.get_pdf())
         page = doc[page_index]
         pix = page.get_pixmap()
@@ -218,7 +231,6 @@ class ComicBook(models.Model):
         pil_data.save(img, format="JPEG")
         img.seek(0)
         return img, pil_data
-
 
     def is_last_page(self, page):
         if (self.page_count - 1) == page:
@@ -265,9 +277,9 @@ class ComicBook(models.Model):
                         book = ComicBook.objects.get(file_name=prev_comic, directory__isnull=True)
                 except ComicBook.DoesNotExist:
                     if self.directory:
-                        book = ComicBook.process_comic_book(prev_comic, self.directory)
+                        book = ComicBook.process_comic_book(Path(prev_comic), self.directory)
                     else:
-                        book = ComicBook.process_comic_book(prev_comic)
+                        book = ComicBook.process_comic_book(Path(prev_comic))
                 cs, _ = ComicStatus.objects.get_or_create(comic=book, user=user)
                 comic_path = urlsafe_base64_encode(book.selector.bytes)
 
@@ -290,9 +302,9 @@ class ComicBook(models.Model):
                     book = ComicBook.objects.get(file_name=next_comic, directory__isnull=True)
             except ComicBook.DoesNotExist:
                 if self.directory:
-                    book = ComicBook.process_comic_book(next_comic, self.directory)
+                    book = ComicBook.process_comic_book(Path(next_comic), self.directory)
                 else:
-                    book = ComicBook.process_comic_book(next_comic)
+                    book = ComicBook.process_comic_book(Path(next_comic))
             except ComicBook.MultipleObjectsReturned:
                 if self.directory:
                     books = ComicBook.objects.filter(file_name=next_comic, directory=self.directory).order_by('id')
@@ -353,21 +365,21 @@ class ComicBook(models.Model):
             with atomic():
                 for page_index in range(archive.page_count):
                     page = ComicPage(
-                        Comic=book, index=page_index, page_file_name=page_index+1, content_type='application/pdf'
+                        Comic=book, index=page_index, page_file_name=page_index + 1, content_type='application/pdf'
                     )
                     page.save()
         return book
 
     @staticmethod
-    def get_ordered_dir_list(folder):
+    def get_ordered_dir_list(folder: Path) -> List[str]:
         directories = []
         files = []
-        for item in listdir(folder):
-            if Path(folder, item).is_dir():
+        for item in folder.glob('*'):
+            if item.is_dir():
                 directories.append(item)
             else:
                 files.append(item)
-        return sorted(directories) + sorted(files)
+        return [x.name for x in chain(sorted(directories), sorted(files))]
 
     @property
     def get_archive_path(self):
@@ -388,6 +400,7 @@ class ComicBook(models.Model):
             pass
 
         try:
+            # noinspection PyUnresolvedReferences
             return fitz.open(str(archive_path)), 'pdf'
         except RuntimeError:
             pass
@@ -475,5 +488,8 @@ class ComicStatus(models.Model):
 
 
 class UserMisc(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    user = AutoOneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     feed_id = models.UUIDField(unique=True, default=uuid.uuid4, db_index=True)
+    allowed_to_read = models.PositiveSmallIntegerField(default=Directory.Classification.C_18,
+                                                       choices=Directory.Classification.choices)

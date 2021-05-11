@@ -1,45 +1,48 @@
-var qsRegex;
-var buttonFilter;
-    var $grid = $('.comic-container').isotope({
-      itemSelector: '.grid-item',
-      layoutMode: 'fitRows',
-      filter: function() {
-        var $this = $(this);
-        var searchResult = qsRegex ? $this.text().match( qsRegex ) : true;
-        var buttonResult = buttonFilter ? $this.is( buttonFilter ) : true;
-        return searchResult && buttonResult;
-      }
-    });
-    $('#filters').on( 'click', 'button', function() {
-        if (typeof $( this ).attr('data-filter') === "undefined") {
+let qsRegex;
+let buttonFilter;
+const js_urls = JSON.parse(document.getElementById('js_urls').textContent)
 
-        }else {
-            buttonFilter = $( this ).attr('data-filter');
-            sessionStorage.setItem(window.location.href+"button", buttonFilter);
-            $grid.isotope();
-        }
-    });
+let $grid = $('.comic-container').isotope({
+  itemSelector: '.grid-item',
+  layoutMode: 'fitRows',
+  filter: function() {
+    let $this = $(this);
+    let searchResult = qsRegex ? $this.text().match( qsRegex ) : true;
+    let buttonResult = buttonFilter ? $this.is( buttonFilter ) : true;
+    return searchResult && buttonResult;
+  }
+});
 
-    var $quicksearch = $('#quicksearch').keyup( debounce( function() {
-         qsRegex = new RegExp($quicksearch.val(), 'gi');
-         sessionStorage.setItem(window.location.href+'text', $quicksearch.val());
-      $grid.isotope();
-    }) );
+$('#filters').on( 'click', 'button', function() {
+    if (typeof $( this ).attr('data-filter') === "undefined") {
+
+    }else {
+        buttonFilter = $( this ).attr('data-filter');
+        sessionStorage.setItem(window.location.href+"button", buttonFilter);
+        $grid.isotope();
+    }
+});
+
+let $quicksearch = $('#quicksearch').keyup( debounce( function() {
+     qsRegex = new RegExp($quicksearch.val(), 'gi');
+     sessionStorage.setItem(window.location.href+'text', $quicksearch.val());
+  $grid.isotope();
+}) );
 
     // debounce so filtering doesn't happen every millisecond
-    function debounce( fn, threshold ) {
-      var timeout;
-      threshold = threshold || 100;
-      return function debounced() {
-        clearTimeout( timeout );
-        var args = arguments;
-        var _this = this;
-        function delayed() {
-          fn.apply( _this, args );
-        }
-        timeout = setTimeout( delayed, threshold );
-      };
+function debounce( fn, threshold ) {
+  var timeout;
+  threshold = threshold || 100;
+  return function debounced() {
+    clearTimeout( timeout );
+    var args = arguments;
+    var _this = this;
+    function delayed() {
+      fn.apply( _this, args );
     }
+    timeout = setTimeout( delayed, threshold );
+  };
+}
 setInterval(function (){
     $grid.isotope();
 }, 1000)
@@ -84,3 +87,49 @@ comic_action_elements.forEach(el => el.addEventListener('click', event => {
     let action = target.attr('comic_action')
     comic_action(selector, item_type, action)
 }));
+
+let modal_buttons = document.getElementsByClassName('modal-button')
+
+modal_buttons.forEach(el => el.addEventListener('click', event => {
+
+    let target = $(event.target).closest('button')
+    let selector = target.attr('selector')
+
+    let modal = $('#editModal')
+    modal.attr('selector', selector)
+    modal.attr('itemtype', target.attr('itemtype'))
+
+    let title = $('#editModalLabel')
+    let title_source = $('.card-title.'+selector)
+    title.text(title_source.text())
+
+    let classification = $('select[name="classification"]')
+    let classification_value = $('.classification-badge.'+selector)
+    classification.val(classification_value.attr('classification'))
+
+}))
+
+let save_button = document.getElementById('save_button')
+
+save_button.addEventListener('click', function (event){
+    let modal = $('#editModal')
+    let selector = modal.attr('selector')
+    let itemtype = modal.attr('itemtype')
+    let classification = $('select[name="classification"]')
+    let classification_badge = $('.classification-badge.'+selector)
+    let action_url = js_urls.perform_action.replace('operation', 'set_classification').replace('item_type', itemtype).replace('selector', selector)
+    $.ajax({
+        type: "POST",
+        url: action_url,
+        data: {
+            classification:  classification.val(),
+            csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').attr('value')
+        },
+        success: function (ev){
+            classification_badge.text($('select[name="classification"] option:selected').text())
+            modal.modal('hide')
+        },
+    })
+
+
+})

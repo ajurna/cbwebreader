@@ -11,6 +11,7 @@
                 <th>Username</th>
                 <th>Email</th>
                 <th>Superuser</th>
+                <th>Classification</th>
             </tr>
         </thead>
         <tbody data-link="row" class="rowlink">
@@ -20,6 +21,7 @@
                 <td><a href="{% url 'user_details' user.id %}">{{user.username}}</a></td>
                 <td>{{user.email}}</td>
                 <td>{{user.is_superuser}}</td>
+                <td>{{ user.usermisc.get_allowed_to_read_display }}</td>
             </tr>
             {% endfor %}
         </tbody>
