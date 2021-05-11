@@ -47,5 +47,5 @@ class ComicStatusAdmin(admin.ModelAdmin):
 
 @admin.register(UserMisc)
 class UserMiscAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'feed_id')
+    list_display = ('user', 'feed_id', 'allowed_to_read')
     list_filter = ('user',)

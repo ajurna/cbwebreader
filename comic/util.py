@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Union
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db.models import Count, Q, F
 from django.utils.http import urlsafe_base64_encode
 
@@ -112,7 +113,7 @@ class DirFile:
             self.name = self.obj.file_name
 
 
-def generate_directory(user, directory=False):
+def generate_directory(user: User, directory=False):
     """
     :type user: User
     :type directory: Directory
@@ -150,7 +151,8 @@ def generate_directory(user, directory=False):
         total_read=F('comicstatus__last_read_page'),
         finished=F('comicstatus__finished'),
         unread=F('comicstatus__unread'),
-        user=F('comicstatus__user')
+        user=F('comicstatus__user'),
+        classification=F('directory__classification')
     ).filter(Q(user__isnull=True) | Q(user=user.id))
 
     for directory_obj in dir_list_obj:
@@ -170,6 +172,8 @@ def generate_directory(user, directory=False):
         directory_obj.total = 0
         directory_obj.total_read = 0
         files.append(DirFile(directory_obj))
+
+    files = [file for file in files if file.obj.classification <= user.usermisc.allowed_to_read]
 
     for file_name in file_list:
         if file_name.suffix.lower() in [".rar", ".zip", ".cbr", ".cbz", ".pdf"]:

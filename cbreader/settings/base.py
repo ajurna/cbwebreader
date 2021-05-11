@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     "comic_auth",
     'django_extensions',
     'imagekit',
+    'django_boost',
 )
 
 MIDDLEWARE = [

@@ -17,7 +17,7 @@ urlpatterns = [
     path("recent/", views.recent_comics, name="recent_comics"),
     path("recent/json/", views.recent_comics_json, name="recent_comics_json"),
     path("edit/", views.comic_edit, name="comic_edit"),
-    path("feed/<int:user_selector>/", feeds.RecentComics()),
+    path("feed/<user_selector>/", feeds.RecentComics()),
     path("<directory_selector>/", views.comic_list, name="comic_list"),
     path("<directory_selector>/thumb", views.directory_thumbnail, name="directory_thumbnail"),
     path("action/<operation>/<item_type>/<selector>/", views.perform_action, name="perform_action")

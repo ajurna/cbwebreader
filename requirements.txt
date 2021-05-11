@@ -76,6 +76,9 @@ dj-database-url==0.5.0 \
 django-appconf==1.0.4 \
     --hash=sha256:be58deb54a43d77d2e1621fe59f787681376d3cd0b8bd8e4758ef6c3a6453380 \
     --hash=sha256:1b1d0e1069c843ebe8ae5aa48ec52403b1440402b320c3e3a206a0907e97bb06
+django-boost==1.7.2 \
+    --hash=sha256:b2460f8613920cdb309cb5c27a0a18d8fb83812f6019c6bb2218f82b33a67ea3 \
+    --hash=sha256:ca80641314f75446ba815ed9632c64ede025c72bc18ec59af89abce97769a65f
 django-bootstrap4==3.0.0; python_version >= "3.6" \
     --hash=sha256:bffc96f65386fbd49cae1474393e01d4b414c12fcab0fff50545e6142e7ba19b \
     --hash=sha256:76a52fb22a8d3dbb2f7609b21908ce863e941a4462be079bf1d12025e551af37
@@ -271,9 +274,15 @@ sqlparse==0.4.1; python_version >= "3.6" \
 toml==0.10.2; python_version >= "3.5" and python_full_version < "3.0.0" or python_full_version >= "3.3.0" and python_version >= "3.5" \
     --hash=sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b \
     --hash=sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f
+ua-parser==0.10.0 \
+    --hash=sha256:47b1782ed130d890018d983fac37c2a80799d9e0b9c532e734c67cf70f185033 \
+    --hash=sha256:46ab2e383c01dbd2ab284991b87d624a26a08f72da4d7d413f5bfab8b9036f8a
 urllib3==1.26.4; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" and python_version < "4" \
     --hash=sha256:2f4da4594db7e1e110a944bb1b551fdf4e6c136ad42e4234131391e21eb5b0df \
     --hash=sha256:e7b021f7241115872f92f43c6508082facffbd1c048e3c6e2bb9c2a157e28937
+user-agents==2.2.0 \
+    --hash=sha256:d36d25178db65308d1458c5fa4ab39c9b2619377010130329f3955e7626ead26 \
+    --hash=sha256:a98c4dc72ecbc64812c4534108806fb0a0b3a11ec3fd1eafe807cee5b0a942e7
 win32-setctime==1.0.3; sys_platform == "win32" and python_version >= "3.5" \
     --hash=sha256:dc925662de0a6eb987f0b01f599c01a8236cb8c62831c22d9cada09ad958243e \
     --hash=sha256:4e88556c32fdf47f64165a2180ba4552f8bb32c1103a2fafd05723a0bd42bd4b

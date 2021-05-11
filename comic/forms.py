@@ -3,6 +3,8 @@ from os import path
 from django import forms
 from django.contrib.auth.models import User
 
+from comic.models import Directory
+
 
 class InitialSetupForm(forms.Form):
     username = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
@@ -87,28 +89,23 @@ class EditUserForm(forms.Form):
         required=False,
         widget=forms.TextInput(attrs={"class": "form-control disabled", "readonly": True}),
     )
-    email = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
+    email = forms.EmailField(widget=forms.TextInput(attrs={"class": "form-control"}))
     password = forms.CharField(
         required=False, widget=forms.PasswordInput(attrs={"class": "form-control"})
     )
-    # TODO: allow setting superuser on users
+    allowed_to_read = forms.ChoiceField(choices=Directory.Classification.choices)
 
     @staticmethod
     def get_initial_values(user):
-        out = {"username": user.username, "email": user.email}
+        out = {"username": user.username, "email": user.email, "allowed_to_read": user.usermisc.allowed_to_read}
         return out
-
-    def clean_email(self):
-        data = self.cleaned_data["email"]
-        user = User.objects.get(username=self.cleaned_data["username"])
-        if data == user.email:
-            return data
-        if User.objects.filter(email=data).exists():
-            raise forms.ValidationError("Email Address is in use")
-        return data
 
     def clean_password(self):
         data = self.cleaned_data["password"]
         if len(data) < 8 & len(data) != 0:
             raise forms.ValidationError("Password is too short")
         return data
+
+
+class DirectoryEditForm(forms.Form):
+    classification = forms.ChoiceField(choices=Directory.Classification.choices)
