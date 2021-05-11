@@ -343,8 +343,9 @@ def get_image(request, comic_selector, page):
 def comic_thumbnail(request, comic_selector):
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
     book = ComicBook.objects.get(selector=selector)
-    if book.directory.classification > request.user.usermisc.allowed_to_read:
-        return HttpResponse(status=401)
+    if book.directory:
+        if book.directory.classification > request.user.usermisc.allowed_to_read:
+            return HttpResponse(status=401)
     return redirect(book.get_thumbnail_url())
 
 
