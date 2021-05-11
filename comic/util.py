@@ -5,7 +5,7 @@ from typing import Union
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models import Count, Q, F
+from django.db.models import Count, Q, F, Case, When, PositiveSmallIntegerField
 from django.utils.http import urlsafe_base64_encode
 
 from .models import ComicBook, Directory, ComicStatus
@@ -152,7 +152,11 @@ def generate_directory(user: User, directory=False):
         finished=F('comicstatus__finished'),
         unread=F('comicstatus__unread'),
         user=F('comicstatus__user'),
-        classification=F('directory__classification')
+        classification=Case(
+            When(directory__isnull=True, then=Directory.Classification.C_18),
+            default=F('directory__classification'),
+            output_field=PositiveSmallIntegerField(choices=Directory.Classification.choices)
+        )
     ).filter(Q(user__isnull=True) | Q(user=user.id))
 
     for directory_obj in dir_list_obj:
@@ -172,7 +176,6 @@ def generate_directory(user: User, directory=False):
         directory_obj.total = 0
         directory_obj.total_read = 0
         files.append(DirFile(directory_obj))
-
     files = [file for file in files if file.obj.classification <= user.usermisc.allowed_to_read]
 
     for file_name in file_list:

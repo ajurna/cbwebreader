@@ -284,8 +284,9 @@ def read_comic(request, comic_selector):
 
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
     book = get_object_or_404(ComicBook, selector=selector)
-    if book.directory.classification > request.user.usermisc.allowed_to_read:
-        return redirect('index')
+    if book.directory:
+        if book.directory.classification > request.user.usermisc.allowed_to_read:
+            return redirect('index')
 
     pages = ComicPage.objects.filter(Comic=book)
 
@@ -330,8 +331,9 @@ def set_read_page(request, comic_selector, page):
 def get_image(request, comic_selector, page):
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
     book = ComicBook.objects.get(selector=selector)
-    if book.directory.classification > request.user.usermisc.allowed_to_read:
-        return HttpResponse(status=401)
+    if book.directory:
+        if book.directory.classification > request.user.usermisc.allowed_to_read:
+            return HttpResponse(status=401)
     img, content = book.get_image(int(page))
     return FileResponse(img, content_type=content)
 
