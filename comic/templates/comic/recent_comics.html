@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load sri %}
 {% load static %}
 {% block title %}{{ title }}{% endblock %}
 
@@ -41,5 +42,5 @@
 {% endblock %}
 
 {% block script %}
-<script type="text/javascript" src="{% static "js/recent_comics.min.js" %}"></script>
+{% sri_static "js/recent_comics.min.js" %}
 {% endblock %}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load sri %}
 {% load static %}
 {% block title %}{{ title }}{% endblock %}
 
@@ -24,5 +25,5 @@
 {% block script %}
     {{ nav|json_script:"nav" }}
     {{ status.last_read_page|json_script:"last_read_page" }}
-    <script type="text/javascript" src="{% static "js/read_comic.min.js" %}"></script>
+    {% sri_static "js/read_comic.min.js" %}
 {% endblock %}

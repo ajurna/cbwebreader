@@ -28,6 +28,7 @@ PyMuPDF = "^1.18.12"
 django-bootstrap4 = "^3.0.0"
 django-csp = "^3.7"
 django-boost = "^1.7.2"
+django-sri = "^0.3.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.812"

@@ -205,6 +205,17 @@ requests = "*"
 sqlparse = "*"
 
 [[package]]
+name = "django-sri"
+version = "0.3.0"
+description = "Subresource Integrity for Django"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+Django = ">=2.2"
+
+[[package]]
 name = "gprof2dot"
 version = "2021.2.21"
 description = "Generate a dot graph from the output of several profilers."
@@ -501,7 +512,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "8364532c96609a5598f24f5e77f2b647763fafc8052c1d466dabc154a90c6d09"
+content-hash = "8b695dd8371076ad76d915dba137bf8a581629781f879a2f8cc78d254090f1e4"
 
 [metadata.files]
 asgiref = [
@@ -621,6 +632,10 @@ django-recaptcha2 = [
 ]
 django-silk = [
     {file = "django_silk-4.1.0-py2.py3-none-any.whl", hash = "sha256:a331e55618fa62eaf3cf5a63f31bc1e91205efbeeca5e587c577498b0e251ed8"},
+]
+django-sri = [
+    {file = "django-sri-0.3.0.tar.gz", hash = "sha256:961e316c0663d2b277a60f677bae3bed451a26f045129eddf09827f98fe00b86"},
+    {file = "django_sri-0.3.0-py3-none-any.whl", hash = "sha256:9fa50b4b41b4cc3e8072d1bc4a60a81e38fd95698aed115d2f56f3d7e83a6877"},
 ]
 gprof2dot = [
     {file = "gprof2dot-2021.2.21.tar.gz", hash = "sha256:1223189383b53dcc8ecfd45787ac48c0ed7b4dbc16ee8b88695d053eea1acabf"},
