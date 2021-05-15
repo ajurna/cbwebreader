@@ -1,5 +1,3 @@
-wait-for-it.sh database:5432
-
 python manage.py migrate --settings=cbreader.settings.base
 
 python manage.py collectstatic --settings=cbreader.settings.base  --noinput
