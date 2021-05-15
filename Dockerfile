@@ -20,7 +20,7 @@ ARG MUPDF=1.18.0
 
 COPY requirements.txt /src
 
-RUN apk add --no-cache --virtual .build-deps gcc build-base g++ cmake make postgresql-dev mariadb-dev mariadb-connector-c-dev musl-dev mupdf-dev python3-dev freetype-dev libffi-dev \
+RUN apk add --no-cache --virtual .build-deps gcc build-base g++ cmake make postgresql-dev mariadb-dev mariadb-connector-c-dev musl-dev mupdf-dev python3-dev freetype-dev libffi-dev jbig2dec-dev jpeg-dev openjpeg-dev harfbuzz-dev \
     && apk add --no-cache tini bash unrar dcron python3 mariadb-connector-c jpeg-dev postgresql-libs \
     && ln -s /usr/include/freetype2/ft2build.h /usr/include/ft2build.h \
     && ln -s /usr/include/freetype2/freetype/ /usr/include/freetype \
