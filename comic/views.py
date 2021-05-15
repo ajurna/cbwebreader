@@ -4,7 +4,7 @@ import uuid
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
-from django.db.models import Max, Count, F, Case, When, BooleanField
+from django.db.models import Max, Count, F, Case, When, BooleanField, PositiveSmallIntegerField
 from django.db.transaction import atomic
 from django.http import HttpResponse, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -139,7 +139,14 @@ def recent_comics_json(request):
         unread=Case(When(comicstatus__user=request.user, then='comicstatus__unread')),
         finished=Case(When(comicstatus__user=request.user, then='comicstatus__finished')),
         last_read_page=Case(When(comicstatus__user=request.user, then='comicstatus__last_read_page')),
+        classification=Case(
+            When(directory__isnull=True, then=Directory.Classification.C_18),
+            default=F('directory__classification'),
+            output_field=PositiveSmallIntegerField(choices=Directory.Classification.choices)
+        )
     )
+    comics = comics.filter(classification__lte=request.user.usermisc.allowed_to_read)
+
     response_data["recordsFiltered"] = comics.count()
     response_data["data"] = list()
     for book in comics[start:end]:
