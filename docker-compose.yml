@@ -8,8 +8,7 @@ services:
     links:
       - database
     depends_on:
-      database:
-        condition: service_healthy
+      - database
     expose:
       - 8000
     volumes:
@@ -25,8 +24,7 @@ services:
     links:
       - database
     depends_on:
-      database:
-        condition: service_healthy
+      - database
     volumes:
       - ${COMIC_BOOK_VOLUME}:${COMIC_BOOK_VOLUME}
       - media_files:/media
