@@ -45,6 +45,7 @@ services:
       timeout: 10s
       retries: 3
     environment:
+      - PGUSER=${DB_USER}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASS}
       - POSTGRES_DB=${DB_DATABASE}
