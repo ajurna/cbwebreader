@@ -8,7 +8,8 @@ services:
     links:
       - database
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     expose:
       - 8000
     volumes:
@@ -24,7 +25,8 @@ services:
     links:
       - database
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     volumes:
       - ${COMIC_BOOK_VOLUME}:${COMIC_BOOK_VOLUME}
       - media_files:/media
@@ -37,6 +39,8 @@ services:
       - 5432
     volumes:
       - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASS}
