@@ -35,12 +35,13 @@ services:
 
   database:
     image: postgres:11.4-alpine
+    username: ${DB_USER}
     expose:
       - 5432
     volumes:
       - ./data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $DB_USER"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 5s
       timeout: 10s
       retries: 3
