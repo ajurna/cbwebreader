@@ -15,11 +15,11 @@
     <title>{% block title %}CB Web Reader{% endblock %}</title>
 
     <!-- Bootstrap core CSS -->
-    {% bootstrap_css %}
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.21/b-1.6.2/b-colvis-1.6.2/r-2.2.4/datatables.min.css"/>
+    {% sri_static "bootstrap/dist/css/bootstrap.min.css" %}
+    {% sri_static "datatables.net-bs4/css/dataTables.bootstrap4.min.css" %}
     <!-- Custom styles for this template -->
   {% sri_static "css/base.min.css" %}
-  {% sri_static "font-awesome/css/all.css" %}
+  {% sri_static "font-awesome/css/font-awesome.css" %}
 
   </head>
 
@@ -60,13 +60,16 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    {% bootstrap_javascript jquery='full' %}
-    <script src="https://cdn.datatables.net/v/bs4/dt-1.10.21/b-1.6.2/b-colvis-1.6.2/r-2.2.4/datatables.min.js" integrity="sha384-P3iGLDP5TXhDKfLfR7rtqmxJ8IqQE6m4zOeFjT7Nnt3scS9VMDJ88XVSnG+yrM4e" crossorigin="anonymous"></script>
-    {% sri_static "js/js.cookie.js" %}
-    {% sri_static "reveal.js/reveal.js" %}
-    {% sri_static "reveal.js/plugin/menu/menu.js" %}
-    {% sri_static "js/hammer.min.js" %}
-    {% sri_static "js/isotope.pkgd.min.js" %}
+{#    {% bootstrap_javascript jquery='full' %}#}
+    {% sri_static "jquery/dist/jquery.min.js" %}
+    {% sri_static "bootstrap/dist/js/bootstrap.bundle.js" %}
+    {% sri_static "datatables.net/js/jquery.dataTables.min.js" %}
+    {% sri_static "datatables.net-bs4/js/dataTables.bootstrap4.min.js" %}
+    {% sri_static "js-cookie/src/js.cookie.js" %}
+    {% sri_static "reveal.js/dist/reveal.js" %}
+    {% sri_static "reveal.js-menu/menu.js" %}
+    {% sri_static "hammerjs/hammer.js" %}
+    {% sri_static "isotope-layout/dist/isotope.pkgd.min.js" %}
 
  {% block script %}
  {% endblock %}
