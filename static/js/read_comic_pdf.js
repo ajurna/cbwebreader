@@ -91,13 +91,11 @@ document.getElementById('prev').addEventListener('click', onPrevPage);
  */
 function onNextPage() {
     if (pageNum >= pdfDoc.numPages) {
-
         if (nav.next_type === 'ComicBook'){
             window.location = "/comic/read/"+ nav.next_path +"/"
         } else {
             window.location = "/comic/"+ nav.next_path +"/"
         }
-
     } else {
         pageNum++;
         queueRenderPage(pageNum);
