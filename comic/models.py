@@ -242,9 +242,13 @@ class ComicBook(models.Model):
         return ComicPage.objects.filter(Comic=self).count()
 
     def nav(self, user):
+        next_path, next_type = self.nav_get_next_comic(user)
+        prev_path, prev_type = self.nav_get_prev_comic(user)
         return {
-            "next_path": self.nav_get_next_comic(user),
-            "prev_path": self.nav_get_prev_comic(user),
+            "next_path": next_path,
+            "next_type": next_type,
+            "prev_path": prev_path,
+            "prev_type": prev_type,
             "cur_path": urlsafe_base64_encode(self.selector.bytes)
         }
 
@@ -258,17 +262,17 @@ class ComicBook(models.Model):
         comic_index = dir_list.index(self.file_name)
         if comic_index == 0:
             if self.directory:
-                comic_path = urlsafe_base64_encode(self.directory.selector.bytes)
+                comic_path = urlsafe_base64_encode(self.directory.selector.bytes), type(self.directory).__name__
             else:
-                comic_path = ""
+                comic_path = "", None
         else:
             prev_comic = dir_list[comic_index - 1]
 
             if Path(folder, prev_comic).is_dir():
                 if self.directory:
-                    comic_path = urlsafe_base64_encode(self.directory.selector.bytes)
+                    comic_path = urlsafe_base64_encode(self.directory.selector.bytes), type(self.directory).__name__
                 else:
-                    comic_path = ""
+                    comic_path = "", None
             else:
                 try:
                     if self.directory:
@@ -281,7 +285,7 @@ class ComicBook(models.Model):
                     else:
                         book = ComicBook.process_comic_book(Path(prev_comic))
                 cs, _ = ComicStatus.objects.get_or_create(comic=book, user=user)
-                comic_path = urlsafe_base64_encode(book.selector.bytes)
+                comic_path = urlsafe_base64_encode(book.selector.bytes), type(book).__name__
 
         return comic_path
 
@@ -315,12 +319,12 @@ class ComicBook(models.Model):
                 books.delete()
             if type(book) is str:
                 raise IndexError
-            comic_path = urlsafe_base64_encode(book.selector.bytes)
+            comic_path = urlsafe_base64_encode(book.selector.bytes), type(book).__name__
         except IndexError:
             if self.directory:
-                comic_path = urlsafe_base64_encode(self.directory.selector.bytes)
+                comic_path = urlsafe_base64_encode(self.directory.selector.bytes), type(self.directory).__name__
             else:
-                comic_path = ""
+                comic_path = "", None
         return comic_path
 
     class DirFile:

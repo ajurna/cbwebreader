@@ -299,6 +299,7 @@ def read_comic(request, comic_selector):
 
     status, _ = ComicStatus.objects.get_or_create(comic=book, user=request.user)
     title = "CBWebReader - " + book.file_name
+    print(book.nav(request.user))
     context = {
         "book": book,
         "pages": pages,
