@@ -1,8 +1,8 @@
 {
     "dependencies": {
+        "@fortawesome/fontawesome-free": "^5.15.3",
         "bootstrap": "^4.6.0",
         "datatables.net-bs4": "^1.10.24",
-        "font-awesome": "^4.7.0",
         "hammerjs": "^2.0.8",
         "isotope-layout": "^3.0.6",
         "jquery": "^3.6.0",
