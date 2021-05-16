@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load sri %}
 {% load bootstrap4 %}
 {% load static %}
 {% block title %}{{ title }}{% endblock %}
@@ -119,5 +120,5 @@
 
 {% block script %}
     {{ js_urls|json_script:'js_urls' }}
-    <script type="text/javascript" src="{% static "js/comic_list.min.js" %}"></script>
+    {% sri_static "js/comic_list.min.js" %}
 {% endblock %}

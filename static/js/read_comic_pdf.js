@@ -72,11 +72,17 @@ function queueRenderPage(num) {
  * Displays previous page.
  */
 function onPrevPage() {
-  if (pageNum <= 1) {
-    window.location = "/comic/read/"+ nav.prev_path +"/"
-  }
-  pageNum--;
-  queueRenderPage(pageNum);
+    if (pageNum <= 1) {
+        if (nav.prev_type === 'ComicBook'){
+            window.location = "/comic/read/"+ nav.prev_path +"/"
+        } else {
+            window.location = "/comic/"+ nav.prev_path +"/"
+        }
+    } else {
+        pageNum--;
+        queueRenderPage(pageNum);
+    }
+
 }
 document.getElementById('prev').addEventListener('click', onPrevPage);
 
@@ -84,11 +90,17 @@ document.getElementById('prev').addEventListener('click', onPrevPage);
  * Displays next page.
  */
 function onNextPage() {
-  if (pageNum >= pdfDoc.numPages) {
-    window.location = "/comic/read/"+ nav.next_path +"/"
-  }
-  pageNum++;
-  queueRenderPage(pageNum);
+    if (pageNum >= pdfDoc.numPages) {
+        if (nav.next_type === 'ComicBook'){
+            window.location = "/comic/read/"+ nav.next_path +"/"
+        } else {
+            window.location = "/comic/"+ nav.next_path +"/"
+        }
+    } else {
+        pageNum++;
+        queueRenderPage(pageNum);
+    }
+
 }
 document.getElementById('next').addEventListener('click', onNextPage);
 

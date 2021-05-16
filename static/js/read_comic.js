@@ -32,30 +32,30 @@ Reveal.on( 'slidechanged', event => {
 
 const hammertime = new Hammer(document.getElementById('comic_box'), {});
 hammertime.on('swipeleft', function (ev) {
-    if (Reveal.isLastSlide()){
-        window.location = "/comic/read/"+ nav.next_path +"/"
-    } else {
-        Reveal.next()
-    }
+    nextPage()
 });
 hammertime.on('swiperight', function (ev) {
-    if (Reveal.isFirstSlide()){
-        window.location = "/comic/read/"+ nav.prev_path +"/"
-    } else {
-        Reveal.prev();
-    }
+    prevPage()
 });
 
 function prevPage() {
     if (Reveal.isFirstSlide()){
-        window.location = "/comic/read/"+ nav.prev_path +"/"
+        if (nav.prev_type === 'ComicBook'){
+            window.location = "/comic/read/"+ nav.prev_path +"/"
+        } else {
+            window.location = "/comic/"+ nav.prev_path +"/"
+        }
     } else {
         Reveal.prev();
     }
 }
 function nextPage() {
     if (Reveal.isLastSlide()){
-        window.location = "/comic/read/"+ nav.next_path +"/"
+        if (nav.next_type === 'ComicBook'){
+            window.location = "/comic/read/"+ nav.next_path +"/"
+        } else {
+            window.location = "/comic/"+ nav.next_path +"/"
+        }
     } else {
         Reveal.next()
     }

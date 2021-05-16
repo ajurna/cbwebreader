@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'django_extensions',
     'imagekit',
     'django_boost',
+    'sri'
 )
 
 MIDDLEWARE = [
