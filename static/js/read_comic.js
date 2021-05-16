@@ -32,11 +32,7 @@ Reveal.on( 'slidechanged', event => {
 
 const hammertime = new Hammer(document.getElementById('comic_box'), {});
 hammertime.on('swipeleft', function (ev) {
-    if (Reveal.isLastSlide()){
-        window.location = "/comic/read/"+ nav.next_path +"/"
-    } else {
-        Reveal.next()
-    }
+    nextPage()
 });
 hammertime.on('swiperight', function (ev) {
     prevPage()
