@@ -9,7 +9,7 @@ var pdfjsLib = window['pdfjs-dist/build/pdf'];
 
 
 // The workerSrc property shall be specified.
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/static/pdfjs/build/pdf.worker.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/static/pdfjs-dist/build/pdf.worker.min.js';
 
 var pdfDoc = null,
     pageNum = last_read_page,

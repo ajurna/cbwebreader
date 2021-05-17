@@ -24,7 +24,7 @@
 {% endblock %}
 
 {% block script %}
-    {% sri_static "pdfjs/build/pdf.js" %}
+    {% sri_static "pdfjs-dist/build/pdf.min.js" %}
     {{ nav|json_script:"nav" }}
     {{ status.last_read_page|json_script:"last_read_page" }}
     {% sri_static 'js/read_comic_pdf.min.js' %}

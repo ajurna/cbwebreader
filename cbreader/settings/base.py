@@ -41,7 +41,7 @@ INSTALLED_APPS = (
     'django_extensions',
     'imagekit',
     'django_boost',
-    'sri'
+    'sri',
 )
 
 MIDDLEWARE = [
@@ -107,7 +107,8 @@ USE_TZ = True
 STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
-    Path(BASE_DIR, "static")
+    Path(BASE_DIR, "static"),
+    Path(BASE_DIR, "node_modules")
 ]
 
 STATIC_ROOT = os.getenv('STATIC_ROOT', None)
@@ -148,11 +149,11 @@ BOOTSTRAP4 = {
         "crossorigin": "anonymous",
     },
 }
-CSP_DEFAULT_SRC = ("'none'")
-CSP_STYLE_SRC = ("'self'", 'cdn.jsdelivr.net', 'cdn.datatables.net')
+CSP_DEFAULT_SRC = ("'none'",)
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
 CSP_IMG_SRC = ("'self'", "data:")
-CSP_FONT_SRC = ("'self'")
-CSP_SCRIPT_SRC = ("'self'", 'code.jquery.com', 'cdn.jsdelivr.net', 'cdn.datatables.net')
-CSP_CONNECT_SRC = ("'self'")
+CSP_FONT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'",)
+CSP_CONNECT_SRC = ("'self'",)
 CSP_INCLUDE_NONCE_IN = ['script-src']
 CSP_SCRIPT_SRC_ATTR = ("'self'", "'unsafe-inline'")

@@ -31,7 +31,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.VERIFY_PAGES = options.get('verify_pages', False)
         self.OUTPUT = options.get('out', False)
-        print(options)
         self.scan_directory()
 
     def scan_directory(self, directory=False):
@@ -40,7 +39,6 @@ class Command(BaseCommand):
 
         :type directory: Directory
         """
-        a=1
         if not directory:
             comic_dir = settings.COMIC_BOOK_VOLUME
         else:

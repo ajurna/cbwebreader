@@ -175,6 +175,14 @@ async = ["django-celery (>=3.0)"]
 async_rq = ["django-rq (>=0.6.0)"]
 
 [[package]]
+name = "django-node-assets"
+version = "0.9.9"
+description = "The Django application that allows install and serve assets via Node.js package manager infrastructure."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "django-recaptcha2"
 version = "1.4.1"
 description = "Django reCaptcha v2 field/widget"
@@ -512,7 +520,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "e7289afc61bb52a49499dfc3f815d9f72d6a402b9c6885ccb25df26dee82b9ec"
+content-hash = "b2385694c4ce0140ea66397cfb9d753c65ee46261a9710531ee4e46810849ece"
 
 [metadata.files]
 asgiref = [
@@ -625,6 +633,10 @@ django-extensions = [
 django-imagekit = [
     {file = "django-imagekit-4.0.2.tar.gz", hash = "sha256:6ec0afb77cdf52cd453c9fc2c10ef350d111edfd6ce53c5977aa8a0e22cee00c"},
     {file = "django_imagekit-4.0.2-py2.py3-none-any.whl", hash = "sha256:304c3379f6a5cac387e47ace11195a603ad3cb01e3e951b45489824d25b00359"},
+]
+django-node-assets = [
+    {file = "django-node-assets-0.9.9.tar.gz", hash = "sha256:fcbaac9b1d4fd86d72270d8ba5475f0b7412bc051d9cbdd7fe61e730114ac7ca"},
+    {file = "django_node_assets-0.9.9-py3-none-any.whl", hash = "sha256:697ba77d816e3c6fec1373d255ddc0a705c72cd474da3f962fb441b3998a72e3"},
 ]
 django-recaptcha2 = [
     {file = "django-recaptcha2-1.4.1.tar.gz", hash = "sha256:c0b43851b05c6bf6ebb5ecc890c13ccedacd9bb33d64b4291c74dd6fcbc89366"},
