@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
+from typing import Union, Iterable
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -131,8 +131,16 @@ def generate_directory(user: User, directory=False):
         dir_list_obj = Directory.objects.filter(name__in=[x.name for x in dir_list], parent=directory)
         file_list_obj = ComicBook.objects.filter(file_name__in=[x.name for x in file_list], directory=directory)
     else:
-        dir_list_obj = Directory.objects.filter(name__in=[x.name for x in dir_list], parent__isnull=True)
-        file_list_obj = ComicBook.objects.filter(file_name__in=[x.name for x in file_list], directory__isnull=True)
+        dir_list_obj: Iterable[Directory] = Directory.objects.filter(name__in=[x.name for x in dir_list], parent__isnull=True)
+        file_list_obj: Iterable[ComicBook] = ComicBook.objects.filter(file_name__in=[x.name for x in file_list], directory__isnull=True)
+    for file in file_list_obj:
+        if file.thumbnail and not Path(file.thumbnail.path).exists():
+            file.thumbnail.delete()
+            file.save()
+    for folder in dir_list_obj:
+        if folder.thumbnail and not Path(folder.thumbnail.path).exists():
+            folder.thumbnail.delete()
+            folder.save()
 
     dir_list_obj = dir_list_obj.annotate(
         total=Count('comicbook', distinct=True),
