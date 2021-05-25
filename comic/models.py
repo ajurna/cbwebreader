@@ -457,6 +457,9 @@ class ComicPage(models.Model):
     page_file_name = models.CharField(max_length=200, unique=False)
     content_type = models.CharField(max_length=30)
 
+    class Meta:
+        ordering = ['index']
+
 
 class ComicStatus(models.Model):
     user = models.ForeignKey(User, unique=False, null=False, on_delete=models.CASCADE)
