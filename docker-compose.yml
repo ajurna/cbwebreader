@@ -56,7 +56,7 @@ services:
       - media_files:/media
       - ./cbreader/settings/nginx.conf:/etc/nginx/conf.d/default.conf
     ports:
-      - 1337:80
+      - 8337:80
     depends_on:
       - cbwebreader
 volumes:
