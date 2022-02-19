@@ -1,4 +1,4 @@
-FROM python:3-alpine3.14
+FROM python:3.11.0a5-alpine3.14
 
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONHASHSEED=random \
