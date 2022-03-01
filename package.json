@@ -8,7 +8,7 @@
         "jquery": "^3.6.0",
         "js-cookie": "^2.2.1",
         "pdfjs-dist": "^2.7.570",
-        "reveal.js": "^4.1.0",
+        "reveal.js": "^4.3.0",
         "reveal.js-menu": "^2.1.0"
     }
 }
