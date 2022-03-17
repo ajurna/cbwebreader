@@ -105,7 +105,7 @@ idna==3.3; python_version >= "3.7" and python_full_version < "3.0.0" or python_f
 jinja2==3.0.3; python_version >= "3.7" \
     --hash=sha256:077ce6014f7b40d03b47d1f1ca4b0fc8328a692bd284016f806ed0eaca390ad8 \
     --hash=sha256:611bb273cd68f3b993fabdc4064fc858c5b47a973cb5aa7999ec1ba405c87cd7
-loguru==0.5.3; python_version >= "3.5" \
+loguru==0.6.0; python_version >= "3.5" \
     --hash=sha256:f8087ac396b5ee5f67c963b495d615ebbceac2796379599820e324419d53667c \
     --hash=sha256:b28e72ac7a98be3d28ad28570299a393dfcd32e5e3f6a353dec94675767b6319
 markupsafe==2.1.0; python_version >= "3.7" \
