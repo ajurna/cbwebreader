@@ -16,7 +16,7 @@ django-node-assets==0.9.9
 django-recaptcha2==1.4.1
 django-silk==4.1.0; python_version >= "3.5"
 django-sri==0.3.0; python_version >= "3.6"
-django==3.2.7; python_version >= "3.6"
+django==3.2.12; python_version >= "3.6"
 gprof2dot==2021.2.21; python_version >= "3.5"
 gunicorn==20.1.0; python_version >= "3.5"
 idna==3.2; python_version >= "3.5" and python_full_version < "3.0.0" or python_full_version >= "3.6.0" and python_version >= "3.5"
