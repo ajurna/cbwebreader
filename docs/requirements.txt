@@ -24,7 +24,7 @@ jinja2==3.0.1; python_version >= "3.6"
 loguru==0.5.3; python_version >= "3.5"
 markupsafe==2.0.1; python_version >= "3.6"
 pilkit==2.0
-pillow==9.0.0; python_version >= "3.6"
+pillow==9.0.1; python_version >= "3.6"
 pycodestyle==2.7.0; python_version >= "3.5" and python_full_version < "3.0.0" or python_full_version >= "3.4.0" and python_version >= "3.5"
 pygments==2.10.0; python_version >= "3.5"
 pymupdf==1.18.17
