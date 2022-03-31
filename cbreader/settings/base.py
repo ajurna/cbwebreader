@@ -153,7 +153,7 @@ CSP_DEFAULT_SRC = ("'none'",)
 CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
 CSP_IMG_SRC = ("'self'", "data:")
 CSP_FONT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "'sha256-khnq7MWUoC3fJlH98ZjaCbVOvyd5+vnfVyue/ca55JA='")
 CSP_CONNECT_SRC = ("'self'",)
 CSP_INCLUDE_NONCE_IN = ['script-src']
 CSP_SCRIPT_SRC_ATTR = ("'self'", "'unsafe-inline'")

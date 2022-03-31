@@ -82,10 +82,9 @@ def perform_action(request, operation, item_type, selector):
             return HttpResponse(400)
     if operation == 'set_classification':
         form = DirectoryEditForm(request.POST)
-        if form.is_valid() and item_type == 'Directory':
-            pass
-        else:
+        if not (form.is_valid() and item_type == 'Directory'):
             return HttpResponse(400)
+
     if item_type == 'ComicBook':
         book = get_object_or_404(ComicBook, selector=selector_uuid)
         getattr(book, operation)(request.user)
@@ -128,12 +127,7 @@ def recent_comics_json(request):
     # Ordering
     if request.POST["order[0][dir]"] == "desc":
         order_string += "-"
-    if request.POST["order[0][dir]"] == "3":
-        order_string += "date_added"
-    elif request.POST["order[0][dir]"] == "2":
-        order_string += "date_added"
-    else:
-        order_string += "date_added"
+    order_string += "date_added"
     comics = comics.order_by(order_string)
     comics = comics.annotate(
         unread=Case(When(comicstatus__user=request.user, then='comicstatus__unread')),
@@ -235,10 +229,9 @@ def user_config_page(request, user_id):
     if request.POST:
         form = EditUserForm(request.POST)
         if form.is_valid():
-            if "password" in form.cleaned_data:
-                if len(form.cleaned_data["password"]) != 0:
-                    user.set_password(form.cleaned_data["password"])
-                    success_message.append("Password Updated.")
+            if "password" in form.cleaned_data and len(form.cleaned_data["password"]) != 0:
+                user.set_password(form.cleaned_data["password"])
+                success_message.append("Password Updated.")
             if form.cleaned_data["email"] != user.email:
                 user.email = form.cleaned_data["email"]
                 success_message.append("Email Updated.</br>")
@@ -293,9 +286,8 @@ def read_comic(request, comic_selector):
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
     book = get_object_or_404(ComicBook, selector=selector)
     misc, _ = UserMisc.objects.get_or_create(user=request.user)
-    if book.directory:
-        if book.directory.classification > misc.allowed_to_read:
-            return redirect('index')
+    if book.directory and book.directory.classification > misc.allowed_to_read:
+        return redirect('index')
 
     pages = ComicPage.objects.filter(Comic=book)
 
@@ -341,9 +333,8 @@ def get_image(request, comic_selector, page):
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
     book = ComicBook.objects.get(selector=selector)
     misc, _ = UserMisc.objects.get_or_create(user=request.user)
-    if book.directory:
-        if book.directory.classification > misc.allowed_to_read:
-            return HttpResponse(status=401)
+    if book.directory and book.directory.classification > misc.allowed_to_read:
+        return HttpResponse(status=401)
     img, content = book.get_image(int(page))
     return FileResponse(img, content_type=content)
 
@@ -354,9 +345,8 @@ def comic_thumbnail(request, comic_selector):
     selector = uuid.UUID(bytes=urlsafe_base64_decode(comic_selector))
     book = ComicBook.objects.get(selector=selector)
     misc, _ = UserMisc.objects.get_or_create(user=request.user)
-    if book.directory:
-        if book.directory.classification > misc.allowed_to_read:
-            return HttpResponse(status=401)
+    if book.directory and book.directory.classification > misc.allowed_to_read:
+        return HttpResponse(status=401)
     return redirect(book.get_thumbnail_url())
 
 
