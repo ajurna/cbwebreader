@@ -3,7 +3,7 @@ line_length = 119
 
 [tool.poetry]
 name = "cbwebreader"
-version = "0.3.6"
+version = "0.4.0"
 description = "CBR/Z Web Reader"
 authors = ["ajurna <ajurna@gmail.com>"]
 license = "Creative Commons Attribution-ShareAlike 4.0 International License"
@@ -30,9 +30,12 @@ django-csp = "^3.7"
 django-boost = "^1.7.2"
 django-sri = "^0.3.0"
 django-node-assets = "^0.9.9"
+django-permissions-policy = "^4.9.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.910"
+Werkzeug = "<2.1"
+pyOpenSSL = "^22.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
