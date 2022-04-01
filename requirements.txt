@@ -82,6 +82,9 @@ django-imagekit==4.1.0 \
 django-node-assets==0.9.11 \
     --hash=sha256:df6ca9aeb868aa9692cbf8f6265132b6159798866b15ac95d7d0d4dd5f3cb6da \
     --hash=sha256:4d37659c07976dc4ebccb6704051c25204e3381aa5e4f98a4a76b57e33cb1776
+django-permissions-policy==4.9.0; python_version >= "3.7" \
+    --hash=sha256:1cbb4f7c9fdb2c583571b6a8fd61ca4b3f39535f8770900e918db6ac38b49e83 \
+    --hash=sha256:8bde3fcca657a013cf2a2695451f229a9b558f2de15e08ecb863b2303400cf8d
 django-recaptcha2==1.4.1 \
     --hash=sha256:c0b43851b05c6bf6ebb5ecc890c13ccedacd9bb33d64b4291c74dd6fcbc89366 \
     --hash=sha256:9ea90db0cec502741be1066c09ec1b8e02a73162a319a042e78e67c4605087af
