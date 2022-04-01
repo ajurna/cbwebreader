@@ -8,7 +8,7 @@ $(document).ready(function() {
             "type": "POST",
             "url": "/comic/recent/json/",
             "data": function ( d ) {
-                d.csrfmiddlewaretoken = Cookies.get('csrftoken');
+                d.csrfmiddlewaretoken = $("input[name='csrfmiddlewaretoken']")[0].value;
             },
         },
         "rowCallback": function( row, data, index ) {
