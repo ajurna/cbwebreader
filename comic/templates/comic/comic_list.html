@@ -29,7 +29,7 @@
     </div>
 </div>
 <div class="container comic-container">
-    <div class="row grid ">
+    <div class="row grid card-group">
         {% for file in files %}
         <div class="m-2 grid-item {% if file.percent == 100 %}read{% else %}unread{% endif %}">
             <div class="card card_list_card">
@@ -40,12 +40,12 @@
                 {% endif %}
 
                     {% if file.obj.thumbnail %}
-                    <img src="{{file.obj.thumbnail.url}}" class="card-img-top" alt="{{ file.name }}" alt_src="{% static "/img/placeholder.png" %}" onerror="this.onerror=null;this.src=this.getAttribute('alt_src');">
+                    <img src="{{file.obj.thumbnail.url}}" class="card-img-top" alt="{{ file.name }}" alt_src="{% static "/img/placeholder.png" %}">
                     {% else %}
                         {% if file.item_type == 'Directory' %}
-                            <img src="{% url 'directory_thumbnail' file.selector %}" class="card-img-top" alt="{{ file.name }}" alt_src="{% static "/img/placeholder.png" %}" onerror="this.onerror=null;this.src=this.getAttribute('alt_src');">
+                            <img src="{% url 'directory_thumbnail' file.selector %}" class="card-img-top" alt="{{ file.name }}" alt_src="{% static "/img/placeholder.png" %}">
                         {% elif file.item_type == 'ComicBook' %}
-                            <img src="{% url 'comic_thumbnail' file.selector %}" class="card-img-top" alt="{{ file.name }}" alt_src="{% static "/img/placeholder.png" %}" onerror="this.onerror=null;this.src=this.getAttribute('alt_src');">
+                            <img src="{% url 'comic_thumbnail' file.selector %}" class="card-img-top" alt="{{ file.name }}" alt_src="{% static "/img/placeholder.png" %}">
                         {% endif %}
                     {% endif %}
                 </a>
@@ -69,7 +69,7 @@
                     <button type="button" class="btn btn-primary comic_action" title="Mark Un-Read" selector="{{ file.selector }}" itemtype="{{ file.item_type }}" comic_action="mark_unread"><i class="fas fa-book"></i></button>
                     <button type="button" class="btn btn-primary comic_action" title="Mark Read" selector="{{ file.selector }}" itemtype="{{ file.item_type }}" comic_action="mark_read"><i class="fas fa-book-open"></i></button>
                     <div class="btn-group" role="group">
-                        <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">F
 
                         </button>
                         <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">

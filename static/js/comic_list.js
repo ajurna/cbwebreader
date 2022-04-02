@@ -14,9 +14,8 @@ let $grid = $('.comic-container').isotope({
 });
 
 $('#filters').on( 'click', 'button', function() {
-    if (typeof $( this ).attr('data-filter') === "undefined") {
-
-    }else {
+    if (typeof $( this ).attr('data-filter') === "undefined") {}
+    else {
         buttonFilter = $( this ).attr('data-filter');
         sessionStorage.setItem(window.location.href+"button", buttonFilter);
         $grid.isotope();
@@ -132,4 +131,8 @@ save_button.addEventListener('click', function (event){
     })
 
 
+})
+
+$( "img" ).on("error", function() {
+    $(this).src=$(this).attr('alt_src');
 })

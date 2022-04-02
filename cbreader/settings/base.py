@@ -157,7 +157,7 @@ CSP_FONT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'", "'sha256-khnq7MWUoC3fJlH98ZjaCbVOvyd5+vnfVyue/ca55JA='")
 CSP_CONNECT_SRC = ("'self'",)
 CSP_INCLUDE_NONCE_IN = ['script-src']
-CSP_SCRIPT_SRC_ATTR = ("'self'", "'unsafe-inline'")
+CSP_SCRIPT_SRC_ATTR = ("'self'",)# "'unsafe-inline'")
 
 PERMISSIONS_POLICY = {
     "accelerometer": [],
@@ -179,6 +179,8 @@ PERMISSIONS_POLICY = {
 
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'Strict'
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'Strict'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
