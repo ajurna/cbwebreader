@@ -160,7 +160,7 @@ mysqlclient==2.1.0; python_version >= "3.5" \
     --hash=sha256:973235686f1b720536d417bf0a0d39b4ab3d5086b2b6ad5e6752393428c02b12
 pilkit==2.0 \
     --hash=sha256:ddb30c2f0198a147e56b151476c3bb9fe045fbfd5b0a0fa2a3148dba62d1559f
-pillow==9.1.0; python_version >= "3.7" \
+pillow==9.1.1; python_version >= "3.7" \
     --hash=sha256:af79d3fde1fc2e33561166d62e3b63f0cc3e47b5a3a2e5fea40d4917754734ea \
     --hash=sha256:55dd1cf09a1fd7c7b78425967aacae9b0d70125f7d3ab973fadc7b5abc3de652 \
     --hash=sha256:a5eaf3b42df2bcda61c53a742ee2c6e63f777d0e085bbc6b2ab7ed57deb13db7 \
