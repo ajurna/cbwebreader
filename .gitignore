@@ -92,3 +92,4 @@ media
 db.sqlite3
 identifier.sqlite
 .dmypy.json
+node_modules
