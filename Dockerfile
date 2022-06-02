@@ -15,6 +15,9 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
     PIP_NO_CACHE_DIR=1
 
 RUN apt update
+RUN apt install -y software-properties-common
+RUN apt-add-repository non-free
+RUN apt update
 
 COPY requirements.txt /src
 COPY package.json /src
@@ -27,7 +30,8 @@ COPY package-lock.json /src
 #    && pip install -r requirements.txt \
 #    && apt remove build-essential postgresql-dev mariadb-dev mariadb-connector-c-dev mupdf-dev python3-dev freetype-dev libffi-dev jbig2dec-dev jpeg-dev openjpeg-dev harfbuzz-dev npm
 
-RUN apt install -y npm cron \
+RUN apt install -y software-properties-common \
+    && apt install -y npm cron unrar \
     && npm install \
     && pip install --upgrade pip \
     && pip install -r requirements.txt \
