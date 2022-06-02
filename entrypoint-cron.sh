@@ -1,6 +1,6 @@
 #!/bin/sh
 
 # Start cron daemon.
-crond -f
+cron -f
 
 # Start application.

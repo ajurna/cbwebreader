@@ -4,7 +4,7 @@ import uuid
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
-from django.db.models import Max, Count, F, Case, When, BooleanField, PositiveSmallIntegerField
+from django.db.models import Max, Count, F, Case, When, PositiveSmallIntegerField
 from django.db.transaction import atomic
 from django.http import HttpResponse, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render

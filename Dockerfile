@@ -1,4 +1,4 @@
-FROM python:3-alpine3.14
+FROM python:3
 
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONHASHSEED=random \
@@ -14,23 +14,30 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1
 
-RUN apk update
+RUN apt update
 
 COPY requirements.txt /src
 COPY package.json /src
 COPY package-lock.json /src
 
-RUN apk add --no-cache --virtual .build-deps gcc build-base g++ cmake make postgresql-dev mariadb-dev mariadb-connector-c-dev mupdf-dev python3-dev freetype-dev libffi-dev jbig2dec-dev jpeg-dev openjpeg-dev harfbuzz-dev npm\
-    && apk add --no-cache tini bash unrar dcron python3 mariadb-connector-c jpeg postgresql-libs jbig2dec jpeg openjpeg harfbuzz mupdf postgresql-client\
+#RUN apt install -y  build-essential postgresql libmariadb-dev libmupdf-dev python3-dev libfreetype-dev libffi-dev libjbig2dec0-dev libjpeg-dev libharfbuzz-dev npm\
+#    && apt install tini bash unrar python3 mariadb-connector-c jpeg postgresql-libs jbig2dec jpeg openjpeg harfbuzz mupdf postgresql-client\
+#    && npm install \
+#    && pip install --upgrade pip \
+#    && pip install -r requirements.txt \
+#    && apt remove build-essential postgresql-dev mariadb-dev mariadb-connector-c-dev mupdf-dev python3-dev freetype-dev libffi-dev jbig2dec-dev jpeg-dev openjpeg-dev harfbuzz-dev npm
+
+RUN apt install -y npm cron \
     && npm install \
     && pip install --upgrade pip \
     && pip install -r requirements.txt \
-    && apk del .build-deps
+    && apt remove -y npm \
+    && apt -y auto-remove
 
 COPY entrypoint.sh /src
 
 COPY . /src/
 
-RUN cat /src/cbreader/crontab >> /etc/crontabs/root
+RUN cat /src/cbreader/crontab >> /etc/cron.daily/cbreader
 
 EXPOSE 8000
