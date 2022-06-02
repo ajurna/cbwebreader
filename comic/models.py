@@ -174,7 +174,12 @@ class ComicBook(models.Model):
             return False
 
         page_obj = ComicPage.objects.get(Comic=self, index=page)
-        out = (archive.open(page_obj.page_file_name), page_obj.content_type)
+        try:
+            out = (archive.open(page_obj.page_file_name), page_obj.content_type)
+        except rarfile.NoRarEntry:
+            self.verify_pages()
+            page_obj = ComicPage.objects.get(Comic=self, index=page)
+            out = (archive.open(page_obj.page_file_name), page_obj.content_type)
         return out
 
     def get_thumbnail_url(self):
