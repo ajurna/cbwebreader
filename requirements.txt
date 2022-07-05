@@ -94,7 +94,7 @@ django-silk==4.3.0; python_version >= "3.7" \
 django-sri==0.3.0; python_version >= "3.6" \
     --hash=sha256:961e316c0663d2b277a60f677bae3bed451a26f045129eddf09827f98fe00b86 \
     --hash=sha256:9fa50b4b41b4cc3e8072d1bc4a60a81e38fd95698aed115d2f56f3d7e83a6877
-django==3.2.13; python_version >= "3.6" \
+django==3.2.14; python_version >= "3.6" \
     --hash=sha256:b896ca61edc079eb6bbaa15cf6071eb69d6aac08cce5211583cfb41515644fdf \
     --hash=sha256:6d93497a0a9bf6ba0e0b1a29cccdc40efbfc76297255b1309b3a884a688ec4b6
 gprof2dot==2021.2.21; python_version >= "3.7" \
