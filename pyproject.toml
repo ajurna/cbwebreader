@@ -3,7 +3,7 @@ line_length = 119
 
 [tool.poetry]
 name = "cbwebreader"
-version = "0.4.5"
+version = "0.4.6"
 description = "CBR/Z Web Reader"
 authors = ["ajurna <ajurna@gmail.com>"]
 license = "Creative Commons Attribution-ShareAlike 4.0 International License"
