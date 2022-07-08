@@ -23,8 +23,7 @@ export default {
       {id: 1, href: '/library', text:'Library'},
       {id: 2, href: '/data', text:'Data'}
     ]
-    }
-  },
+  }},
   props: {
 
   }

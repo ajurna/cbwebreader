@@ -46,17 +46,8 @@ export default {
     CDropdownMenu,
     CDropdownItem
   },
-  data () {
-    return {
-      publicPath: process.env.BASE_URL,
-      data: {
-        title: '100 Bullets (1999)',
-        url: '/comic/hBIlAchXRxaXs9ZCXaDWLg/',
-        thumbnail: 'logo.png',
-        progress: 50,
-        total: 100
-      }
-    }
+  props: {
+    data: Object
   }
 }
 </script>
