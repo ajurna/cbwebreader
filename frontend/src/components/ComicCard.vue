@@ -1,16 +1,34 @@
 <template>
-  <CCard style="width: 18rem">
-    <CCardImage orientation="top" src="./assets/logo.png" />
+  <CCard class="col-lg-2">
+    <CCardImage orientation="top" :src="data.thumbnail"/>
     <CCardBody>
-      <CCardTitle>Card title</CCardTitle>
-      <CCardText>Some quick example text to build on the card title and make up the bulk of the card's content.</CCardText>
-      <CButton href="#">Go somewhere</CButton>
+      <CCardTitle><a :href="data.url">{{ data.title }}</a></CCardTitle>
+      <CCardText>
+        <p class="text-center">{{data.progress}} / {{data.total}}</p>
+        <CProgress class="mb-3">
+          <CProgressBar :value="data.progress/data.total*100"/>
+        </CProgress>
+        <CButtonGroup class="w-100">
+          <CButton color="primary"><font-awesome-icon icon='book' /> </CButton>
+          <CButton color="primary"><font-awesome-icon icon='book-open' /> </CButton>
+          <CDropdown variant="btn-group">
+            <CDropdownToggle color="primary"><font-awesome-icon icon='edit' /></CDropdownToggle>
+            <CDropdownMenu>
+              <CDropdownItem href="#"><font-awesome-icon icon='book' /> Mark Un-read</CDropdownItem>
+              <CDropdownItem href="#"><font-awesome-icon icon='book-open' />Mark read</CDropdownItem>
+              <CDropdownItem href="#"><font-awesome-icon icon='edit' />Edit Comic</CDropdownItem>
+            </CDropdownMenu>
+          </CDropdown>
+        </CButtonGroup>
+      </CCardText>
+
     </CCardBody>
   </CCard>
 </template>
 
 <script>
-import {CCard, CCardImage, CCardBody, CCardTitle, CCardText, CButton} from '@coreui/vue'
+import {CCard, CCardImage, CCardBody, CCardTitle, CCardText, CButton, CProgress, CProgressBar, CButtonGroup, CDropdown,
+  CDropdownToggle, CDropdownMenu, CDropdownItem} from '@coreui/vue'
 export default {
   name: "ComicCard",
   components: {
@@ -19,7 +37,26 @@ export default {
     CCardBody,
     CCardTitle,
     CCardText,
-    CButton
+    CButton,
+    CProgress,
+    CProgressBar,
+    CButtonGroup,
+    CDropdown,
+    CDropdownToggle,
+    CDropdownMenu,
+    CDropdownItem
+  },
+  data () {
+    return {
+      publicPath: process.env.BASE_URL,
+      data: {
+        title: '100 Bullets (1999)',
+        url: '/comic/hBIlAchXRxaXs9ZCXaDWLg/',
+        thumbnail: 'logo.png',
+        progress: 50,
+        total: 100
+      }
+    }
   }
 }
 </script>

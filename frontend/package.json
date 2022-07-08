@@ -10,6 +10,9 @@
   "dependencies": {
     "@coreui/coreui": "^4.2.0",
     "@coreui/vue": "^4.3.0",
+    "@fortawesome/fontawesome-svg-core": "^6.1.1",
+    "@fortawesome/free-solid-svg-icons": "^6.1.1",
+    "@fortawesome/vue-fontawesome": "^3.0.1",
     "core-js": "^3.8.3",
     "vue": "^3.2.13"
   },
