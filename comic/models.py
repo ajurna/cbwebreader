@@ -36,7 +36,7 @@ class Directory(models.Model):
         C_18 = 4, '18'
 
     name = models.CharField(max_length=100)
-    parent = models.ForeignKey("Directory", null=True, blank=True, on_delete=models.CASCADE)
+    parent = models.ForeignKey("Directory", null=True, blank=True, on_delete=models.CASCADE, to_field="selector")
     selector = models.UUIDField(unique=True, default=uuid.uuid4, db_index=True)
     thumbnail = ProcessedImageField(upload_to='thumbs',
                                     processors=[ResizeToFill(200, 300)],
@@ -124,7 +124,7 @@ class Directory(models.Model):
 class ComicBook(models.Model):
     file_name = models.TextField()
     date_added = models.DateTimeField(auto_now_add=True)
-    directory = models.ForeignKey(Directory, blank=True, null=True, on_delete=models.CASCADE)
+    directory = models.ForeignKey(Directory, blank=True, null=True, on_delete=models.CASCADE, to_field="selector")
     selector = models.UUIDField(unique=True, default=uuid.uuid4, db_index=True)
     version = models.IntegerField(default=1)
     thumbnail = ProcessedImageField(upload_to='thumbs',

@@ -17,9 +17,18 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.urls import path
+from rest_framework import routers
+from comic import rest
 
 import comic.views
 import comic_auth.views
+
+router = routers.DefaultRouter()
+router.register(r'users', rest.UserViewSet)
+router.register(r'groups', rest.GroupViewSet)
+router.register(r'directory', rest.DirectoryViewSet)
+router.register(r'comicbook', rest.ComicBookViewSet)
 
 urlpatterns = [
     url(r"^$", comic.views.comic_redirect),
@@ -28,6 +37,8 @@ urlpatterns = [
     url(r"^setup/", comic.views.initial_setup),
     url(r"^comic/", include("comic.urls")),
     url(r"^admin/", admin.site.urls),
+    path('api/', include(router.urls)),
+    path('api-auth/', include('rest_framework.urls'))
 
 ]
 if settings.DEBUG:
