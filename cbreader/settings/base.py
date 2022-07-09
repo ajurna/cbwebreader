@@ -42,6 +42,7 @@ INSTALLED_APPS = (
     'imagekit',
     'django_boost',
     'sri',
+    "corsheaders",
     'django_filters',
     'rest_framework',
 )
@@ -50,6 +51,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django_permissions_policy.PermissionsPolicyMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -179,13 +181,13 @@ PERMISSIONS_POLICY = {
     "usb": [],
 }
 
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_SAMESITE = 'Strict'
-CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'Strict'
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# SESSION_COOKIE_HTTPONLY = True
+# SESSION_COOKIE_SECURE = True
+# SESSION_COOKIE_SAMESITE = 'Strict'
+# CSRF_COOKIE_HTTPONLY = True
+# CSRF_COOKIE_SECURE = True
+# CSRF_COOKIE_SAMESITE = 'Strict'
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 REST_FRAMEWORK = {
@@ -193,5 +195,10 @@ REST_FRAMEWORK = {
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
 }
+
+CORS_ALLOW_ALL_ORIGINS = True

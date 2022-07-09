@@ -34,6 +34,8 @@ django-permissions-policy = "^4.9.0"
 djangorestframework = "^3.13.1"
 Markdown = "^3.3.7"
 django-filter = "^22.1"
+django-cors-headers = "^3.13.0"
+djangorestframework-simplejwt = "^5.2.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.942"
