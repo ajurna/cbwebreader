@@ -2,7 +2,7 @@
   <CContainer>
     <CRow>
       <CCol lg="4"/>
-      <CCol lg="4">
+      <CCol lg="4" id="login-col">
         <CForm>
           <CFormInput
               type="username"
@@ -31,9 +31,6 @@
 
 <script>
 import {CContainer, CRow, CCol, CForm, CFormInput, CButton} from "@coreui/vue";
-import axios from "axios";
-
-
 
 export default {
   name: "LoginView",
@@ -42,31 +39,30 @@ export default {
     CCol,
     CContainer,
     CRow,
-    // CFormLabel,
     CFormInput,
-    CButton
+    CButton,
   },
   data() {
     return {
       username: '',
       password: '',
-      csrfToken: ''
+      password_alert: false
     }
   },
   methods: {
     login () {
-      console.log('clicked login' + this.username + this.password)
-
-      axios.post('http://localhost:8000/api/token/', {
-        username: this.username,
-        password: this.password
-      })
+      this.$store.dispatch("obtainToken", {username: this.username, password: this.password})
       .then(function (response) {
         console.log(response);
       })
       .catch(function (error) {
+        console.log('Caught in view')
         console.log(error);
+        this.password_alert = true
       });
+    },
+    dismiss_alert() {
+      this.password_alert = false
     }
   }
 }

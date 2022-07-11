@@ -1,20 +1,35 @@
 import { createStore } from 'vuex'
 import axios from 'axios'
 import jwtDecode from 'jwt-decode'
+import {useToast} from "vue-toast-notification";
+import router from "@/router";
+
+function get_jwt_from_storage(){
+  try {
+    return JSON.parse(localStorage.getItem('t'))
+  } catch {
+    return null
+  }
+}
+
 export default createStore({
   state: {
-    jwt: localStorage.getItem('t'),
+    jwt: get_jwt_from_storage(),
     endpoints: {
-      obtainJWT: 'http://loclhost:8000/api/token/',
-      refreshJWT: 'http://loclhost:8000/api/token/refresh'
+      obtainJWT: 'https://localhost:8000/api/token/',
+      refreshJWT: 'https://localhost:8000/api/token/refresh'
     }
   },
   getters: {
   },
   mutations: {
     updateToken(state, newToken){
-      localStorage.setItem('t', newToken);
+      localStorage.setItem('t', JSON.stringify(newToken));
       state.jwt = newToken;
+    },
+    updateAccessToken(state, newToken){
+      state.jwt.access = newToken.access
+      localStorage.setItem('t', JSON.stringify(state.jwt));
     },
     removeToken(state){
       localStorage.removeItem('t');
@@ -22,26 +37,29 @@ export default createStore({
     }
   },
   actions: {
-    obtainToken(username, password){
+    obtainToken(context, {username, password}){
       const payload = {
         username: username,
         password: password
       }
       axios.post(this.state.endpoints.obtainJWT, payload)
         .then((response)=>{
-            this.commit('updateToken', response.data.token);
+            context.commit('updateToken', response.data);
+            router.push('/')
           })
         .catch((error)=>{
             console.log(error);
+            const $toast = useToast();
+            $toast.error(error.response.data.detail, {position:'top'});
           })
     },
     refreshToken(){
       const payload = {
-        token: this.state.jwt
+        refresh: this.state.jwt.refresh
       }
       axios.post(this.state.endpoints.refreshJWT, payload)
         .then((response)=>{
-            this.commit('updateToken', response.data.token)
+            this.commit('updateToken', response.data)
           })
         .catch((error)=>{
             console.log(error)
@@ -52,7 +70,7 @@ export default createStore({
       if(token){
         const decoded = jwtDecode(token);
         const exp = decoded.exp
-        const orig_iat = decoded.orig_iat
+        const orig_iat = decoded.iat
         if(exp - (Date.now()/1000) < 1800 && (Date.now()/1000) - orig_iat < 628200){
           this.dispatch('refreshToken')
         } else if (exp -(Date.now()/1000) < 1800){
