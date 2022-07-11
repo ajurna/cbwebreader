@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from django.contrib.auth.models import User, Group
 from django_filters.rest_framework import DjangoFilterBackend
@@ -7,6 +7,8 @@ from rest_framework.response import Response
 
 from comic import models
 from rest_framework import viewsets, serializers, mixins, permissions
+
+from comic.util import generate_directory
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -55,18 +57,6 @@ class DirectoryViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.
     serializer_class = DirectorySerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    @action(detail=True, methods=['get'])
-    def listing(self, request, selector: UUID):
-        directories = models.Directory.objects.filter(parent=selector)
-        serializer = self.get_serializer(directories, many=True)
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['get'])
-    def base(self, request):
-        directories = models.Directory.objects.filter(parent__isnull=True)
-        serializer = self.get_serializer(directories, many=True)
-        return Response(serializer.data)
-
 
 class ComicBookSerializer(serializers.ModelSerializer):
     class Meta:
@@ -83,3 +73,41 @@ class ComicBookViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     # filterset_fields = ['directory', 'selector']
+
+
+class BrowseSerializer(serializers.Serializer):
+    selector = serializers.UUIDField()
+    title = serializers.CharField()
+    progress = serializers.IntegerField()
+    total = serializers.IntegerField()
+
+
+class BrowseViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = BrowseSerializer
+    lookup_field = 'selector'
+
+    def list(self, request):
+        queryset = []
+        for item in generate_directory(request.user):
+            queryset.append({
+                "selector": item.obj.selector,
+                "title": item.name,
+                "progress": item.total_read,
+                "total": item.total
+            })
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, selector: UUID):
+        queryset = []
+        directory = models.Directory.objects.get(selector=selector)
+        for item in generate_directory(request.user, directory):
+            queryset.append({
+                "selector": item.obj.selector,
+                "title": item.name,
+                "progress": item.total_read,
+                "total": item.total
+            })
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)

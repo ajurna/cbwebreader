@@ -30,6 +30,7 @@ router.register(r'users', rest.UserViewSet)
 router.register(r'groups', rest.GroupViewSet)
 router.register(r'directory', rest.DirectoryViewSet)
 router.register(r'comicbook', rest.ComicBookViewSet)
+router.register(r'browse', rest.BrowseViewSet, basename='browse')
 
 urlpatterns = [
     url(r"^$", comic.views.comic_redirect),
