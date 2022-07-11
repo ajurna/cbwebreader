@@ -80,6 +80,7 @@ class BrowseSerializer(serializers.Serializer):
     title = serializers.CharField()
     progress = serializers.IntegerField()
     total = serializers.IntegerField()
+    type = serializers.CharField()
 
 
 class BrowseViewSet(viewsets.ViewSet):
@@ -94,7 +95,8 @@ class BrowseViewSet(viewsets.ViewSet):
                 "selector": item.obj.selector,
                 "title": item.name,
                 "progress": item.total_read,
-                "total": item.total
+                "total": item.total,
+                "type": item.item_type
             })
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
@@ -107,7 +109,8 @@ class BrowseViewSet(viewsets.ViewSet):
                 "selector": item.obj.selector,
                 "title": item.name,
                 "progress": item.total_read,
-                "total": item.total
+                "total": item.total,
+                "type": item.item_type
             })
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)

@@ -1,8 +1,8 @@
 <template>
   <CCard class="col-lg-2">
-    <CCardImage orientation="top" :src="data.thumbnail"/>
+    <CCardImage orientation="top" :src="thumbnail"/>
     <CCardBody>
-      <CCardTitle><a :href="data.url">{{ data.title }}</a></CCardTitle>
+      <CCardTitle><a :href="url">{{ data.title }}</a></CCardTitle>
       <CCardText>
         <p class="text-center">{{data.progress}} / {{data.total}}</p>
         <CProgress class="mb-3">
@@ -48,6 +48,15 @@ export default {
   },
   props: {
     data: Object
+  },
+  computed: {
+    url() {
+      return (this.data.type === 'Directory' ? '/browse/' + this.data.selector + '/' : '/comic/' + this.data.selector + '/');
+    },
+    thumbnail() {
+      // return '/comic/' + data.selector + '/thumb/'
+      return 'logo.png'
+    }
   }
 }
 </script>

@@ -17,7 +17,7 @@ export default createStore({
     jwt: get_jwt_from_storage(),
     endpoints: {
       obtainJWT: 'https://localhost:8000/api/token/',
-      refreshJWT: 'https://localhost:8000/api/token/refresh'
+      refreshJWT: 'https://localhost:8000/api/token/refresh/'
     }
   },
   getters: {
@@ -63,6 +63,7 @@ export default createStore({
           })
         .catch((error)=>{
             console.log(error)
+            router.push('/login')
           })
     },
     inspectToken(){
