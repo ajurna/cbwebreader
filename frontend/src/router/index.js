@@ -9,6 +9,12 @@ const routes = [
     component: HomeView
   },
   {
+    path: '/browse/:selector',
+    name: 'browse',
+    component: HomeView,
+    props: true
+  },
+  {
     path: '/login',
     name: 'login',
     component: LoginView

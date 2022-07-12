@@ -1,6 +1,6 @@
 <template>
   <CContainer>
-    <CRow v-if="viewable">
+    <CRow>
       <template v-for="comic in comics" :key="comic.title" >
         <comic-card :data="comic" />
       </template>
@@ -13,8 +13,6 @@
 
 import {CContainer, CRow} from "@coreui/vue"
 import ComicCard from "@/components/ComicCard";
-// import axios from 'axios'
-// import router from "@/router";
 import api from '@/api'
 
 export default {
@@ -23,11 +21,16 @@ export default {
   data () {
     return {
       comics: [],
-      viewable: true
   }},
-  async mounted () {
-    console.log()
-    api.get('https://localhost:8000/api/browse/')
+  props: {
+    selector: String
+  },
+  mounted () {
+    let url = 'https://localhost:8000/api/browse/'
+    if (this.selector) {
+      url += this.selector
+    }
+    api.get(url)
       .then(response => {
         this.comics = response.data
       })

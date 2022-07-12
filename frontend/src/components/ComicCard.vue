@@ -55,7 +55,7 @@ export default {
     },
     thumbnail() {
       // return '/comic/' + data.selector + '/thumb/'
-      return 'logo.png'
+      return '/logo.png'
     }
   }
 }
