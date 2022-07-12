@@ -36,6 +36,7 @@ INSTALLED_APPS = (
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "snowpenguin.django.recaptcha2",
+    'webpack_loader',
     'bootstrap4',
     "comic",
     "comic_auth",
@@ -58,26 +59,12 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'csp.middleware.CSPMiddleware',
+    # 'csp.middleware.CSPMiddleware',
 ]
 
 ROOT_URLCONF = "cbreader.urls"
 
-TEMPLATES = [
-    {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ["templates"],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "context_processors": [
-                "django.template.context_processors.debug",
-                "django.template.context_processors.request",
-                "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
-            ]
-        },
-    }
-]
+
 
 WSGI_APPLICATION = "cbreader.wsgi.application"
 
@@ -155,14 +142,14 @@ BOOTSTRAP4 = {
         "crossorigin": "anonymous",
     },
 }
-CSP_DEFAULT_SRC = ("'none'",)
-CSP_STYLE_SRC = ("'self'",)
-CSP_IMG_SRC = ("'self'", "data:")
-CSP_FONT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "'sha256-khnq7MWUoC3fJlH98ZjaCbVOvyd5+vnfVyue/ca55JA='")
-CSP_CONNECT_SRC = ("'self'",)
-CSP_INCLUDE_NONCE_IN = ['script-src']
-CSP_SCRIPT_SRC_ATTR = ("'self'",)# "'unsafe-inline'")
+# CSP_DEFAULT_SRC = ("'none'",)
+# CSP_STYLE_SRC = ("'self'",)
+# CSP_IMG_SRC = ("'self'", "data:")
+# CSP_FONT_SRC = ("'self'",)
+# CSP_SCRIPT_SRC = ("'self'", "'sha256-khnq7MWUoC3fJlH98ZjaCbVOvyd5+vnfVyue/ca55JA='")
+# CSP_CONNECT_SRC = ("'self'",)
+# CSP_INCLUDE_NONCE_IN = ['script-src']
+# CSP_SCRIPT_SRC_ATTR = ("'self'",)# "'unsafe-inline'")
 
 PERMISSIONS_POLICY = {
     "accelerometer": [],
@@ -206,4 +193,31 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = True
 SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
+}
+
+TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
+FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [TEMPLATES_DIR, ],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ]
+        },
+    }
+]
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'CACHE': DEBUG,
+        'BUNDLE_DIR_NAME': '/bundles/',  # must end with slash
+        'STATS_FILE': os.path.join(FRONTEND_DIR, 'webpack-stats.json'),
+    }
 }

@@ -20,7 +20,7 @@ async function get_access_token() {
 const axios_jwt = axios.create();
 
 axios_jwt.interceptors.request.use(async function (config) {
-    let access_token = await get_access_token()
+    let access_token = await get_access_token().catch(() => {router.push('/login')})
     config.headers = {
         Authorization: "Bearer " + access_token
     }

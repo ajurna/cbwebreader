@@ -15,10 +15,7 @@ function get_jwt_from_storage(){
 export default createStore({
   state: {
     jwt: get_jwt_from_storage(),
-    endpoints: {
-      obtainJWT: 'https://localhost:8000/api/token/',
-      refreshJWT: 'https://localhost:8000/api/token/refresh/'
-    }
+    base_url: 'http://localhost:8000',
   },
   getters: {
   },
@@ -38,7 +35,7 @@ export default createStore({
         username: username,
         password: password
       }
-      axios.post(this.state.endpoints.obtainJWT, payload)
+      axios.post(this.state.base_url+'/api/token/', payload)
         .then((response)=>{
             context.commit('updateToken', response.data);
             router.push('/')
@@ -53,7 +50,7 @@ export default createStore({
       const payload = {
         refresh: this.state.jwt.refresh
       }
-      return axios.post(this.state.endpoints.refreshJWT, payload)
+      return axios.post(this.state.base_url + '/api/token/refresh/', payload)
         .then((response)=>{
             this.commit('updateToken', response.data)
           })

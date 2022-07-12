@@ -6,7 +6,7 @@
 <style>
 </style>
 <script>
-import TheNavbar from "@/components/TheNavbar";
+import TheNavbar from "@/components/TheNavbar.vue";
 export default {
   components: {TheNavbar}
 }

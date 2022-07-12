@@ -31,8 +31,7 @@ export default {
     selector: String
   },
   mounted () {
-    let BASE = 'https://localhost:8000'
-    let comic_list_url = BASE + '/api/browse/'
+    let comic_list_url = this.$store.state.base_url + '/api/browse/'
 
     if (this.selector) {
       comic_list_url += this.selector

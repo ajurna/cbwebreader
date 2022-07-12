@@ -328,6 +328,14 @@ python-versions = ">=3.6"
 Django = ">=2.2"
 
 [[package]]
+name = "django-webpack-loader"
+version = "1.6.0"
+description = "Transparently use webpack with django"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "djangorestframework"
 version = "3.13.1"
 description = "Web APIs for Django, made easy."
@@ -917,7 +925,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "5dd3e1a494a44a8e187c2b61add9e9ef0bbc9fdd0a7b3e60a0bbe6afef084221"
+content-hash = "17feabe50342ee182987e48e5e2a9a596577b26186a3ce3794f745c89092848a"
 
 [metadata.files]
 appnope = []
@@ -1135,6 +1143,7 @@ django-sri = [
     {file = "django-sri-0.3.0.tar.gz", hash = "sha256:961e316c0663d2b277a60f677bae3bed451a26f045129eddf09827f98fe00b86"},
     {file = "django_sri-0.3.0-py3-none-any.whl", hash = "sha256:9fa50b4b41b4cc3e8072d1bc4a60a81e38fd95698aed115d2f56f3d7e83a6877"},
 ]
+django-webpack-loader = []
 djangorestframework = []
 djangorestframework-simplejwt = []
 executing = []
