@@ -1,7 +1,7 @@
 <template>
   <CContainer>
-    <CRow>
-      <template v-for="comic in comics" :key="comic.title">
+    <CRow v-if="viewable">
+      <template v-for="comic in comics" :key="comic.title" >
         <comic-card :data="comic" />
       </template>
     </CRow>
@@ -13,29 +13,25 @@
 
 import {CContainer, CRow} from "@coreui/vue"
 import ComicCard from "@/components/ComicCard";
-import axios from 'axios'
-import router from "@/router";
+// import axios from 'axios'
+// import router from "@/router";
+import api from '@/api'
 
 export default {
   name: "TheComicList",
   components: {CRow, ComicCard, CContainer},
   data () {
     return {
-      comics: []
+      comics: [],
+      viewable: true
   }},
-  mounted () {
+  async mounted () {
     console.log()
-    axios
-      .get('https://localhost:8000/api/browse/',
-          {
-            headers: {
-              Authorization: "Bearer " + this.$store.state.jwt.access
-            }})
-      .then(response => (this.comics = response.data))
-        .catch(() => {
-          this.$store.dispatch('refreshToken')
-          router.push('/')
-        })
+    api.get('https://localhost:8000/api/browse/')
+      .then(response => {
+        this.comics = response.data
+      })
+        .catch((error) => {console.log(error)})
 
   }
 }

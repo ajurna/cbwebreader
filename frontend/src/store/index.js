@@ -27,10 +27,6 @@ export default createStore({
       localStorage.setItem('t', JSON.stringify(newToken));
       state.jwt = newToken;
     },
-    updateAccessToken(state, newToken){
-      state.jwt.access = newToken.access
-      localStorage.setItem('t', JSON.stringify(state.jwt));
-    },
     removeToken(state){
       localStorage.removeItem('t');
       state.jwt = null;
@@ -57,7 +53,7 @@ export default createStore({
       const payload = {
         refresh: this.state.jwt.refresh
       }
-      axios.post(this.state.endpoints.refreshJWT, payload)
+      return axios.post(this.state.endpoints.refreshJWT, payload)
         .then((response)=>{
             this.commit('updateToken', response.data)
           })

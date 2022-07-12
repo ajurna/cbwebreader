@@ -4,6 +4,7 @@ Django settings for cbreader project.
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
@@ -203,3 +204,7 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
+SIMPLE_JWT = {
+    "ROTATE_REFRESH_TOKENS": True,
+    'ACCESS_TOKEN_LIFETIME': timedelta(seconds=30),
+}
