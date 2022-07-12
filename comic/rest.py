@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from comic import models
 from rest_framework import viewsets, serializers, mixins, permissions
 
-from comic.util import generate_directory
+from comic.util import generate_directory, generate_breadcrumbs_from_path
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -111,6 +111,36 @@ class BrowseViewSet(viewsets.ViewSet):
                 "progress": item.total_read,
                 "total": item.total,
                 "type": item.item_type
+            })
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
+
+
+class BreadcrumbSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    selector = serializers.UUIDField()
+    name = serializers.CharField()
+
+
+class BreadcrumbViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = BreadcrumbSerializer
+    lookup_field = 'selector'
+
+    def retrieve(self, request, selector: UUID):
+        queryset = []
+        comic = False
+        try:
+            directory = models.Directory.objects.get(selector=selector)
+        except models.Directory.DoesNotExist:
+            comic = models.ComicBook.objects.get(selector=selector)
+            directory = comic.directory
+
+        for index, item in enumerate(generate_breadcrumbs_from_path(directory, comic)):
+            queryset.append({
+                "id": index,
+                "selector": item.selector,
+                "name": item.name,
             })
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)

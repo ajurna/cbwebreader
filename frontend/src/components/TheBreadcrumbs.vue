@@ -1,8 +1,8 @@
 <template>
     <CBreadcrumb>
       <template v-for="(item, index) in crumbs" :key="item.id">
-        <CBreadcrumbItem href="#" v-if="index !== crumbs.length - 1">{{ item.text }}</CBreadcrumbItem>
-        <CBreadcrumbItem v-else active>{{ item.text }}</CBreadcrumbItem>
+        <CBreadcrumbItem :href="(item.selector ? '/browse/' + item.selector + '/': '/')" v-if="index !== crumbs.length - 1">{{ item.name }}</CBreadcrumbItem>
+        <CBreadcrumbItem v-else active>{{ item.name }}</CBreadcrumbItem>
       </template>
     </CBreadcrumb>
 
@@ -18,14 +18,10 @@ export default {
   },
   data () {
     return {
-      crumbs: [
-      {id: 0, href: '/home', text:'home'},
-      {id: 1, href: '/library', text:'Library'},
-      {id: 2, href: '/data', text:'Data'}
-    ]
+
   }},
   props: {
-
+    crumbs: Object
   }
 }
 </script>

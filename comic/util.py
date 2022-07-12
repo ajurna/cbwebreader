@@ -37,6 +37,7 @@ class Breadcrumb:
     def __init__(self):
         self.name = "Home"
         self.url = "/comic/"
+        self.selector = ''
 
     def __str__(self):
         return self.name
@@ -60,11 +61,13 @@ def generate_breadcrumbs_from_path(directory=False, book=False):
         bc = Breadcrumb()
         bc.name = item.name
         bc.url = "/comic/" + urlsafe_base64_encode(item.selector.bytes)
+        bc.selector = item.selector
         output.append(bc)
     if book:
         bc = Breadcrumb()
         bc.name = book.file_name
         bc.url = "/read/" + urlsafe_base64_encode(book.selector.bytes)
+        bc.selector = book.selector
         output.append(bc)
 
     return output
