@@ -3,7 +3,7 @@
     <CCardImage orientation="top" :src="thumbnail" />
     <CCardBody class="pb-0 pt-0">
       <CCardTitle>
-        <router-link :to="(data.type ? {'name': 'browse', params: { selector: data.selector }} : {'name': 'browse', params: { selector: data.selector }})">{{ data.title }}</router-link>
+        <router-link :to="(data.type === 'Directory' ? {'name': 'browse', params: { selector: data.selector }} : {'name': 'read', params: { selector: data.selector }})">{{ data.title }}</router-link>
       </CCardTitle>
     </CCardBody>
     <CCardFooter class="pl-0 pr-0 pt-0">

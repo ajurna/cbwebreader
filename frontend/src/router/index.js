@@ -16,6 +16,12 @@ const routes = [
     props: true
   },
   {
+    path: '/read/:selector',
+    name: 'read',
+    component: HomeView,
+    props: true
+  },
+  {
     path: '/login',
     name: 'login',
     component: LoginView

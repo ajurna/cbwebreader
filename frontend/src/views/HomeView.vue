@@ -1,17 +1,20 @@
 <template>
-  <the-comic-list />
+  <the-breadcrumbs :selector="selector"/>
+  <the-comic-list :selector="selector" />
 </template>
 
 <script>
-// @ is an alias to /src
-// import HelloWorld from '@/components/HelloWorld.vue'
 import TheComicList from "@/components/TheComicList";
+import TheBreadcrumbs from "@/components/TheBreadcrumbs";
 
 export default {
   name: 'HomeView',
   components: {
+    TheBreadcrumbs,
     TheComicList,
-    // HelloWorld
+  },
+  props: {
+    selector: String
   }
 }
 </script>

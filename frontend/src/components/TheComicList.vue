@@ -1,5 +1,4 @@
 <template>
-  <the-breadcrumbs :crumbs="breadcrumbs"/>
   <CContainer>
     <CRow>
       <template v-for="comic in comics" :key="comic.title" >
@@ -31,18 +30,6 @@ export default {
     selector: String
   },
   methods: {
-    updateBreadcrumbs () {
-      if (this.selector) {
-        let breadcrumb_url = this.$store.state.base_url + '/api/breadcrumbs/' + this.selector + '/'
-        api.get(breadcrumb_url)
-          .then(response => {
-            this.breadcrumbs = response.data
-          })
-          .catch((error) => {console.log(error)})
-      } else {
-        this.breadcrumbs = [{id: 0, selector: '', name: 'Home'}]
-      }
-    },
     updateComicList () {
       let comic_list_url = this.$store.state.base_url + '/api/browse/'
       if (this.selector) {
@@ -56,12 +43,10 @@ export default {
     },
   },
   mounted () {
-    this.updateBreadcrumbs()
     this.updateComicList()
   },
   watch: {
     selector(oldSelector, newSelector) {
-      this.updateBreadcrumbs()
       this.updateComicList()
     }
   }

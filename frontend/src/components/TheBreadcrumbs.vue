@@ -12,6 +12,7 @@
 
 <script>
 import { CBreadcrumbItem, CBreadcrumb } from '@coreui/vue'
+import api from "@/api";
 export default {
   name: "TheBreadcrumbs",
   components: {
@@ -20,11 +21,33 @@ export default {
   },
   data () {
     return {
-
+      crumbs: []
   }},
   props: {
-    crumbs: Object
-  }
+    selector: String
+  },
+  methods: {
+    updateBreadcrumbs () {
+      if (this.selector) {
+        let breadcrumb_url = this.$store.state.base_url + '/api/breadcrumbs/' + this.selector + '/'
+        api.get(breadcrumb_url)
+          .then(response => {
+            this.crumbs = response.data
+          })
+          .catch((error) => {console.log(error)})
+      } else {
+        this.breadcrumbs = [{id: 0, selector: '', name: 'Home'}]
+      }
+    },
+  },
+  watch: {
+    selector(oldSelector, newSelector) {
+      this.updateBreadcrumbs()
+    }
+  },
+  mounted () {
+    this.updateBreadcrumbs()
+  },
 }
 </script>
 
