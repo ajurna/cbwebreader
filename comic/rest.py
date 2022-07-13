@@ -1,13 +1,11 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from django.contrib.auth.models import User, Group
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.decorators import action
+from rest_framework import viewsets, serializers, mixins, permissions
 from rest_framework.response import Response
 
 from comic import models
-from rest_framework import viewsets, serializers, mixins, permissions
-
 from comic.util import generate_directory, generate_breadcrumbs_from_path
 
 
@@ -81,11 +79,12 @@ class BrowseSerializer(serializers.Serializer):
     progress = serializers.IntegerField()
     total = serializers.IntegerField()
     type = serializers.CharField()
+    thumbnail = serializers.FileField()
 
 
 class BrowseViewSet(viewsets.ViewSet):
-    permission_classes = [permissions.IsAuthenticated]
     serializer_class = BrowseSerializer
+    permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'selector'
 
     def list(self, request):
@@ -96,7 +95,8 @@ class BrowseViewSet(viewsets.ViewSet):
                 "title": item.name,
                 "progress": item.total_read,
                 "total": item.total,
-                "type": item.item_type
+                "type": item.item_type,
+                "thumbnail": item.obj.thumbnail
             })
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
@@ -110,7 +110,8 @@ class BrowseViewSet(viewsets.ViewSet):
                 "title": item.name,
                 "progress": item.total_read,
                 "total": item.total,
-                "type": item.item_type
+                "type": item.item_type,
+                "thumbnail": item.obj.thumbnail
             })
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
@@ -144,3 +145,34 @@ class BreadcrumbViewSet(viewsets.ViewSet):
             })
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
+
+
+class GenerateThumbnailSerializer(serializers.Serializer):
+    selector = serializers.UUIDField()
+    thumbnail = serializers.FileField()
+
+
+class GenerateThumbnailViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = GenerateThumbnailSerializer
+    lookup_field = 'selector'
+
+    def retrieve(self, request, selector: UUID):
+        try:
+            directory = models.Directory.objects.get(selector=selector)
+            directory.generate_thumbnail()
+            return Response(
+                self.serializer_class({
+                    "selector": directory.selector,
+                    "thumbnail": directory.thumbnail
+                })
+            )
+        except models.Directory.DoesNotExist:
+            comic = models.ComicBook.objects.get(selector=selector)
+            comic.generate_thumbnail()
+            return Response(
+                self.serializer_class({
+                    "selector": comic.selector,
+                    "thumbnail": comic.thumbnail
+                })
+            )

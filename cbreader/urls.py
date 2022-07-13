@@ -34,6 +34,7 @@ router.register(r'directory', rest.DirectoryViewSet)
 router.register(r'comicbook', rest.ComicBookViewSet)
 router.register(r'browse', rest.BrowseViewSet, basename='browse')
 router.register(r'breadcrumbs', rest.BreadcrumbViewSet, basename='breadcrumbs')
+router.register(r'generate_thumbnail', rest.GenerateThumbnailViewSet, basename='generate_thumbnail')
 
 urlpatterns = [
     # url(r"^$", comic.views.comic_redirect),
@@ -52,5 +53,5 @@ urlpatterns = [
 
 
 ]
-# if settings.DEBUG:
-#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
