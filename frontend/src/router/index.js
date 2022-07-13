@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from "@/views/LoginView";
+import ReadView from "@/views/ReadView";
 
 const routes = [
   {
@@ -18,7 +19,7 @@ const routes = [
   {
     path: '/read/:selector',
     name: 'read',
-    component: HomeView,
+    component: ReadView,
     props: true
   },
   {

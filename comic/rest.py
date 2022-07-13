@@ -3,6 +3,7 @@ from uuid import UUID
 from django.contrib.auth.models import User, Group
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, serializers, mixins, permissions
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from comic import models
@@ -178,3 +179,36 @@ class GenerateThumbnailViewSet(viewsets.ViewSet):
                     "thumbnail": comic.thumbnail
                 }).data
             )
+
+
+class PageSerializer(serializers.Serializer):
+    index = serializers.IntegerField()
+    page_file_name = serializers.CharField()
+    content_type = serializers.CharField()
+
+
+class ReadSerializer(serializers.Serializer):
+    selector = serializers.UUIDField()
+    title = serializers.CharField()
+    last_read_page = serializers.IntegerField()
+    pages = PageSerializer(many=True)
+
+
+class ReadViewSet(viewsets.ViewSet):
+    serializer_class = ReadSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'selector'
+
+    def retrieve(self, request, selector: UUID):
+        comic = get_object_or_404(models.ComicBook, selector=selector)
+        misc, _ = models.UserMisc.objects.get_or_create(user=request.user)
+        pages = models.ComicPage.objects.filter(Comic=comic)
+        status, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
+        data = {
+            "selector": comic.selector,
+            "title": comic.file_name,
+            "last_read_page": status.last_read_page,
+            "pages": pages,
+        }
+        serializer = self.serializer_class(data)
+        return Response(serializer.data)
