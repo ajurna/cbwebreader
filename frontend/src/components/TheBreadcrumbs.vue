@@ -36,12 +36,12 @@ export default {
           })
           .catch((error) => {console.log(error)})
       } else {
-        this.breadcrumbs = [{id: 0, selector: '', name: 'Home'}]
+        this.crumbs = [{id: 0, selector: '', name: 'Home'}]
       }
     },
   },
   watch: {
-    selector(oldSelector, newSelector) {
+    selector() {
       this.updateBreadcrumbs()
     }
   },
