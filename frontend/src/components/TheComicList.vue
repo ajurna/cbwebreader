@@ -30,26 +30,40 @@ export default {
   props: {
     selector: String
   },
-  mounted () {
-    let comic_list_url = this.$store.state.base_url + '/api/browse/'
-
-    if (this.selector) {
-      comic_list_url += this.selector
-
-      let breadcrumb_url = BASE + '/api/breadcrumbs/' + this.selector + '/'
-      api.get(breadcrumb_url)
-      .then(response => {
-        this.breadcrumbs = response.data
-      })
-        .catch((error) => {console.log(error)})
-    }
-
-    api.get(comic_list_url)
+  methods: {
+    updateBreadcrumbs () {
+      if (this.selector) {
+        let breadcrumb_url = this.$store.state.base_url + '/api/breadcrumbs/' + this.selector + '/'
+        api.get(breadcrumb_url)
+          .then(response => {
+            this.breadcrumbs = response.data
+          })
+          .catch((error) => {console.log(error)})
+      } else {
+        this.breadcrumbs = [{id: 0, selector: '', name: 'Home'}]
+      }
+    },
+    updateComicList () {
+      let comic_list_url = this.$store.state.base_url + '/api/browse/'
+      if (this.selector) {
+        comic_list_url += this.selector
+      }
+      api.get(comic_list_url)
       .then(response => {
         this.comics = response.data
       })
-        .catch((error) => {console.log(error)})
-
+      .catch((error) => {console.log(error)})
+    },
+  },
+  mounted () {
+    this.updateBreadcrumbs()
+    this.updateComicList()
+  },
+  watch: {
+    selector(oldSelector, newSelector) {
+      this.updateBreadcrumbs()
+      this.updateComicList()
+    }
   }
 }
 </script>

@@ -2,7 +2,7 @@
   <CCard class="col-lg-2">
     <CCardImage orientation="top" :src="thumbnail"/>
     <CCardBody>
-      <CCardTitle><a :href="url">{{ data.title }}</a></CCardTitle>
+      <CCardTitle><router-link :to="{'name': 'browse', params: { selector: data.selector }}">{{ data.title }}</router-link></CCardTitle>
       <CCardText>
         <p class="text-center">{{data.progress}} / {{data.total}}</p>
         <CProgress class="mb-3">
@@ -55,7 +55,7 @@ export default {
     },
     thumbnail() {
       // return '/comic/' + data.selector + '/thumb/'
-      return '/logo.png'
+      return '/static/img/placeholder.png'
     }
   }
 }
