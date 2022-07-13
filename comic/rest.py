@@ -160,19 +160,21 @@ class GenerateThumbnailViewSet(viewsets.ViewSet):
     def retrieve(self, request, selector: UUID):
         try:
             directory = models.Directory.objects.get(selector=selector)
-            directory.generate_thumbnail()
+            if not directory.thumbnail:
+                directory.generate_thumbnail()
             return Response(
                 self.serializer_class({
                     "selector": directory.selector,
                     "thumbnail": directory.thumbnail
-                })
+                }).data
             )
         except models.Directory.DoesNotExist:
             comic = models.ComicBook.objects.get(selector=selector)
-            comic.generate_thumbnail()
+            if not comic.thumbnail:
+                comic.generate_thumbnail()
             return Response(
                 self.serializer_class({
                     "selector": comic.selector,
                     "thumbnail": comic.thumbnail
-                })
+                }).data
             )
