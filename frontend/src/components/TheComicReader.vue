@@ -16,12 +16,40 @@ export default {
   name: "TheComicReader",
   data () {
     return {
+      current_page: 0,
+      deck: null
     }
   },
   props: {
     comic_data: Object
   },
   methods: {
+    prevPage(){
+
+      if (this.deck.isFirstSlide()){
+        // if (nav.prev_type === 'ComicBook'){
+        //     window.location = "/comic/read/"+ nav.prev_path +"/"
+        // } else {
+        //     window.location = "/comic/"+ nav.prev_path +"/"
+        // }
+      } else {
+        this.current_page -= 1
+        this.deck.slide(this.current_page)
+      }
+    },
+    nextPage(){
+      if (this.deck.isLastSlide()){
+        // if (nav.next_type === 'ComicBook'){
+        //     window.location = "/comic/read/"+ nav.next_path +"/"
+        // } else {
+        //     window.location = "/comic/"+ nav.next_path +"/"
+        // }
+      } else {
+        this.current_page += 1
+        this.deck.slide(this.current_page)
+      }
+
+    },
   },
   watch: {
     '$route' (to, from) {
@@ -29,42 +57,35 @@ export default {
     }
   },
   mounted () {
-    // Reveal.initialize()
+    this.current_page = this.comic_data.last_read_page
+    this.deck = Reveal(this.$refs.comic_box)
+    this.deck.initialize({
+      controls: false,
+      width: "100%",
+      height: "100%",
+      margin: 0,
+      minScale: 1,
+      maxScale: 1,
+      disableLayout: true,
+      progress: true,
+      keyboard: {
+          37: () => {this.prevPage()},
+          39: () => {this.nextPage()},
+          38: () => {window.scrollTo({ top: window.scrollY-window.innerHeight*.6, left: 0, behavior: 'smooth' })},
+          40: () => {window.scrollTo({ top: window.scrollY+window.innerHeight*.6, left: 0, behavior: 'smooth' })},
+        },
+      touch: false,
+      transition: 'slide',
+      plugins: [  ]
+    }).then(() => {
+      this.deck.slide(this.current_page)
+      this.deck.on( 'slidechanged', () => {
+        setTimeout(() =>{document.getElementsByClassName('slides')[0].scrollIntoView({behavior: 'smooth'})}, 100)
+        // $.ajax({url: "/comic/set_page/" + nav.cur_path + "/" + event.indexh + "/"})
+});
+    })
   },
 }
-</script>
-<script setup>
-    import {onBeforeRouteUpdate} from "vue-router";
-    import {onUpdated, onMounted, onActivated, onUnmounted, ref } from "vue"
-    // import Reveal from "reveal.js";
-    const comic_box = ref('comic_box')
-    onBeforeRouteUpdate(async (to, from) => {
-      // only fetch the user if the id changed as maybe only the query or the hash changed
-      console.log(to)
-      console.log(from)
-    })
-    onUpdated(async () => {
-      console.log('onUpdated')
-    })
-    onMounted(async () => {
-      console.log('onMounted')
-      Reveal(comic_box.value).initialize()
-      console.log(comic_box.value)
-      console.log(Reveal.getRevealElement())
-      console.log(Reveal.getSlidesElement())
-      console.log(Reveal.getViewportElement())
-    })
-    onUnmounted(async () => {
-      console.log('onUnmounted')
-      Reveal.destroy()
-      console.log(Reveal.getRevealElement())
-      console.log(Reveal.getSlidesElement())
-      console.log(Reveal.getViewportElement())
-    })
-    onActivated(async () => {
-      console.log('onActivated')
-      // Reveal.sync()
-    })
 </script>
 
 

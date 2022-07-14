@@ -24,9 +24,7 @@ export default {
     api.get(comic_data_url)
         .then(response => {
           this.comic_data = response.data
-          console.log(response.data)
           this.comic_loaded = true
-
         })
         .catch((error) => {console.log(error)})
   }
