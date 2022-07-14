@@ -9,8 +9,8 @@
 </template>
 
 <script>
-
 import Reveal from "reveal.js";
+import api from "@/api";
 
 export default {
   name: "TheComicReader",
@@ -57,6 +57,7 @@ export default {
     }
   },
   mounted () {
+    const set_read_url = this.$store.state.base_url + '/api/set_read/' + this.comic_data.selector + '/'
     this.current_page = this.comic_data.last_read_page
     this.deck = Reveal(this.$refs.comic_box)
     this.deck.initialize({
@@ -80,8 +81,9 @@ export default {
     }).then(() => {
       this.deck.slide(this.current_page)
       this.deck.on( 'slidechanged', () => {
-        setTimeout(() =>{document.getElementsByClassName('slides')[0].scrollIntoView({behavior: 'smooth'})}, 100)
+        setTimeout(event =>{document.getElementsByClassName('slides')[0].scrollIntoView({behavior: 'smooth'})}, 100)
         // $.ajax({url: "/comic/set_page/" + nav.cur_path + "/" + event.indexh + "/"})
+        api.put(set_read_url, {page: event.indexh})
 });
     })
   },

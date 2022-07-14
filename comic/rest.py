@@ -2,7 +2,9 @@ from uuid import UUID
 
 from django.contrib.auth.models import User, Group
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, serializers, mixins, permissions
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import viewsets, serializers, mixins, permissions, status
+from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
@@ -212,3 +214,26 @@ class ReadViewSet(viewsets.ViewSet):
         }
         serializer = self.serializer_class(data)
         return Response(serializer.data)
+
+
+class PageSerializer(serializers.Serializer):
+    page = serializers.IntegerField()
+
+
+class SetReadViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PageSerializer
+    lookup_field = 'selector'
+
+    @swagger_auto_schema(operation_description="PUT /set_read/{selector}/", request_body=PageSerializer)
+    def update(self, request, selector):
+        serializer = PageSerializer(data=request.data)
+
+        if serializer.is_valid():
+            comic_status, _ = models.ComicStatus.objects.get_or_create(comic__selector=selector, user=request.user)
+            comic_status.last_read_page = serializer.data['page']
+            comic_status.save()
+            return Response({'status': 'page set'})
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)

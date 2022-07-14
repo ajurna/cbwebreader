@@ -52,6 +52,7 @@ router.register(r'browse', rest.BrowseViewSet, basename='browse')
 router.register(r'breadcrumbs', rest.BreadcrumbViewSet, basename='breadcrumbs')
 router.register(r'generate_thumbnail', rest.GenerateThumbnailViewSet, basename='generate_thumbnail')
 router.register(r'read', rest.ReadViewSet, basename='read')
+router.register(r'set_read', rest.SetReadViewSet, basename='set_read')
 
 urlpatterns = [
     # url(r"^$", comic.views.comic_redirect),
