@@ -1,78 +1,72 @@
 <template>
-  <div class="reveal" id="comic_box">
+  <div class="reveal" id="comic_box" ref="comic_box">
     <div id="slides_div" class="slides">
-      <section v-for="(item, index) in data.pages" :key="item.index" :data-menu-title="item.page_file_name">
-        <img :data-src="'/image/' + selector + '/' + item.index " class="w-100"  :alt="item.page_file_name">
+      <section v-for="(page, index) in comic_data.pages" :key="page.index" :data-menu-title="page.page_file_name">
+        <img :data-src="'/image/' + comic_data.selector + '/' + page.index " class="w-100"  :alt="page.page_file_name">
       </section>
     </div>
   </div>
 </template>
 
 <script>
-import Reveal from 'reveal.js';
 
-import api from "@/api";
-
+import Reveal from "reveal.js";
 
 export default {
   name: "TheComicReader",
   data () {
     return {
-      data: []
     }
   },
   props: {
-    selector: String
+    comic_data: Object
   },
   methods: {
-    makeReadable(){
-      console.log('started')
-      let comic_data_url = this.$store.state.base_url + '/api/read/' + this.selector + '/'
-      api.get(comic_data_url)
-        .then(response => {
-          this.data = response.data
-          console.log(response.data)
-          Reveal.initialize({
-            controls: true,
-            width: "100%",
-            height: "100%",
-            margin: 0,
-            minScale: 1,
-            maxScale: 1,
-            disableLayout: true,
-            progress: true,
-            keyboard: {
-                37: () => {prevPage()},
-                39: () => {nextPage()},
-                38: () => {window.scrollTo({ top: window.scrollY-window.innerHeight*.6, left: 0, behavior: 'smooth' })},
-                40: () => {window.scrollTo({ top: window.scrollY+window.innerHeight*.6, left: 0, behavior: 'smooth' })},
-              },
-            touch: false,
-            transition: 'slide',
-            plugins: [  ]
-            }).then(() => {
-                Reveal.sync();
-                Reveal.slide(0)
-            });
-        })
-        .catch((error) => {console.log(error)})
-    },
   },
-  // watch: {
-  //   selector(old, n) {
-  //     console.log('watcher')
-  //     this.makeReadable()
-  //   }
-  // },
+  watch: {
+    '$route' (to, from) {
+      // Reveal.initialize()
+    }
+  },
   mounted () {
-    this.makeReadable()
-
+    // Reveal.initialize()
   },
-  beforeUnmount() {
-    Reveal.destroy();
-  }
 }
 </script>
+<script setup>
+    import {onBeforeRouteUpdate} from "vue-router";
+    import {onUpdated, onMounted, onActivated, onUnmounted, ref } from "vue"
+    // import Reveal from "reveal.js";
+    const comic_box = ref('comic_box')
+    onBeforeRouteUpdate(async (to, from) => {
+      // only fetch the user if the id changed as maybe only the query or the hash changed
+      console.log(to)
+      console.log(from)
+    })
+    onUpdated(async () => {
+      console.log('onUpdated')
+    })
+    onMounted(async () => {
+      console.log('onMounted')
+      Reveal(comic_box.value).initialize()
+      console.log(comic_box.value)
+      console.log(Reveal.getRevealElement())
+      console.log(Reveal.getSlidesElement())
+      console.log(Reveal.getViewportElement())
+    })
+    onUnmounted(async () => {
+      console.log('onUnmounted')
+      Reveal.destroy()
+      console.log(Reveal.getRevealElement())
+      console.log(Reveal.getSlidesElement())
+      console.log(Reveal.getViewportElement())
+    })
+    onActivated(async () => {
+      console.log('onActivated')
+      // Reveal.sync()
+    })
+</script>
+
 
 <style scoped>
 
