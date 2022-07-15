@@ -1,7 +1,7 @@
 <template>
-  <div class="reveal" id="comic_box" ref="comic_box">
-    <div id="slides_div" class="slides">
-      <section v-for="(page, index) in comic_data.pages" :key="page.index" :data-menu-title="page.page_file_name">
+  <div class="reveal" id="comic_box" ref="comic_box" >
+    <div id="slides_div" class="slides"  ref="slides">
+      <section v-for="(page, index) in comic_data.pages" :key="page.index" :data-menu-title="page.page_file_name" hidden>
         <img :data-src="'/api/read/' + comic_data.selector + '/image/' + page.index + '/'" class="w-100"  :alt="page.page_file_name">
       </section>
     </div>
@@ -12,7 +12,7 @@
     :click-handler="this.setPage"
     :prev-text="'Prev'"
     :next-text="'Next'"
-    :container-class="'pagination comic-pager'"
+    :container-class="'pagination'"
   >
 </paginate>
 </template>
@@ -67,6 +67,7 @@ export default {
       }
     },
     setPage(pageNum){
+      console.log(pageNum)
       this.current_page = pageNum-1
       this.deck.slide(this.current_page)
     }
@@ -87,7 +88,6 @@ export default {
       margin: 0,
       minScale: 1,
       maxScale: 1,
-      // disableLayout: true,
       keyboard: {
           37: () => {this.prevPage()},
           39: () => {this.nextPage()},
@@ -100,7 +100,7 @@ export default {
     }).then(() => {
       this.deck.slide(this.current_page)
       this.deck.on( 'slidechanged', () => {
-        setTimeout(event =>{document.getElementsByClassName('slides')[0].scrollIntoView({behavior: 'smooth'})}, 100)
+        this.$refs.slides.scrollIntoView({behavior: 'smooth'})
         api.put(set_read_url, {page: event.indexh})
 });
     })
@@ -110,7 +110,7 @@ export default {
 
 
 <style scoped>
-.comic-pager {
+.pagination {
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
