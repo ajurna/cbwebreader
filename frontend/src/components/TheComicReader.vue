@@ -2,21 +2,38 @@
   <div class="reveal" id="comic_box" ref="comic_box">
     <div id="slides_div" class="slides">
       <section v-for="(page, index) in comic_data.pages" :key="page.index" :data-menu-title="page.page_file_name">
-        <img :data-src="'/image/' + comic_data.selector + '/' + page.index " class="w-100"  :alt="page.page_file_name">
+        <img :data-src="'/api/read/' + comic_data.selector + '/image/' + page.index + '/'" class="w-100"  :alt="page.page_file_name">
       </section>
     </div>
   </div>
+  <paginate
+    v-model="this.paginate_page"
+    :page-count="this.comic_data.pages.length"
+    :click-handler="this.setPage"
+    :prev-text="'Prev'"
+    :next-text="'Next'"
+    :container-class="'pagination comic-pager'"
+  >
+</paginate>
 </template>
 
 <script>
 import Reveal from "reveal.js";
 import api from "@/api";
+import 'reveal.js-menu/menu.css'
+import {CPagination, CPaginationItem} from "@coreui/vue";
+import Paginate from "vuejs-paginate-next";
+
+
+
 
 export default {
   name: "TheComicReader",
+  components: {CPagination, CPaginationItem, Paginate},
   data () {
     return {
       current_page: 0,
+      paginate_page: 1,
       deck: null
     }
   },
@@ -48,12 +65,15 @@ export default {
         this.current_page += 1
         this.deck.slide(this.current_page)
       }
-
     },
+    setPage(pageNum){
+      this.current_page = pageNum-1
+      this.deck.slide(this.current_page)
+    }
   },
   watch: {
-    '$route' (to, from) {
-      // Reveal.initialize()
+    'current_page' (new_page) {
+      this.paginate_page = new_page + 1
     }
   },
   mounted () {
@@ -67,8 +87,7 @@ export default {
       margin: 0,
       minScale: 1,
       maxScale: 1,
-      disableLayout: true,
-      progress: true,
+      // disableLayout: true,
       keyboard: {
           37: () => {this.prevPage()},
           39: () => {this.nextPage()},
@@ -82,7 +101,6 @@ export default {
       this.deck.slide(this.current_page)
       this.deck.on( 'slidechanged', () => {
         setTimeout(event =>{document.getElementsByClassName('slides')[0].scrollIntoView({behavior: 'smooth'})}, 100)
-        // $.ajax({url: "/comic/set_page/" + nav.cur_path + "/" + event.indexh + "/"})
         api.put(set_read_url, {page: event.indexh})
 });
     })
@@ -92,5 +110,12 @@ export default {
 
 
 <style scoped>
-
+.comic-pager {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    z-index: 1030;
+  cursor: pointer;
+}
 </style>

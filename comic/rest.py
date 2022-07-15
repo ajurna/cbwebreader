@@ -1,10 +1,11 @@
 from uuid import UUID
 
 from django.contrib.auth.models import User, Group
+from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets, serializers, mixins, permissions, status
-from rest_framework.decorators import api_view
+from rest_framework import viewsets, serializers, mixins, permissions, status, renderers
+from rest_framework.decorators import api_view, action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
@@ -237,3 +238,27 @@ class SetReadViewSet(viewsets.ViewSet):
         else:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
+
+
+class PassthroughRenderer(renderers.BaseRenderer):
+    """
+        Return data as-is. View should supply a Response.
+    """
+    media_type = '*/*'
+    format = ''
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data
+
+
+class ImageViewSet(viewsets.ViewSet):
+    queryset = models.ComicPage.objects.all()
+    lookup_field = 'page'
+    renderer_classes = [PassthroughRenderer]
+
+    def retrieve(self, request, parent_lookup_selector, page):
+        book = models.ComicBook.objects.get(selector=parent_lookup_selector)
+        img, content = book.get_image(int(page))
+        self.renderer_classes[0].media_type = content
+        response = FileResponse(img, content_type=content)
+        return response

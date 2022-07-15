@@ -393,6 +393,17 @@ python-jose = ["python-jose (==3.3.0)"]
 test = ["cryptography", "pytest-cov", "pytest-django", "pytest-xdist", "pytest", "tox"]
 
 [[package]]
+name = "drf-extensions"
+version = "0.7.1"
+description = "Extensions for Django REST Framework"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+djangorestframework = ">=3.9.3"
+
+[[package]]
 name = "drf-yasg"
 version = "1.20.0"
 description = "Automated generation of real Swagger/OpenAPI 2.0 schemas from Django Rest Framework code."
@@ -1040,7 +1051,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "9b3ec9f33e06604f37fdd9370db49af310b95cc5cb7f66878eb22fcab1f56829"
+content-hash = "0477a728fd0facc11e34f3cb0c17559c9cd374f633fc14fb5a7dbd993b4457b5"
 
 [metadata.files]
 appnope = [
@@ -1281,6 +1292,7 @@ djangorestframework = [
     {file = "djangorestframework-3.13.1.tar.gz", hash = "sha256:0c33407ce23acc68eca2a6e46424b008c9c02eceb8cf18581921d0092bc1f2ee"},
 ]
 djangorestframework-simplejwt = []
+drf-extensions = []
 drf-yasg = []
 executing = [
     {file = "executing-0.8.3-py2.py3-none-any.whl", hash = "sha256:d1eef132db1b83649a3905ca6dd8897f71ac6f8cac79a7e58a1a09cf137546c9"},
