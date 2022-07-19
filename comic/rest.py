@@ -1,12 +1,14 @@
 from uuid import UUID
 
 from django.contrib.auth.models import User, Group
+from django.db.models import Count, Case, When, F, PositiveSmallIntegerField
 from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, serializers, mixins, permissions, status, renderers
 from rest_framework.decorators import api_view, action
-from rest_framework.generics import get_object_or_404
+from rest_framework.generics import get_object_or_404, ListAPIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from comic import models
@@ -262,3 +264,42 @@ class ImageViewSet(viewsets.ViewSet):
         self.renderer_classes[0].media_type = content
         response = FileResponse(img, content_type=content)
         return response
+
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
+class RecentComicsSerializer(serializers.ModelSerializer):
+    total_pages = serializers.IntegerField()
+    unread = serializers.BooleanField()
+    finished = serializers.BooleanField()
+    last_read_page = serializers.IntegerField()
+
+    class Meta:
+        model = models.ComicBook
+        fields = ['file_name', 'date_added', 'selector', 'total_pages', 'unread', 'finished', 'last_read_page']
+
+
+class RecentComicsView(mixins.ListModelMixin, viewsets.GenericViewSet):
+    queryset = models.ComicBook.objects.all().order_by('-date_added')
+    serializer_class = RecentComicsSerializer
+    pagination_class = StandardResultsSetPagination
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        query = models.ComicBook.objects.annotate(
+            total_pages=Count('comicpage'),
+            unread=Case(When(comicstatus__user=user, then='comicstatus__unread')),
+            finished=Case(When(comicstatus__user=user, then='comicstatus__finished')),
+            last_read_page=Case(When(comicstatus__user=user, then='comicstatus__last_read_page')),
+            classification=Case(
+                When(directory__isnull=True, then=models.Directory.Classification.C_18),
+                default=F('directory__classification'),
+                output_field=PositiveSmallIntegerField(choices=models.Directory.Classification.choices)
+            )
+        )
+        return query
