@@ -24,17 +24,23 @@ export default {
       crumbs: []
   }},
   props: {
-    selector: String
+    selector: String,
+    manual_crumbs: Object
   },
   methods: {
     updateBreadcrumbs () {
+      console.log(this.manual_crumbs)
       if (this.selector) {
         let breadcrumb_url = this.$store.state.base_url + '/api/breadcrumbs/' + this.selector + '/'
         api.get(breadcrumb_url)
-          .then(response => {
-            this.crumbs = response.data
-          })
-          .catch((error) => {console.log(error)})
+            .then(response => {
+              this.crumbs = response.data
+            })
+            .catch((error) => {
+              console.log(error)
+            })
+      }else if (this.manual_crumbs){
+        this.crumbs = this.manual_crumbs
       } else {
         this.crumbs = [{id: 0, selector: '', name: 'Home'}]
       }

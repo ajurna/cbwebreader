@@ -9,7 +9,7 @@
             <router-link :to="{name: 'home'}" class="nav-link" >Browse</router-link>
           </CNavItem>
           <CNavItem>
-            <CNavLink href="#">Recent</CNavLink>
+            <router-link :to="{name: 'recent'}" class="nav-link" >Recent</router-link>
           </CNavItem>
           <CNavItem>
             <CNavLink href="#">Account</CNavLink>
