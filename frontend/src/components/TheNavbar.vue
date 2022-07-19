@@ -6,7 +6,7 @@
       <CCollapse class="navbar-collapse" :visible="visible">
         <CNavbarNav>
           <CNavItem>
-            <router-link to="home" class="nav-link" >Browse</router-link>
+            <router-link :to="{name: 'home'}" class="nav-link" >Browse</router-link>
           </CNavItem>
           <CNavItem>
             <CNavLink href="#">Recent</CNavLink>
