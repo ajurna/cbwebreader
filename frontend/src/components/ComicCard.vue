@@ -1,8 +1,8 @@
 <template>
-  <CCard class="col-lg-2">
-    <CCardImage orientation="top" :src="thumbnail" />
-    <CCardBody class="pb-0 pt-0">
-      <CCardTitle>
+  <CCard class="col-xl-2 col-lg-2 col-md-3 col-sm-4 p-0 m-1 ">
+    <CCardImage orientation="top" :src="thumbnail" @click="console.log('click')"/>
+    <CCardBody class="pb-0 pt-0 pl-1 pr-1 card-img-overlay d-flex">
+      <CCardTitle class="align-self-end pb-5 mb-4" style="">
         <router-link :to="(data.type === 'Directory' ? {'name': 'browse', params: { selector: data.selector }} : {'name': 'read', params: { selector: data.selector }})">{{ data.title }}</router-link>
       </CCardTitle>
     </CCardBody>
@@ -59,7 +59,12 @@ export default {
   methods: {
     updateThumbnail () {
       api.get(this.$store.state.base_url + '/api/generate_thumbnail/' + this.data.selector + '/')
-        .then((response) => {this.thumbnail = response.data.thumbnail})
+        .then((response) => {
+          if (response.data.thumbnail) {
+            this.thumbnail = response.data.thumbnail
+          }
+
+        })
         .catch(() => {})
     }
   },
@@ -75,5 +80,11 @@ export default {
 </script>
 
 <style scoped>
+.card-title a {
+  color: white;
+  text-shadow: .2rem .2rem .3rem black ;
+  }
+.card {
 
+}
 </style>
