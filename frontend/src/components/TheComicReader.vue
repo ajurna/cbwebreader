@@ -14,7 +14,7 @@
     :next-text="'Next'"
     :container-class="'pagination'"
   >
-</paginate>
+  </paginate>
 </template>
 
 <script>

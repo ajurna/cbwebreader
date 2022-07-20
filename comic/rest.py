@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from django.contrib.auth.models import User, Group
-from django.db.models import Count, Case, When, F, PositiveSmallIntegerField
+from django.db.models import Count, Case, When, F, PositiveSmallIntegerField, Max
 from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
@@ -235,6 +235,14 @@ class SetReadViewSet(viewsets.ViewSet):
         if serializer.is_valid():
             comic_status, _ = models.ComicStatus.objects.get_or_create(comic__selector=selector, user=request.user)
             comic_status.last_read_page = serializer.data['page']
+            comic_status.unread = False
+
+            if models.ComicPage.objects.filter(
+                    Comic=comic_status.comic).aggregate(Max("index"))["index__max"] == comic_status.last_read_page:
+                status.finished = True
+            else:
+                status.finished = False
+
             comic_status.save()
             return Response({'status': 'page set'})
         else:
@@ -284,14 +292,19 @@ class RecentComicsSerializer(serializers.ModelSerializer):
 
 
 class RecentComicsView(mixins.ListModelMixin, viewsets.GenericViewSet):
-    queryset = models.ComicBook.objects.all().order_by('-date_added')
+    queryset = models.ComicBook.objects.all()
     serializer_class = RecentComicsSerializer
     pagination_class = StandardResultsSetPagination
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        query = models.ComicBook.objects.annotate(
+        if "search_text" in self.request.query_params:
+            query = models.ComicBook.objects.filter(file_name__icontains=self.request.query_params["search_text"])
+        else:
+            query = models.ComicBook.objects.all()
+
+        query = query.annotate(
             total_pages=Count('comicpage'),
             unread=Case(When(comicstatus__user=user, then='comicstatus__unread')),
             finished=Case(When(comicstatus__user=user, then='comicstatus__finished')),
@@ -302,4 +315,6 @@ class RecentComicsView(mixins.ListModelMixin, viewsets.GenericViewSet):
                 output_field=PositiveSmallIntegerField(choices=models.Directory.Classification.choices)
             )
         )
+
+        query.order_by('-date_added')
         return query

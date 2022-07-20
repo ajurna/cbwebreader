@@ -1,12 +1,14 @@
 <template>
-  <the-breadcrumbs :manual_crumbs="this.crumbs"></the-breadcrumbs>
+  <the-breadcrumbs :manual_crumbs="this.crumbs" />
+  <the-recent-table />
 </template>
 
 <script>
 import TheBreadcrumbs from "@/components/TheBreadcrumbs";
+import TheRecentTable from "@/components/TheRecentTable";
 export default {
   name: "RecentView",
-  components: {TheBreadcrumbs},
+  components: {TheRecentTable, TheBreadcrumbs},
   data () {
     return {
       crumbs: [
