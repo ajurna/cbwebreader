@@ -24,10 +24,10 @@
       <caption>
         <h2>Recent Comics - Feed</h2>
         Mark selected issues as:
-        <select name="func" id="func_selector">
+        <select name="func" id="func_selector" @change="this.performFunction()" v-model="func_selected">
           <option value="choose">Choose...</option>
-          <option value="read">Read</option>
-          <option value="unread">Un-Read</option>
+          <option value="mark_read">Read</option>
+          <option value="mark_unread">Un-Read</option>
         </select>
       </caption>
     </CRow>
@@ -45,7 +45,7 @@
         <CTableBody>
           <template v-for="(item, index) in comics" :key="item.id">
             <CTableRow>
-              <CTableHeaderCell scope="row"><input class="form-check-input m-0 position-relative mt-1" type="checkbox" :value="item.selector"></CTableHeaderCell>
+              <CTableHeaderCell scope="row"><input ref="comic_selector" class="form-check-input m-0 position-relative mt-1" type="checkbox" :value="item.selector"></CTableHeaderCell>
               <CTableDataCell class=""><font-awesome-icon icon='book' class="" /></CTableDataCell>
               <CTableDataCell><router-link :to="{name: 'read', params: { selector: item.selector }}" class="" >{{ item.file_name }}</router-link></CTableDataCell>
               <CTableDataCell>{{ timeago(item.date_added) }}</CTableDataCell>
@@ -102,7 +102,8 @@ export default {
       page_count: 1,
       search_text: '',
       comics: [],
-      timeout: null
+      timeout: null,
+      func_selected: 'choose'
   }},
   computed: {
   },
@@ -134,7 +135,7 @@ export default {
     get_status(item) {
       if (item.unread || item.unread === null) {
         return "Unread"
-      } else if (item.finshed) {
+      } else if (item.finished) {
         return "Finished"
       } else {
         return item.last_read_page + ' / ' + item.total_pages
@@ -149,6 +150,31 @@ export default {
       this.timeout = setTimeout(() => {
         this.setPage(this.page)
       }, 500)
+    },
+    performFunction() {
+      let selected_ids = []
+      this.$refs.comic_selector.forEach((selector) => {
+        if (selector.checked){
+          selected_ids.push(selector.value)
+        }
+      })
+      if (this.func_selected === 'mark_read') {
+        let comic_mark_read = this.$store.state.base_url + '/api/action/mark_read/'
+        const payload = { selectors: selected_ids }
+        api.put(comic_mark_read, payload).then(() => {
+          this.updateComicList()
+          this.func_selected = "choose"
+        })
+      } else if (this.func_selected === 'mark_unread') {
+        let comic_mark_unread = this.$store.state.base_url + '/api/action/mark_unread/'
+        const payload = { selectors: selected_ids }
+        api.put(comic_mark_unread, payload).then(() => {
+          this.updateComicList()
+          this.func_selected = "choose"
+        })
+      } else {
+        this.func_selected = 'choose'
+      }
     }
   },
   mounted() {
