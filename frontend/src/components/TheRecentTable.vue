@@ -139,7 +139,7 @@ export default {
       } else if (item.finished) {
         return "Finished"
       } else {
-        return item.last_read_page + ' / ' + item.total_pages
+        return item.last_read_page + 1 + ' / ' + item.total_pages
       }
     },
     setPage(page) {

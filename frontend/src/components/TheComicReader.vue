@@ -80,6 +80,7 @@ export default {
   mounted () {
     const set_read_url = this.$store.state.base_url + '/api/set_read/' + this.comic_data.selector + '/'
     this.current_page = this.comic_data.last_read_page
+    this.paginate_page = this.current_page + 1
     this.deck = Reveal(this.$refs.comic_box)
     this.deck.initialize({
       controls: false,
@@ -100,7 +101,7 @@ export default {
     }).then(() => {
       this.deck.slide(this.current_page)
       this.deck.on( 'slidechanged', () => {
-        this.$refs.slides.scrollIntoView({behavior: 'smooth'})
+        this.$refs.comic_box.scrollIntoView({behavior: 'smooth'})
         api.put(set_read_url, {page: event.indexh})
 });
     })

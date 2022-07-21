@@ -233,15 +233,14 @@ class SetReadViewSet(viewsets.ViewSet):
         serializer = ReadPageSerializer(data=request.data)
 
         if serializer.is_valid():
-            comic_status, _ = models.ComicStatus.objects.get_or_create(comic__selector=selector, user=request.user)
+            comic_status, _ = models.ComicStatus.objects.get_or_create(comic_id=selector, user=request.user)
             comic_status.last_read_page = serializer.data['page']
             comic_status.unread = False
-
-            if models.ComicPage.objects.filter(
-                    Comic=comic_status.comic).aggregate(Max("index"))["index__max"] == comic_status.last_read_page:
-                status.finished = True
+            if models.ComicPage.objects.filter(Comic=comic_status.comic).aggregate(Max("index"))["index__max"]\
+                    == comic_status.last_read_page:
+                comic_status.finished = True
             else:
-                status.finished = False
+                comic_status.finished = False
 
             comic_status.save()
             return Response({'status': 'page set'})
