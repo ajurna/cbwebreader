@@ -22,7 +22,7 @@
     </CRow>
     <CRow>
       <caption>
-        <h2>Recent Comics - Feed</h2>
+        <h2>Recent Comics - <a :href="'/feed/' + this.feed_id + '/'">Feed</a></h2>
         Mark selected issues as:
         <select name="func" id="func_selector" @change="this.performFunction()" v-model="func_selected">
           <option value="choose">Choose...</option>
@@ -103,7 +103,8 @@ export default {
       search_text: '',
       comics: [],
       timeout: null,
-      func_selected: 'choose'
+      func_selected: 'choose',
+      feed_id: ''
   }},
   computed: {
   },
@@ -179,6 +180,10 @@ export default {
   },
   mounted() {
     this.updateComicList()
+    let comic_mark_unread = this.$store.state.base_url + '/api/rss_id/'
+    api.get(comic_mark_unread).then((response) => {
+      this.feed_id = response.data.feed_id
+    })
   },
 }
 </script>

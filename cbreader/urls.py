@@ -42,7 +42,7 @@ schema_view = get_schema_view(
 
 import comic.views
 import comic_auth.views
-from comic import rest
+from comic import rest, feeds
 
 router = ExtendedDefaultRouter()
 router.register(r'users', rest.UserViewSet)
@@ -57,6 +57,7 @@ router.register(r'read', rest.ReadViewSet, basename='read')\
 router.register(r'set_read', rest.SetReadViewSet, basename='set_read')
 router.register(r'recent', rest.RecentComicsView, basename="recent")
 router.register(r'action', rest.ActionViewSet, basename='action')
+router.register('rss_id', rest.RSSViewSet, basename='rss_id')
 
 
 urlpatterns = [
@@ -66,10 +67,10 @@ urlpatterns = [
     # url(r"^setup/", comic.views.initial_setup),
     # url(r"^comic/", include("comic.urls")),
     path('admin/', admin.site.urls),
+    path("feed/<user_selector>/", feeds.RecentComicsAPI()),
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    # path('image/<selector>/<int:page>', comic.views.get_image_api , name='get_image_api'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/', include(router.urls)),
@@ -77,8 +78,6 @@ urlpatterns = [
          TemplateView.as_view(template_name="application.html"),
          name="app",
          ),
-
-
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

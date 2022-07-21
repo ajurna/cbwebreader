@@ -395,3 +395,20 @@ class ActionViewSet(viewsets.GenericViewSet):
             data = data.union(self.get_comics(models.Directory.objects.filter(
                 parent__in=directories).values_list('selector', flat=True)))
         return [str(x) for x in data]
+
+
+class RSSSerializer(serializers.Serializer):
+    feed_id = serializers.UUIDField()
+
+
+class RSSViewSet(viewsets.ViewSet):
+    serializer_class = RSSSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def list(self, request):
+        user_misc = models.UserMisc.objects.get(user=request.user)
+        queryset = {
+            "feed_id": user_misc.feed_id
+        }
+        serializer = self.serializer_class(queryset)
+        return Response(serializer.data)
