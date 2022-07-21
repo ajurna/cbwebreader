@@ -219,18 +219,18 @@ class ReadViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
 
-class PageSerializer(serializers.Serializer):
+class ReadPageSerializer(serializers.Serializer):
     page = serializers.IntegerField()
 
 
 class SetReadViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = PageSerializer
+    serializer_class = ReadPageSerializer
     lookup_field = 'selector'
 
-    @swagger_auto_schema(operation_description="PUT /set_read/{selector}/", request_body=PageSerializer)
+    @swagger_auto_schema(operation_description="PUT /set_read/{selector}/", request_body=ReadPageSerializer)
     def update(self, request, selector):
-        serializer = PageSerializer(data=request.data)
+        serializer = ReadPageSerializer(data=request.data)
 
         if serializer.is_valid():
             comic_status, _ = models.ComicStatus.objects.get_or_create(comic__selector=selector, user=request.user)
@@ -316,5 +316,82 @@ class RecentComicsView(mixins.ListModelMixin, viewsets.GenericViewSet):
             )
         )
 
-        query.order_by('-date_added')
+        query = query.order_by('-date_added')
         return query
+
+
+class ActionSerializer(serializers.Serializer):
+    selectors = serializers.ListSerializer(child=serializers.UUIDField())
+
+
+class ActionViewSet(viewsets.GenericViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'action'
+    serializer_class = ActionSerializer
+
+    @action(detail=False, methods=['PUT'])
+    def mark_read(self, request):
+        serializer = ActionSerializer(data=request.data)
+        if serializer.is_valid():
+            comics = self.get_comics(serializer.data['selectors'])
+            comic_status = models.ComicStatus.objects.filter(comic__selector__in=comics, user=request.user)
+            comic_status = comic_status.annotate(total_pages=Count('comic__comicpage'))
+            status_to_update = []
+            for c_status in comic_status:
+                c_status.last_read_page = c_status.total_pages
+                c_status.unread = False
+                c_status.finished = True
+                status_to_update.append(c_status)
+                comics.remove(str(c_status.comic_id))
+            for new_status in comics:
+                comic = models.ComicBook.objects.annotate(
+                    total_pages=Count('comicpage')).get(selector=new_status)
+                obj, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
+                obj.unread = False
+                obj.finished = True
+                obj.last_read_page = comic.total_pages
+                status_to_update.append(obj)
+            models.ComicStatus.objects.bulk_update(status_to_update, ['unread', 'finished', 'last_read_page'])
+            return Response({'status': 'marked_read'})
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['PUT'])
+    def mark_unread(self, request):
+        serializer = ActionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer = ActionSerializer(data=request.data)
+            if serializer.is_valid():
+                comics = self.get_comics(serializer.data['selectors'])
+                comic_status = models.ComicStatus.objects.filter(comic__selector__in=comics, user=request.user)
+                status_to_update = []
+                for c_status in comic_status:
+                    c_status.last_read_page = 0
+                    c_status.unread = True
+                    c_status.finished = False
+                    status_to_update.append(c_status)
+                    comics.remove(str(c_status.comic_id))
+                for new_status in comics:
+                    comic = models.ComicBook.objects.get(selector=new_status)
+                    obj, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
+                    obj.unread = True
+                    obj.finished = False
+                    obj.last_read_page = 0
+                    status_to_update.append(obj)
+                models.ComicStatus.objects.bulk_update(status_to_update, ['unread', 'finished', 'last_read_page'])
+                return Response({'status': 'marked_unread'})
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    def get_comics(self, selectors):
+        data = set()
+        data = data.union(set(models.ComicBook.objects.filter(selector__in=selectors).values_list('selector', flat=True)))
+        directories = models.Directory.objects.filter(selector__in=selectors)
+        if directories:
+            for directory in directories:
+                data = data.union(set(models.ComicBook.objects.filter(directory=directory).values_list('selector', flat=True)))
+            data = data.union(self.get_comics(models.Directory.objects.filter(
+                parent__in=directories).values_list('selector', flat=True)))
+        return [str(x) for x in data]

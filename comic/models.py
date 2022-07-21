@@ -468,7 +468,7 @@ class ComicPage(models.Model):
 
 class ComicStatus(models.Model):
     user = models.ForeignKey(User, unique=False, null=False, on_delete=models.CASCADE)
-    comic = models.ForeignKey(ComicBook, unique=False, null=False, on_delete=models.CASCADE)
+    comic = models.ForeignKey(ComicBook, unique=False, blank=False, null=False, on_delete=models.CASCADE, to_field="selector")
     last_read_page = models.IntegerField(default=0)
     unread = models.BooleanField(default=True)
     finished = models.BooleanField(default=False)

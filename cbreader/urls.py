@@ -56,6 +56,7 @@ router.register(r'read', rest.ReadViewSet, basename='read')\
     .register('image', rest.ImageViewSet, basename='image', parents_query_lookups=['selector'])
 router.register(r'set_read', rest.SetReadViewSet, basename='set_read')
 router.register(r'recent', rest.RecentComicsView, basename="recent")
+router.register(r'action', rest.ActionViewSet, basename='action')
 
 
 urlpatterns = [
