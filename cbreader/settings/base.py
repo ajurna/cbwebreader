@@ -36,7 +36,6 @@ INSTALLED_APPS = (
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'drf_yasg',
-    "snowpenguin.django.recaptcha2",
     'webpack_loader',
     'bootstrap4',
     "comic",
@@ -64,7 +63,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "cbreader.urls"
-
 
 
 WSGI_APPLICATION = "cbreader.wsgi.application"

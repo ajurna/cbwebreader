@@ -1,9 +1,7 @@
 {% extends "base.html" %}
-{% load recaptcha2 %}
 {% load bootstrap4 %}
 {% block title %}CBWebReader - Login{% endblock %}
 {% block content %}
-    {% recaptcha_init %}
 <div class="container">
     {% if error %}
         <div class="alert alert-danger" role="alert"><p>Your username and password didn't match. Please try again.</p></div>

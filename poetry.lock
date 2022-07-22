@@ -325,17 +325,6 @@ python-versions = ">=3.7"
 Django = ">=3.2"
 
 [[package]]
-name = "django-recaptcha2"
-version = "1.4.1"
-description = "Django reCaptcha v2 field/widget"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-requests = "*"
-
-[[package]]
 name = "django-silk"
 version = "5.0.1"
 description = "Silky smooth profiling for the Django Framework"
@@ -1072,7 +1061,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "aca2ebbf4f84b8eb9d7089ec38ad1a47d1b61fcc2e527fc445cd14003c9ffaf5"
+content-hash = "53503f0a307603ca89a568dd86d01db9362c746771d7d0d6fac0bd302f0ff8ae"
 
 [metadata.files]
 appnope = [
@@ -1247,10 +1236,6 @@ django-node-assets = [
 django-permissions-policy = [
     {file = "django-permissions-policy-4.12.0.tar.gz", hash = "sha256:1f10fc354110fef9270fbabbbf8d5358a6d6f5380c79f0dfba56dd41e45b1936"},
     {file = "django_permissions_policy-4.12.0-py3-none-any.whl", hash = "sha256:88ee9cb345898414a6ad3f2eb0d8284c67decdfc43c6fc5331531b7c39809d8c"},
-]
-django-recaptcha2 = [
-    {file = "django-recaptcha2-1.4.1.tar.gz", hash = "sha256:c0b43851b05c6bf6ebb5ecc890c13ccedacd9bb33d64b4291c74dd6fcbc89366"},
-    {file = "django_recaptcha2-1.4.1-py3-none-any.whl", hash = "sha256:9ea90db0cec502741be1066c09ec1b8e02a73162a319a042e78e67c4605087af"},
 ]
 django-silk = []
 django-sri = []
