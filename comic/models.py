@@ -14,6 +14,7 @@ from django.conf import settings
 from django.contrib.auth.models import User, AbstractUser
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
+from django.db.models import UniqueConstraint
 from django.db.transaction import atomic
 from django.templatetags.static import static
 from django.utils.http import urlsafe_base64_encode
@@ -472,6 +473,11 @@ class ComicStatus(models.Model):
     last_read_page = models.IntegerField(default=0)
     unread = models.BooleanField(default=True)
     finished = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['user', 'comic'], name='one_per_user_per_comic')
+        ]
 
     def mark_read(self):
         page_count = ComicPage.objects.filter(Comic=self.comic).count()
