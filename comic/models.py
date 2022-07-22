@@ -56,6 +56,14 @@ class Directory(models.Model):
     def __str__(self):
         return "Directory: {0}; {1}".format(self.name, self.parent)
 
+    @property
+    def title(self):
+        return self.name
+
+    @property
+    def type(self):
+        return 'Directory'
+
     def mark_read(self, user):
         books = ComicBook.objects.filter(directory=self)
         for book in books:
@@ -142,6 +150,14 @@ class ComicBook(models.Model):
 
     def __str__(self):
         return self.file_name
+
+    @property
+    def title(self):
+        return self.file_name
+
+    @property
+    def type(self):
+        return 'ComicBook'
 
     def mark_read(self, user: User):
         status, _ = ComicStatus.objects.get_or_create(comic=self, user=user)

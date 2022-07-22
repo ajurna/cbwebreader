@@ -1,7 +1,9 @@
+from itertools import chain
 from uuid import UUID
 
+from django.conf import settings
 from django.contrib.auth.models import User, Group
-from django.db.models import Count, Case, When, F, PositiveSmallIntegerField, Max
+from django.db.models import Count, Case, When, F, PositiveSmallIntegerField, Max, Q
 from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
@@ -12,7 +14,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from comic import models
-from comic.util import generate_directory, generate_breadcrumbs_from_path
+from comic.util import generate_directory, generate_breadcrumbs_from_path, DirFile
+from pathlib import Path
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -52,7 +55,8 @@ class DirectorySerializer(serializers.ModelSerializer):
         fields = ['name', 'parent', 'selector', 'thumbnail', 'thumbnail_issue', 'thumbnail_index', 'classification']
 
 
-class DirectoryViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+class DirectoryViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
+                       viewsets.GenericViewSet):
     """
     API endpoint that allows Directories to be viewed.
     """
@@ -86,6 +90,8 @@ class BrowseSerializer(serializers.Serializer):
     total = serializers.IntegerField()
     type = serializers.CharField()
     thumbnail = serializers.FileField()
+    classification = serializers.IntegerField()
+
 
 
 class BrowseViewSet(viewsets.ViewSet):
@@ -95,32 +101,96 @@ class BrowseViewSet(viewsets.ViewSet):
 
     def list(self, request):
         queryset = []
-        for item in generate_directory(request.user):
-            queryset.append({
-                "selector": item.obj.selector,
-                "title": item.name,
-                "progress": item.total_read,
-                "total": item.total,
-                "type": item.item_type,
-                "thumbnail": item.obj.thumbnail
-            })
-        serializer = self.serializer_class(queryset, many=True)
+        serializer = self.serializer_class(self.generate_directory(request.user), many=True)
         return Response(serializer.data)
 
     def retrieve(self, request, selector: UUID):
         queryset = []
         directory = models.Directory.objects.get(selector=selector)
-        for item in generate_directory(request.user, directory):
-            queryset.append({
-                "selector": item.obj.selector,
-                "title": item.name,
-                "progress": item.total_read,
-                "total": item.total,
-                "type": item.item_type,
-                "thumbnail": item.obj.thumbnail
-            })
-        serializer = self.serializer_class(queryset, many=True)
+        serializer = self.serializer_class(self.generate_directory(request.user, directory), many=True)
         return Response(serializer.data)
+
+    @staticmethod
+    def clean_directories(directories, dir_path, directory=None):
+
+        dir_db_set = set([Path(settings.COMIC_BOOK_VOLUME, x.path) for x in directories])
+        dir_list = set([x for x in sorted(dir_path.glob('*')) if x.is_dir()])
+        # Create new directories db instances
+        for new_directory in dir_list - dir_db_set:
+            models.Directory(name=new_directory.name, parent=directory).save()
+
+        # Remove stale db instances
+        for stale_directory in dir_db_set - dir_list:
+            models.Directory.objects.get(name=stale_directory.name, parent=directory).delete()
+
+    @staticmethod
+    def clean_files(files, user, dir_path, directory=None):
+        file_list = set([x for x in sorted(dir_path.glob('*')) if x.is_file()])
+        files_db_set = set([Path(dir_path, x.file_name) for x in files])
+
+        # Parse new comics
+        for new_comic in file_list - files_db_set:
+            if new_comic.suffix.lower() in [".rar", ".zip", ".cbr", ".cbz", ".pdf"]:
+                book = models.ComicBook.process_comic_book(new_comic, directory)
+                models.ComicStatus(user=user, comic=book).save()
+
+        # Remove stale comic instances
+        for stale_comic in files_db_set - file_list:
+            models.ComicBook.objects.get(file_name=stale_comic, directory=directory).delete()
+
+    def generate_directory(self, user: User, directory=None):
+        """
+        :type user: User
+        :type directory: Directory
+        """
+        dir_path = Path(settings.COMIC_BOOK_VOLUME, directory.path) if directory else settings.COMIC_BOOK_VOLUME
+        files = []
+
+        dir_db_query = models.Directory.objects.filter(parent=directory)
+        self.clean_directories(dir_db_query, dir_path, directory)
+
+        file_db_query = models.ComicBook.objects.filter(directory=directory)
+        self.clean_files(file_db_query, user, dir_path, directory)
+
+        dir_db_query = dir_db_query.annotate(
+            total=Count('comicbook', distinct=True),
+            progress=Count('comicbook__comicstatus', Q(comicbook__comicstatus__finished=True,
+                                                       comicbook__comicstatus__user=user), distinct=True)
+        )
+        files.extend(dir_db_query)
+
+        # Create Missing Status
+        new_status = [models.ComicStatus(comic=file, user=user) for file in
+                      file_db_query.exclude(comicstatus__in=models.ComicStatus.objects.filter(
+                          comic__in=file_db_query, user=user))]
+        models.ComicStatus.objects.bulk_create(new_status)
+
+        file_db_query = file_db_query.annotate(
+            total=Count('comicpage', distinct=True),
+            progress=F('comicstatus__last_read_page'),
+            finished=F('comicstatus__finished'),
+            unread=F('comicstatus__unread'),
+            user=F('comicstatus__user'),
+            classification=Case(
+                When(directory__isnull=True, then=models.Directory.Classification.C_18),
+                default=F('directory__classification'),
+                output_field=PositiveSmallIntegerField(choices=models.Directory.Classification.choices)
+            )
+        ).filter(Q(user__isnull=True) | Q(user=user.id))
+
+        files.extend(file_db_query)
+
+        # files = [file for file in files if file.classification <= user.usermisc.allowed_to_read]
+
+        comics_to_annotate = []
+
+        for file in chain(file_db_query, dir_db_query):
+            if file.thumbnail and not Path(file.thumbnail.path).exists():
+                file.thumbnail.delete()
+                file.save()
+        files.sort(key=lambda x: x.title)
+        files.sort(key=lambda x: x.type, reverse=True)
+        return files
 
 
 class BreadcrumbSerializer(serializers.Serializer):
@@ -236,7 +306,7 @@ class SetReadViewSet(viewsets.ViewSet):
             comic_status, _ = models.ComicStatus.objects.get_or_create(comic_id=selector, user=request.user)
             comic_status.last_read_page = serializer.data['page']
             comic_status.unread = False
-            if models.ComicPage.objects.filter(Comic=comic_status.comic).aggregate(Max("index"))["index__max"]\
+            if models.ComicPage.objects.filter(Comic=comic_status.comic).aggregate(Max("index"))["index__max"] \
                     == comic_status.last_read_page:
                 comic_status.finished = True
             else:
@@ -386,11 +456,13 @@ class ActionViewSet(viewsets.GenericViewSet):
 
     def get_comics(self, selectors):
         data = set()
-        data = data.union(set(models.ComicBook.objects.filter(selector__in=selectors).values_list('selector', flat=True)))
+        data = data.union(
+            set(models.ComicBook.objects.filter(selector__in=selectors).values_list('selector', flat=True)))
         directories = models.Directory.objects.filter(selector__in=selectors)
         if directories:
             for directory in directories:
-                data = data.union(set(models.ComicBook.objects.filter(directory=directory).values_list('selector', flat=True)))
+                data = data.union(
+                    set(models.ComicBook.objects.filter(directory=directory).values_list('selector', flat=True)))
             data = data.union(self.get_comics(models.Directory.objects.filter(
                 parent__in=directories).values_list('selector', flat=True)))
         return [str(x) for x in data]

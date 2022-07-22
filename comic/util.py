@@ -115,7 +115,21 @@ class DirFile:
             self.name = self.obj.name
         elif isinstance(self.obj, ComicBook):
             self.name = self.obj.file_name
+    @property
+    def type(self):
+        return 'ComicBook'
 
+    @property
+    def title(self):
+        return self.name
+
+    @property
+    def progress(self):
+        return self.total_read
+
+    @property
+    def thumbnail(self):
+        return '/error.jpg'
 
 def generate_directory(user: User, directory=None):
     """

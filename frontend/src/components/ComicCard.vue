@@ -3,7 +3,7 @@
     <CCardImage orientation="top" :src="thumbnail" @click="console.log('click')"/>
     <CCardBody class="pb-0 pt-0 pl-1 pr-1 card-img-overlay d-flex">
       <span class="badge rounded-pill bg-primary unread-badge" v-if="this.unread > 0">{{ this.unread }}</span>
-      <CCardTitle class="align-self-end pb-5 mb-4" style="">
+      <CCardTitle class="align-self-end pb-5 mb-4 text-break" style="">
         <router-link :to="(data.type === 'Directory' ? {'name': 'browse', params: { selector: data.selector }} : {'name': 'read', params: { selector: data.selector }})">{{ data.title }}</router-link>
       </CCardTitle>
     </CCardBody>
