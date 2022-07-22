@@ -53,11 +53,11 @@ router.register(r'browse', rest.BrowseViewSet, basename='browse')
 router.register(r'breadcrumbs', rest.BreadcrumbViewSet, basename='breadcrumbs')
 router.register(r'generate_thumbnail', rest.GenerateThumbnailViewSet, basename='generate_thumbnail')
 router.register(r'read', rest.ReadViewSet, basename='read')\
-    .register('image', rest.ImageViewSet, basename='image', parents_query_lookups=['selector'])
+    .register(r'image', rest.ImageViewSet, basename='image', parents_query_lookups=['selector'])
 router.register(r'set_read', rest.SetReadViewSet, basename='set_read')
 router.register(r'recent', rest.RecentComicsView, basename="recent")
 router.register(r'action', rest.ActionViewSet, basename='action')
-router.register('rss_id', rest.RSSViewSet, basename='rss_id')
+router.register(r'rss_id', rest.RSSViewSet, basename='rss_id')
 
 
 urlpatterns = [
