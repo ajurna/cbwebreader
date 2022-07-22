@@ -135,6 +135,11 @@ class ComicBook(models.Model):
                                     null=True)
     thumbnail_index = models.PositiveIntegerField(default=0)
 
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['directory', 'file_name'], name='one_comic_name_per_directory')
+        ]
+
     def __str__(self):
         return self.file_name
 
