@@ -194,6 +194,8 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = True
 SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
+    'LEEWAY': timedelta(minutes=5),
 }
 
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')

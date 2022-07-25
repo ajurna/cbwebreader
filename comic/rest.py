@@ -136,7 +136,7 @@ class BrowseViewSet(viewsets.ViewSet):
 
         # Remove stale comic instances
         for stale_comic in files_db_set - file_list:
-            models.ComicBook.objects.get(file_name=stale_comic, directory=directory).delete()
+            models.ComicBook.objects.get(file_name=stale_comic.name, directory=directory).delete()
 
     def generate_directory(self, user: User, directory=None):
         """
