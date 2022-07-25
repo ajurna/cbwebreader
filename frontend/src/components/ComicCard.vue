@@ -65,6 +65,7 @@ export default {
         .then((response) => {
           if (response.data.thumbnail) {
             this.thumbnail = response.data.thumbnail
+            this.data.thumbnail = response.data.thumbnail
           }
 
         })
