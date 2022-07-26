@@ -16,8 +16,8 @@
       </CInputGroup>
     </CRow>
     <CRow>
-      <template v-for="comic in filteredComics" :key="comic.title" >
-        <comic-card :data="comic" />
+      <template v-for="comic in filteredComics" :key="comic.selector" >
+        <comic-card :data="comic" @updateComicList="updateComicList"/>
       </template>
     </CRow>
   </CContainer>
