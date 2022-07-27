@@ -20,7 +20,7 @@
           <CDropdownMenu>
             <CDropdownItem @click="updateComic('mark_unread')"><font-awesome-icon icon='book' />Mark Un-read</CDropdownItem>
             <CDropdownItem @click="updateComic('mark_read')"><font-awesome-icon icon='book-open' />Mark read</CDropdownItem>
-            <CDropdownItem v-if="data.type === 'ComicBook'"><font-awesome-icon icon='book' /><font-awesome-icon icon='turn-up' />Mark previous read</CDropdownItem>
+            <CDropdownItem v-if="data.type === 'ComicBook'" @click="$emit('markPreviousRead', data.selector)"><font-awesome-icon icon='book' /><font-awesome-icon icon='turn-up' />Mark previous comics read</CDropdownItem>
             <CDropdownItem v-if="data.type === 'Directory'"><font-awesome-icon icon='edit' />Edit comic</CDropdownItem>
           </CDropdownMenu>
         </CDropdown>

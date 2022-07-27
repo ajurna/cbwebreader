@@ -14,7 +14,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from comic import models
-from comic.util import generate_directory, generate_breadcrumbs_from_path, DirFile
+from comic.util import generate_breadcrumbs_from_path
 from pathlib import Path
 
 
@@ -80,7 +80,6 @@ class ComicBookViewSet(viewsets.ModelViewSet):
     serializer_class = ComicBookSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
-    # filterset_fields = ['directory', 'selector']
 
 
 class BrowseSerializer(serializers.Serializer):
@@ -91,6 +90,8 @@ class BrowseSerializer(serializers.Serializer):
     type = serializers.CharField()
     thumbnail = serializers.FileField()
     classification = serializers.IntegerField()
+    finished = serializers.BooleanField()
+    unread = serializers.BooleanField()
 
 
 
@@ -155,7 +156,9 @@ class BrowseViewSet(viewsets.ViewSet):
         dir_db_query = dir_db_query.annotate(
             total=Count('comicbook', distinct=True),
             progress=Count('comicbook__comicstatus', Q(comicbook__comicstatus__finished=True,
-                                                       comicbook__comicstatus__user=user), distinct=True)
+                                                       comicbook__comicstatus__user=user), distinct=True),
+            finished=Q(total=F('progress')),
+            unread=Q(total__gt=F('progress'))
         )
         files.extend(dir_db_query)
 
