@@ -39,10 +39,15 @@ export default createStore({
       axios.post(this.state.base_url+'/api/token/', payload)
         .then((response)=>{
             context.commit('updateToken', response.data);
-            router.push('/')
+            if ('next' in router.currentRoute.value.query) {
+              router.push(router.currentRoute.value.query.next)
+            } else {
+              router.push('/')
+            }
+
           })
         .catch((error)=>{
-            console.log(error);
+            // console.log(error);
             const $toast = useToast();
             $toast.error(error.response.data.detail, {position:'top'});
           })
@@ -56,8 +61,8 @@ export default createStore({
             this.commit('updateToken', response.data)
           })
         .catch((error)=>{
-            console.log(error)
-            router.push('/login')
+            // console.log(error)
+            // router.push({name: 'login', query: {area: 'store'}})
           })
     },
     inspectToken(){

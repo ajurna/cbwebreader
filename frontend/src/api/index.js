@@ -8,7 +8,7 @@ async function get_access_token() {
     let refresh = jwtDecode(store.state.jwt.refresh)
     if (access.exp - Date.now()/1000 < 5) {
         if (refresh.exp - Date.now()/1000 < 5) {
-            await router.push('/login')
+            await router.push({name: 'login', params: { username: 'eduardo' }})
             return null
         } else {
             return store.dispatch('refreshToken').then(() => {return store.state.jwt.access})
@@ -20,7 +20,14 @@ async function get_access_token() {
 const axios_jwt = axios.create();
 
 axios_jwt.interceptors.request.use(async function (config) {
-    let access_token = await get_access_token().catch(() => {router.push('/login')})
+    let access_token = await get_access_token().catch(() => {
+        if (router.currentRoute.value.fullPath.includes('login')){
+          router.push({name: 'login'})
+        }else {
+          router.push({name: 'login', query: { next: router.currentRoute.value.fullPath }})
+        }
+
+    })
     config.headers = {
         Authorization: "Bearer " + access_token
     }

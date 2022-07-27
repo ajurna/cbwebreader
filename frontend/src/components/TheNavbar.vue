@@ -18,7 +18,7 @@
             <CNavLink href="#">Users</CNavLink>
           </CNavItem>
           <CNavItem>
-            <CNavLink href="#">Log Out</CNavLink>
+            <CNavLink @click="logout">Log Out</CNavLink>
           </CNavItem>
         </CNavbarNav>
       </CCollapse>
@@ -27,6 +27,8 @@
 </template>
 <script>
 import { CNavbar, CNavbarNav, CContainer, CNavbarBrand, CNavbarToggler, CCollapse, CNavItem, CNavLink } from '@coreui/vue'
+import store from "@/store";
+import router from "@/router";
 export default {
   name: "TheNavbar",
   components: {
@@ -43,10 +45,18 @@ export default {
     return {
       visible: true
     }
+  },
+  methods: {
+    logout () {
+      store.state.jwt = null
+      router.push({name: 'login'})
+    }
   }
 }
 </script>
 
 <style scoped>
-
+.nav-link {
+  cursor: pointer;
+}
 </style>
