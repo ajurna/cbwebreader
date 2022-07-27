@@ -3,9 +3,9 @@
     <CRow>
       <CInputGroup>
         <CFormInput placeholder="Search" aria-label="Filter comics by name" v-model="this.filters.search_string"/>
-        <CButton type="button" :color="(!this.filters.filter_read && !this.filters.filter_unread? 'primary' : 'secondary')" variant="outline" @click="this.filters.filter_read=false; this.filters.filter_unread=false">All</CButton>
-        <CButton type="button" :color="(this.filters.filter_read && !this.filters.filter_unread? 'primary' : 'secondary')" variant="outline" @click="this.filters.filter_read=true; this.filters.filter_unread=false">Read</CButton>
-        <CButton type="button" :color="(!this.filters.filter_read && this.filters.filter_unread? 'primary' : 'secondary')" variant="outline" @click="this.filters.filter_read=false; this.filters.filter_unread=true">Un-read</CButton>
+        <CButton type="button" :color="(!filters.filter_read && !filters.filter_unread? 'primary' : 'secondary')" variant="outline" @click="filters.filter_read=false; filters.filter_unread=false">All</CButton>
+        <CButton type="button" :color="(filters.filter_read && !filters.filter_unread? 'primary' : 'secondary')" variant="outline" @click="filters.filter_read=true; filters.filter_unread=false">Read</CButton>
+        <CButton type="button" :color="(!filters.filter_read && filters.filter_unread? 'primary' : 'secondary')" variant="outline" @click="filters.filter_read=false; filters.filter_unread=true">Un-read</CButton>
         <CDropdown variant="input-group">
           <CDropdownToggle color="secondary" variant="outline">Action</CDropdownToggle>
           <CDropdownMenu>
@@ -107,7 +107,6 @@ export default {
   },
   mounted () {
     this.updateComicList()
-    // this.filters = store.state.filters
   },
   beforeUpdate() {
     let filter_id = ( this.selector ? this.selector : 'home')
