@@ -21,8 +21,9 @@
               text="Please enter your password"
               aria-describedby="loginFormControlInputHelpInline"
               v-model="password"
+              @keyup.enter="login"
             />
-            <CButton @click="login" color="primary" class="mb-3">Login</CButton>
+            <CButton @click="login" color="primary" class="mb-3" @keyup.enter="login">Login</CButton>
         </CForm>
       </CCol>
     </CRow>
@@ -52,17 +53,6 @@ export default {
   methods: {
     login () {
       this.$store.dispatch("obtainToken", {username: this.username, password: this.password})
-      .then(function (response) {
-        console.log(response);
-      })
-      .catch(function (error) {
-        console.log('Caught in view')
-        console.log(error);
-        this.password_alert = true
-      });
-    },
-    dismiss_alert() {
-      this.password_alert = false
     }
   }
 }
