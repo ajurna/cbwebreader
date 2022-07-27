@@ -2,10 +2,10 @@
   <CContainer>
     <CRow>
       <CInputGroup>
-        <CFormInput placeholder="Search" aria-label="Filter comics by name" v-model="this.search_string"/>
-        <CButton type="button" :color="(!this.filter_read && !this.filter_unread? 'primary' : 'secondary')" variant="outline" @click="this.filter_read=false; this.filter_unread=false">All</CButton>
-        <CButton type="button" :color="(this.filter_read && !this.filter_unread? 'primary' : 'secondary')" variant="outline" @click="this.filter_read=true; this.filter_unread=false">Read</CButton>
-        <CButton type="button" :color="(!this.filter_read && this.filter_unread? 'primary' : 'secondary')" variant="outline" @click="this.filter_read=false; this.filter_unread=true">Un-read</CButton>
+        <CFormInput placeholder="Search" aria-label="Filter comics by name" v-model="this.filters.search_string"/>
+        <CButton type="button" :color="(!this.filters.filter_read && !this.filters.filter_unread? 'primary' : 'secondary')" variant="outline" @click="this.filters.filter_read=false; this.filters.filter_unread=false">All</CButton>
+        <CButton type="button" :color="(this.filters.filter_read && !this.filters.filter_unread? 'primary' : 'secondary')" variant="outline" @click="this.filters.filter_read=true; this.filters.filter_unread=false">Read</CButton>
+        <CButton type="button" :color="(!this.filters.filter_read && this.filters.filter_unread? 'primary' : 'secondary')" variant="outline" @click="this.filters.filter_read=false; this.filters.filter_unread=true">Un-read</CButton>
         <CDropdown variant="input-group">
           <CDropdownToggle color="secondary" variant="outline">Action</CDropdownToggle>
           <CDropdownMenu>
@@ -29,6 +29,7 @@ import {CContainer, CRow, CInputGroup, CFormInput, CButton, CDropdown, CDropdown
 import ComicCard from "@/components/ComicCard";
 import api from '@/api'
 import TheBreadcrumbs from "@/components/TheBreadcrumbs";
+import store from "@/store";
 
 export default {
   name: "TheComicList",
@@ -40,9 +41,11 @@ export default {
       breadcrumbs: [
         {id: 0, selector: '', name: 'Home'}
       ],
-      search_string: '',
-      filter_read: false,
-      filter_unread: false
+      filters: {
+        search_string: '',
+        filter_read: false,
+        filter_unread: false
+      }
   }},
   props: {
     selector: String
@@ -89,14 +92,14 @@ export default {
   computed: {
     filteredComics() {
       let filtered_comics = [...this.comics]
-      if (this.search_string) {
+      if (this.filters.search_string) {
         filtered_comics = filtered_comics.filter(comic => {
-          return comic.title.toLowerCase().includes(this.search_string.toLowerCase()) })
+          return comic.title.toLowerCase().includes(this.filters.search_string.toLowerCase()) })
       }
-      if (this.filter_read) {
+      if (this.filters.filter_read) {
         filtered_comics = filtered_comics.filter(comic => comic.finished )
       }
-      if (this.filter_unread) {
+      if (this.filters.filter_unread) {
         filtered_comics = filtered_comics.filter(comic => comic.unread )
       }
       return filtered_comics
@@ -104,12 +107,30 @@ export default {
   },
   mounted () {
     this.updateComicList()
+    // this.filters = store.state.filters
+  },
+  beforeUpdate() {
+    let filter_id = ( this.selector ? this.selector : 'home')
+    if (filter_id in store.state.filters) {
+      this.filters = store.state.filters[filter_id]
+    } else {
+      this.filters = {
+        search_string: '',
+        filter_read: false,
+        filter_unread: false
+      }
+      store.state.filters[filter_id] = this.filters
+    }
   },
   watch: {
     selector() {
       this.updateComicList()
+    },
+    filters() {
+      let filter_id = ( this.selector ? this.selector : 'home')
+      store.state.filters[filter_id] = this.filters
     }
-  }
+  },
 }
 </script>
 
