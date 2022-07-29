@@ -1,21 +1,22 @@
 from itertools import chain
+from pathlib import Path
 from uuid import UUID
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.db.models import Count, Case, When, F, PositiveSmallIntegerField, Max, Q
 from django.http import FileResponse
-from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, serializers, mixins, permissions, status, renderers
-from rest_framework.decorators import api_view, action
-from rest_framework.generics import get_object_or_404, ListAPIView
+from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from comic import models
 from comic.util import generate_breadcrumbs_from_path
-from pathlib import Path
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -30,7 +31,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
@@ -48,40 +49,6 @@ class GroupViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 
-class DirectorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Directory
-
-        fields = ['name', 'parent', 'selector', 'thumbnail', 'thumbnail_issue', 'thumbnail_index', 'classification']
-
-
-class DirectoryViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
-                       viewsets.GenericViewSet):
-    """
-    API endpoint that allows Directories to be viewed.
-    """
-    queryset = models.Directory.objects.all()
-    lookup_field = 'selector'
-    serializer_class = DirectorySerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class ComicBookSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.ComicBook
-        fields = ['file_name', 'date_added', 'directory', 'selector', 'version', 'thumbnail', 'thumbnail_index']
-
-
-class ComicBookViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
-    queryset = models.ComicBook.objects.all()
-    serializer_class = ComicBookSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend]
-
-
 class BrowseSerializer(serializers.Serializer):
     selector = serializers.UUIDField()
     title = serializers.CharField()
@@ -92,7 +59,6 @@ class BrowseSerializer(serializers.Serializer):
     classification = serializers.IntegerField()
     finished = serializers.BooleanField()
     unread = serializers.BooleanField()
-
 
 
 class BrowseViewSet(viewsets.ViewSet):
@@ -486,3 +452,64 @@ class RSSViewSet(viewsets.ViewSet):
         }
         serializer = self.serializer_class(queryset)
         return Response(serializer.data)
+
+
+class AccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'is_superuser']
+
+
+class UpdateEmailSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    email = serializers.EmailField()
+    old_password = serializers.CharField()
+    new_password = serializers.CharField(required=False)
+    new_password_confirm = serializers.CharField(required=False)
+
+    def validate_new_password(self, data):
+        if data == '':
+            return data
+        try:
+            validate_password(data)
+        except ValidationError as e:
+            raise serializers.ValidationError(e)
+        return data
+
+    def validate(self, attrs):
+        super().validate(attrs)
+        if attrs['new_password'] != attrs['new_password_confirm']:
+            raise serializers.ValidationError('New passwords do not match')
+        return attrs
+
+
+class AccountViewSet(viewsets.GenericViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'username'
+    serializer_class = AccountSerializer
+
+    @swagger_auto_schema(method='patch', responses={200: AccountSerializer})
+    @action(detail=False, methods=['PATCH'], serializer_class=PasswordResetSerializer)
+    def reset_password(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            return Response('password_reset')
+        else:
+            return Response({"errors": serializer.errors})
+
+    def list(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
+    @swagger_auto_schema(method='patch', responses={200: AccountSerializer})
+    @action(detail=False, methods=['PATCH'], serializer_class=UpdateEmailSerializer)
+    def update_email(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            print(serializer)

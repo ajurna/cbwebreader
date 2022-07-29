@@ -46,9 +46,7 @@ from comic import rest, feeds
 
 router = ExtendedDefaultRouter()
 router.register(r'users', rest.UserViewSet)
-router.register(r'groups', rest.GroupViewSet)
-router.register(r'directory', rest.DirectoryViewSet)
-router.register(r'comicbook', rest.ComicBookViewSet)
+# router.register(r'groups', rest.GroupViewSet)
 router.register(r'browse', rest.BrowseViewSet, basename='browse')
 router.register(r'breadcrumbs', rest.BreadcrumbViewSet, basename='breadcrumbs')
 router.register(r'generate_thumbnail', rest.GenerateThumbnailViewSet, basename='generate_thumbnail')
@@ -58,6 +56,7 @@ router.register(r'set_read', rest.SetReadViewSet, basename='set_read')
 router.register(r'recent', rest.RecentComicsView, basename="recent")
 router.register(r'action', rest.ActionViewSet, basename='action')
 router.register(r'rss_id', rest.RSSViewSet, basename='rss_id')
+router.register(r'account', rest.AccountViewSet, basename='account')
 
 
 urlpatterns = [

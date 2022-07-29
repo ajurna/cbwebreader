@@ -3,10 +3,18 @@ import axios from 'axios'
 import jwtDecode from 'jwt-decode'
 import {useToast} from "vue-toast-notification";
 import router from "@/router";
+import api from "@/api";
 
 function get_jwt_from_storage(){
   try {
     return JSON.parse(localStorage.getItem('t'))
+  } catch {
+    return null
+  }
+}
+function get_user_from_storage(){
+  try {
+    return JSON.parse(localStorage.getItem('u'))
   } catch {
     return null
   }
@@ -16,7 +24,8 @@ export default createStore({
   state: {
     jwt: get_jwt_from_storage(),
     base_url: 'http://localhost:8000',
-    filters: {}
+    filters: {},
+    user: get_user_from_storage()
   },
   getters: {
   },
@@ -25,10 +34,15 @@ export default createStore({
       localStorage.setItem('t', JSON.stringify(newToken));
       state.jwt = newToken;
     },
-    removeToken(state){
+    logOut(state){
       localStorage.removeItem('t');
+      localStorage.removeItem('u')
       state.jwt = null;
-    }
+      state.user = null
+    },
+    updateUser(state, userData){
+      state.user = userData
+    },
   },
   actions: {
     obtainToken(context, {username, password}){
@@ -36,9 +50,12 @@ export default createStore({
         username: username,
         password: password
       }
-      axios.post(this.state.base_url+'/api/token/', payload)
+      axios.post('/api/token/', payload)
         .then((response)=>{
             context.commit('updateToken', response.data);
+            api.get('/api/account').then(response => {
+              context.commit('updateUser', response.data)
+            })
             if ('next' in router.currentRoute.value.query) {
               router.push(router.currentRoute.value.query.next)
             } else {

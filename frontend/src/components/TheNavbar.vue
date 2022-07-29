@@ -12,7 +12,7 @@
             <router-link :to="{name: 'recent'}" class="nav-link" >Recent</router-link>
           </CNavItem>
           <CNavItem>
-            <CNavLink href="#">Account</CNavLink>
+            <router-link :to="{name: 'account'}" class="nav-link" >Account</router-link>
           </CNavItem>
           <CNavItem>
             <CNavLink href="#">Users</CNavLink>
@@ -48,7 +48,7 @@ export default {
   },
   methods: {
     logout () {
-      store.state.jwt = null
+      store.commit('logOut')
       router.push({name: 'login'})
     }
   }
