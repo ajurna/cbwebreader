@@ -1,6 +1,6 @@
 <template>
   <CContainer>
-    <CForm @submit="updateAccount" >
+    <CForm @submit="updateAccount">
       <CFormInput
         type="text"
         label="Username"
@@ -24,7 +24,7 @@
         text="Must enter current password to change settings."
         v-model="current_password"
         feedback-invalid="Wrong Password."
-        :valid="password_correct"
+        :valid="current_password.length > 0"
       />
       <CFormInput
         type="password"
@@ -42,7 +42,7 @@
         text="Must be at least 9 characters long."
         v-model="new_password_confirm"
         feedback-invalid="New passwords should match."
-        :valid="new_password === new_password_confirm"
+        :valid="new_password === new_password_confirm && new_password.length > 8"
       />
       <CButton color="primary" type="submit">Save</CButton>
     </CForm>
@@ -69,24 +69,56 @@ export default {
       current_password: '',
       new_password: '',
       new_password_confirm: '',
-      password_correct: false
     }
   },
   mounted() {
-    api.get('/api/account/').then(response => {
-      this.$store.commit('updateUser', response.data)
-      this.username = this.$store.state.user.username
-      this.email = this.$store.state.user.email
-    })
-
+    this.updateFromServer()
   },
   methods: {
+    updateFromServer() {
+      api.get('/api/account/').then(response => {
+        this.$store.commit('updateUser', response.data)
+        this.username = this.$store.state.user.username
+        this.email = this.$store.state.user.email
+        this.current_password = ''
+        this.new_password = ''
+        this.new_password_confirm = ''
+      })
+    },
     updateAccount (data) {
       if (!this.current_password) {
-        toast.success('form submitted', {position:'top'});
-        return
+        toast.error('Please enter your current password.', {position:'top'});
+      } else {
+        if (this.email !== this.$store.state.user.email) {
+          let payload = {
+            username: this.username,
+            email: this.email,
+            password: this.current_password
+          }
+          api.patch('/api/account/update_email/', payload).then(() => {
+            toast.success('Email Address updated')
+            this.updateFromServer()
+          }).catch(error => {
+            toast.error(error.response.data.errors)
+          })
+        }
+        if (this.new_password === this.new_password_confirm) {
+          let payload = {
+            username: this.username,
+            old_password: this.current_password,
+            new_password: this.new_password,
+            new_password_confirm: this.new_password_confirm
+          }
+          api.patch('/api/account/reset_password/', payload).then(() => {
+            toast.success('Password reset successfully')
+            this.updateFromServer()
+          }).catch(error => {
+            console.log(error.response.data)
+            toast.error(error.response.data.errors)
+          })
+        }
+
       }
-      // console.log(data)
     },
     validateEmail(mail){
       return (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(mail))
