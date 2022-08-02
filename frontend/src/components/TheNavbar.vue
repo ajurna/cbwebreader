@@ -15,7 +15,7 @@
             <router-link :to="{name: 'account'}" class="nav-link" >Account</router-link>
           </CNavItem>
           <CNavItem>
-            <CNavLink href="#">Users</CNavLink>
+            <router-link :to="{name: 'account'}" class="nav-link" v-if="this.$store.getters.is_superuser">Users</router-link>
           </CNavItem>
           <CNavItem>
             <CNavLink @click="logout">Log Out</CNavLink>

@@ -28,6 +28,13 @@ export default createStore({
     user: get_user_from_storage()
   },
   getters: {
+    is_superuser (state) {
+      if (state.user === null){
+        return false
+      } else {
+        return state.user.is_superuser
+      }
+    }
   },
   mutations: {
     updateToken(state, newToken){
@@ -41,6 +48,7 @@ export default createStore({
       state.user = null
     },
     updateUser(state, userData){
+      localStorage.setItem('u', JSON.stringify(userData));
       state.user = userData
     },
   },
