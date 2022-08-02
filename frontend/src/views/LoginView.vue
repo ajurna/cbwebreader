@@ -3,7 +3,7 @@
     <CRow>
       <CCol lg="4"/>
       <CCol lg="4" id="login-col">
-        <CForm>
+        <CForm @submit="login">
           <CFormInput
               type="username"
               id="username"
@@ -23,7 +23,7 @@
               v-model="password"
               @keyup.enter="login"
             />
-            <CButton @click="login" color="primary" class="mb-3" @keyup.enter="login">Login</CButton>
+            <CButton color="primary" class="mb-3">Login</CButton>
         </CForm>
       </CCol>
     </CRow>
