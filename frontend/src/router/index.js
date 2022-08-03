@@ -8,12 +8,12 @@ import AccountView from "@/views/AccountView";
 const routes = [
   {
     path: '/',
-    name: 'home',
-    component: HomeView,
-    props: {selector: ''}
+    redirect: () => {
+      return { name: 'browse' }
+    }
   },
   {
-    path: '/browse/:selector',
+    path: '/browse/:selector?',
     name: 'browse',
     component: HomeView,
     props: true

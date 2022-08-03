@@ -151,10 +151,6 @@ class BrowseViewSet(viewsets.ViewSet):
 
         files.extend(file_db_query)
 
-        # files = [file for file in files if file.classification <= user.usermisc.allowed_to_read]
-
-        comics_to_annotate = []
-
         for file in chain(file_db_query, dir_db_query):
             if file.thumbnail and not Path(file.thumbnail.path).exists():
                 file.thumbnail.delete()
@@ -237,6 +233,8 @@ class ReadSerializer(serializers.Serializer):
     selector = serializers.UUIDField()
     title = serializers.CharField()
     last_read_page = serializers.IntegerField()
+    prev_comic = serializers.DictField()
+    next_comic = serializers.DictField()
     pages = PageSerializer(many=True)
 
 
@@ -250,10 +248,24 @@ class ReadViewSet(viewsets.ViewSet):
         misc, _ = models.UserMisc.objects.get_or_create(user=request.user)
         pages = models.ComicPage.objects.filter(Comic=comic)
         status, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
+        comic_list = list(models.ComicBook.objects.filter(directory=comic.directory))
+        comic_index = comic_list.index(comic)
+        try:
+            prev_comic = {'route': 'browse', 'selector': comic.directory.selector} if comic_index == 0 else \
+                {'route': 'read', 'selector': comic_list[comic_index-1].selector}
+        except AttributeError:
+            prev_comic = {'route': 'browse'}
+        try:
+            next_comic = {'route': 'browse', 'selector': comic.directory.selector} if comic_index+1 == len(comic_list) else \
+                {'route': 'read', 'selector': comic_list[comic_index+1].selector}
+        except AttributeError:
+            next_comic = {'route': 'browse'}
         data = {
             "selector": comic.selector,
             "title": comic.file_name,
             "last_read_page": status.last_read_page,
+            "prev_comic": prev_comic,
+            "next_comic": next_comic,
             "pages": pages,
         }
         serializer = self.serializer_class(data)
@@ -263,8 +275,11 @@ class ReadViewSet(viewsets.ViewSet):
     def pdf(self, request: Request, selector: UUID) -> Union[FileResponse, Response]:
         book = models.ComicBook.objects.get(selector=selector)
         misc, _ = models.UserMisc.objects.get_or_create(user=request.user)
-        if book.directory.classification > misc.allowed_to_read:
-            return Response(status=400, data={'errors': 'Not allowed to read.'})
+        try:
+            if book.directory.classification > misc.allowed_to_read:
+                return Response(status=400, data={'errors': 'Not allowed to read.'})
+        except AttributeError:
+            pass
         return FileResponse(open(book.get_pdf(), 'rb'), content_type='application/pdf')
 
 

@@ -180,7 +180,10 @@ class ComicBook(models.Model):
 
     def get_pdf(self) -> Path:
         base_dir = settings.COMIC_BOOK_VOLUME
-        return Path(base_dir, self.directory.get_path(), self.file_name)
+        if self.directory:
+            return Path(base_dir, self.directory.get_path(), self.file_name)
+        else:
+            return Path(base_dir, self.file_name)
 
     def get_image(self, page: int):
         base_dir = settings.COMIC_BOOK_VOLUME

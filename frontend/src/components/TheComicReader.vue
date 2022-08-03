@@ -1,33 +1,40 @@
 <template>
   <div class="reveal" id="comic_box" ref="comic_box" >
     <div id="slides_div" class="slides"  ref="slides">
-      <section v-for="(page, index) in comic_data.pages" :key="page.index" :data-menu-title="page.page_file_name" hidden>
+      <section class="" v-for="(page, index) in comic_data.pages" :key="page.index" :data-menu-title="page.page_file_name" hidden>
         <img :data-src="'/api/read/' + comic_data.selector + '/image/' + page.index + '/'" class="w-100"  :alt="page.page_file_name">
       </section>
     </div>
   </div>
-  <paginate
-    v-model="this.paginate_page"
-    :page-count="this.comic_data.pages.length"
-    :click-handler="this.setPage"
-    :prev-text="'Prev'"
-    :next-text="'Next'"
-    :container-class="'pagination'"
-  >
-  </paginate>
+  <CRow class="navButtons pb-2">
+    <CListGroup :layout="'horizontal'">
+      <CListGroupItem class="p-1 pt-2 page-link pl-2 pr-2" @click="prevComic">Prev&nbsp;Comic</CListGroupItem>
+      <paginate
+        v-model="this.paginate_page"
+        :page-count="this.comic_data.pages.length"
+        :click-handler="this.setPage"
+        :prev-text="'Prev'"
+        :next-text="'Next'"
+        :container-class="'pagination'"
+      >
+      </paginate>
+      <CListGroupItem  class="p-1 pt-2 page-link pl-2 pr-2">Next&nbsp;Comic</CListGroupItem>
+    </CListGroup>
+  </CRow>
+
 </template>
 
 <script>
 import Reveal from "reveal.js";
 import api from "@/api";
 import 'reveal.js-menu/menu.css'
-import {CPagination, CPaginationItem} from "@coreui/vue";
+import {CPagination, CPaginationItem, CRow, CButton, CCol, CListGroup, CListGroupItem} from "@coreui/vue";
 import Paginate from "vuejs-paginate-next";
 import * as Hammer from 'hammerjs'
 
 export default {
   name: "TheComicReader",
-  components: {CPagination, CPaginationItem, Paginate},
+  components: {CPagination, CPaginationItem, Paginate, CRow, CButton, CCol, CListGroup, CListGroupItem},
   data () {
     return {
       current_page: 0,
@@ -40,35 +47,40 @@ export default {
   },
   methods: {
     prevPage(){
-
       if (this.deck.isFirstSlide()){
-        // if (nav.prev_type === 'ComicBook'){
-        //     window.location = "/comic/read/"+ nav.prev_path +"/"
-        // } else {
-        //     window.location = "/comic/"+ nav.prev_path +"/"
-        // }
+        this.prevComic()
       } else {
         this.current_page -= 1
         this.deck.slide(this.current_page)
       }
     },
+    prevComic(){
+      this.$router.push({
+        name: this.comic_data.prev_comic.route,
+        params: {selector: this.comic_data.prev_comic.selector}
+      })
+    },
+    nextComic(){
+      this.$router.push({
+        name: this.comic_data.next_comic.route,
+        params: {selector: this.comic_data.next_comic.selector}
+      })
+    },
     nextPage(){
       if (this.deck.isLastSlide()){
-        // if (nav.next_type === 'ComicBook'){
-        //     window.location = "/comic/read/"+ nav.next_path +"/"
-        // } else {
-        //     window.location = "/comic/"+ nav.next_path +"/"
-        // }
+        this.$router.push({
+          name: this.comic_data.next_comic.route,
+          params: {selector: this.comic_data.next_comic.selector}
+        })
       } else {
         this.current_page += 1
         this.deck.slide(this.current_page)
       }
     },
     setPage(pageNum){
-      console.log(pageNum)
       this.current_page = pageNum-1
       this.deck.slide(this.current_page)
-    }
+    },
   },
   watch: {
     'current_page' (new_page) {
@@ -120,12 +132,19 @@ export default {
 
 
 <style scoped>
-.pagination {
+.navButtons {
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
     bottom: 0;
     z-index: 1030;
+  width: auto;
   cursor: pointer;
+}
+section {
+  padding-bottom: 60px;
+}
+.list-group-item {
+  /*padding: 0;*/
 }
 </style>

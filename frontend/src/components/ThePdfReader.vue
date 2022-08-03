@@ -8,19 +8,25 @@
         </pdf>
     </CRow>
   </CContainer>
-  <paginate
-    v-model="page"
-    :page-count="numPages"
-    :click-handler="this.setPage"
-    :prev-text="'Prev'"
-    :next-text="'Next'"
-    :container-class="'pagination'"
-  >
-  </paginate>
+  <CRow class="navButtons pb-2">
+    <CListGroup :layout="'horizontal'">
+      <CListGroupItem class="p-1 pt-2 page-link pl-2 pr-2" @click="prevComic">Prev&nbsp;Comic</CListGroupItem>
+      <paginate
+        v-model="page"
+        :page-count="numPages"
+        :click-handler="this.setPage"
+        :prev-text="'Prev'"
+        :next-text="'Next'"
+        :container-class="'pagination'"
+      >
+      </paginate>
+      <CListGroupItem  class="p-1 pt-2 page-link pl-2 pr-2" @click="nextComic">Next&nbsp;Comic</CListGroupItem>
+    </CListGroup>
+  </CRow>
 </template>
 
 <script>
-import {CContainer, CRow, CButtonGroup, CButton} from "@coreui/vue";
+import {CContainer, CRow, CButtonGroup, CButton, CListGroup, CListGroupItem} from "@coreui/vue";
 import pdfvuer from 'pdfvuer'
 import api from "@/api";
 import Paginate from "vuejs-paginate-next";
@@ -30,7 +36,7 @@ import * as Hammer from 'hammerjs'
 export default {
   name: "ThePdfReader",
   components: {
-    CContainer, CRow, CButtonGroup, CButton, pdf: pdfvuer, Paginate
+    CContainer, CRow, CButtonGroup, CButton, pdf: pdfvuer, Paginate, CListGroup, CListGroupItem
   },
   data () {
     return {
@@ -78,6 +84,18 @@ export default {
         })
       });
     },
+    prevComic(){
+      this.$router.push({
+        name: this.comic_data.prev_comic.route,
+        params: {selector: this.comic_data.prev_comic.selector}
+      })
+    },
+    nextComic(){
+      this.$router.push({
+        name: this.comic_data.next_comic.route,
+        params: {selector: this.comic_data.next_comic.selector}
+      })
+    },
     nextPage () {
       if (this.page < this.numPages){
         this.page += 1
@@ -106,7 +124,6 @@ export default {
       this.key_timeout = setTimeout(() => {this.keyPress(e)}, 50)
     },
     keyPress(e) {
-      console.log(e)
       if (e.key === 'ArrowRight') {
         this.nextPage()
       } else if (e.key === 'ArrowLeft') {
@@ -130,12 +147,13 @@ export default {
 </script>
 
 <style scoped>
-.pagination {
+.navButtons {
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
     bottom: 0;
     z-index: 1030;
+  width: auto;
   cursor: pointer;
 }
 </style>
