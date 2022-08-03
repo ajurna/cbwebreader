@@ -1,0 +1,127 @@
+<template>
+  <CContainer>
+    <CRow class="w-100 pb-5 mb-5" v-if="loaded">
+        <pdf :src="pdfdata"  :page="page" ref="pdfWindow">
+          <template slot="loading">
+            loading content here...
+          </template>
+        </pdf>
+    </CRow>
+  </CContainer>
+  <paginate
+    v-model="page"
+    :page-count="numPages"
+    :click-handler="this.setPage"
+    :prev-text="'Prev'"
+    :next-text="'Next'"
+    :container-class="'pagination'"
+  >
+  </paginate>
+</template>
+
+<script>
+import {CContainer, CRow, CButtonGroup, CButton} from "@coreui/vue";
+import pdfvuer from 'pdfvuer'
+import api from "@/api";
+import Paginate from "vuejs-paginate-next";
+
+export default {
+  name: "ThePdfReader",
+  components: {
+    CContainer, CRow, CButtonGroup, CButton, pdf: pdfvuer, Paginate
+  },
+  data () {
+    return {
+      page: 1,
+      numPages: 0,
+      pdfdata: undefined,
+      errors: [],
+      scale: 'page-width',
+      loaded: false,
+      key_timeout: null,
+    }
+  },
+  props: {
+    comic_data: Object
+  },
+  computed: {
+  },
+  mounted () {
+    this.getPdf()
+    window.addEventListener('keyup', this.keyPressDebounce)
+  },
+  unmounted() {
+    window.removeEventListener('keyup', this.keyPressDebounce)
+  },
+  watch: {
+  },
+  methods: {
+    getPdf () {
+      this.pdfdata = pdfvuer.createLoadingTask('/api/read/' + this.comic_data.selector + '/pdf/');
+      this.pdfdata.then(pdf => {
+        this.numPages = pdf.numPages;
+        this.loaded = true
+        this.page = this.comic_data.last_read_page
+      });
+    },
+    nextPage () {
+      if (this.page < this.numPages){
+        this.page += 1
+        this.setReadPage(this.page)
+      }
+    },
+    prevPage() {
+      if (this.page > 1){
+        this.page -= 1
+        this.setReadPage(this.page)
+      }
+    },
+    setPage(num) {
+      this.page = num
+      this.setReadPage(this.page)
+    },
+    setReadPage(num){
+      this.$refs.pdfWindow.$el.scrollIntoView()
+      let payload = {
+          page: num
+      }
+      api.put('/api/set_read/'+ this.comic_data.selector +'/', payload)
+    },
+    keyPressDebounce(e){
+      clearTimeout(this.key_timeout)
+      this.key_timeout = setTimeout(() => {this.keyPress(e)}, 50)
+    },
+    keyPress(e) {
+      console.log(e)
+      if (e.key === 'ArrowRight') {
+        this.nextPage()
+      } else if (e.key === 'ArrowLeft') {
+        this.prevPage()
+      } else if (e.key === 'ArrowUp') {
+        window.scrollTo({
+          top: window.scrollY-window.innerHeight*.7,
+          left: 0,
+          behavior: 'smooth'
+        });
+      } else if (e.key === 'ArrowDown') {
+        window.scrollTo({
+          top: window.scrollY+window.innerHeight*.7,
+          left: 0,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+.pagination {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    z-index: 1030;
+  cursor: pointer;
+}
+</style>

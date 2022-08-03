@@ -1,5 +1,6 @@
 from itertools import chain
 from pathlib import Path
+from typing import Union
 from uuid import UUID
 
 from django.conf import settings
@@ -244,7 +245,7 @@ class ReadViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'selector'
 
-    def retrieve(self, request, selector: UUID):
+    def retrieve(self, request: Request, selector: UUID) -> Response:
         comic = get_object_or_404(models.ComicBook, selector=selector)
         misc, _ = models.UserMisc.objects.get_or_create(user=request.user)
         pages = models.ComicPage.objects.filter(Comic=comic)
@@ -257,6 +258,14 @@ class ReadViewSet(viewsets.ViewSet):
         }
         serializer = self.serializer_class(data)
         return Response(serializer.data)
+
+    @action(methods=['get'], detail=True)
+    def pdf(self, request: Request, selector: UUID) -> Union[FileResponse, Response]:
+        book = models.ComicBook.objects.get(selector=selector)
+        misc, _ = models.UserMisc.objects.get_or_create(user=request.user)
+        if book.directory.classification > misc.allowed_to_read:
+            return Response(status=400, data={'errors': 'Not allowed to read.'})
+        return FileResponse(open(book.get_pdf(), 'rb'), content_type='application/pdf')
 
 
 class ReadPageSerializer(serializers.Serializer):
