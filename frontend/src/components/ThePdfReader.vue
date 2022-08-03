@@ -1,6 +1,6 @@
 <template>
-  <CContainer>
-    <CRow class="w-100 pb-5 mb-5" v-if="loaded">
+  <CContainer ref="pdfContainer">
+    <CRow class="w-100 pb-5 mb-5" v-if="loaded" >
         <pdf :src="pdfdata"  :page="page" ref="pdfWindow" :resize="true">
           <template slot="loading">
             loading content here...
@@ -24,6 +24,8 @@ import {CContainer, CRow, CButtonGroup, CButton} from "@coreui/vue";
 import pdfvuer from 'pdfvuer'
 import api from "@/api";
 import Paginate from "vuejs-paginate-next";
+import * as Hammer from 'hammerjs'
+
 
 export default {
   name: "ThePdfReader",
@@ -39,6 +41,7 @@ export default {
       scale: 'page-width',
       loaded: false,
       key_timeout: null,
+      hammertime: null
     }
   },
   props: {
@@ -62,6 +65,17 @@ export default {
         this.numPages = pdf.numPages;
         this.loaded = true
         this.page = this.comic_data.last_read_page
+
+        this.hammertime = new Hammer(this.$refs.pdfContainer.$el, {})
+        this.hammertime.on('swipeleft', (_e, self=this) => {
+          self.nextPage()
+        })
+        this.hammertime.on('swiperight', (_e, self=this) => {
+          self.prevPage()
+        })
+        this.hammertime.on('tap', (_e, self=this) => {
+          self.nextPage()
+        })
       });
     },
     nextPage () {
