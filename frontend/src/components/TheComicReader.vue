@@ -23,9 +23,7 @@ import api from "@/api";
 import 'reveal.js-menu/menu.css'
 import {CPagination, CPaginationItem} from "@coreui/vue";
 import Paginate from "vuejs-paginate-next";
-
-
-
+import * as Hammer from 'hammerjs'
 
 export default {
   name: "TheComicReader",
@@ -103,7 +101,18 @@ export default {
       this.deck.on( 'slidechanged', () => {
         this.$refs.comic_box.scrollIntoView({behavior: 'smooth'})
         api.put(set_read_url, {page: event.indexh})
-});
+      });
+    })
+
+    this.hammertime = new Hammer(this.$refs.comic_box, {})
+    this.hammertime.on('swipeleft', (_e, self=this) => {
+      self.nextPage()
+    })
+    this.hammertime.on('swiperight', (_e, self=this) => {
+      self.prevPage()
+    })
+    this.hammertime.on('tap', (_e, self=this) => {
+      self.nextPage()
     })
   },
 }
