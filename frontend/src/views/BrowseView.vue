@@ -8,7 +8,7 @@ import TheComicList from "@/components/TheComicList";
 import TheBreadcrumbs from "@/components/TheBreadcrumbs";
 
 export default {
-  name: 'HomeView',
+  name: 'BrowseView',
   components: {
     TheBreadcrumbs,
     TheComicList,

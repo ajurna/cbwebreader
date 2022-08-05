@@ -46,6 +46,7 @@ from comic import rest, feeds
 
 router = ExtendedDefaultRouter()
 router.register(r'users', rest.UserViewSet)
+router.register(r'usermisc', rest.UserMiscViewSet)
 # router.register(r'groups', rest.GroupViewSet)
 router.register(r'browse', rest.BrowseViewSet, basename='browse')
 router.register(r'breadcrumbs', rest.BreadcrumbViewSet, basename='breadcrumbs')

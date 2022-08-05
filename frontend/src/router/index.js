@@ -4,6 +4,7 @@ import ReadView from "@/views/ReadView";
 import RecentView from "@/views/RecentView";
 import AccountView from "@/views/AccountView";
 import BrowseView from "@/views/BrowseView";
+import UserView from "@/views/UserView";
 
 const routes = [
   {
@@ -38,6 +39,11 @@ const routes = [
     path: '/account',
     name: 'account',
     component: AccountView
+  },
+  {
+    path: '/user/:userid?',
+    name: 'user',
+    component: UserView
   },
   {
     path: '/about',

@@ -21,10 +21,11 @@ from comic import models
 from comic.util import generate_breadcrumbs_from_path
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
+    usermisc = serializers.SlugRelatedField(many=False, read_only=True, slug_field='allowed_to_read')
     class Meta:
         model = User
-        fields = ['url', 'username', 'email', 'groups']
+        fields = ['id', 'username', 'email', 'groups', 'is_superuser', 'usermisc']
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -35,6 +36,17 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
 
+
+class UserMiscSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserMisc
+        fields = ['user', 'feed_id', 'allowed_to_read']
+
+
+class UserMiscViewSet(viewsets.ModelViewSet):
+    queryset = models.UserMisc.objects.all()
+    serializer_class = UserMiscSerializer
+    permission_classes = [permissions.IsAdminUser]
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
