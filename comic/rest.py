@@ -417,7 +417,7 @@ class ActionViewSet(viewsets.GenericViewSet):
             comic_status = comic_status.annotate(total_pages=Count('comic__comicpage'))
             status_to_update = []
             for c_status in comic_status:
-                c_status.last_read_page = c_status.total_pages
+                c_status.last_read_page = c_status.total_pages-1
                 c_status.unread = False
                 c_status.finished = True
                 status_to_update.append(c_status)

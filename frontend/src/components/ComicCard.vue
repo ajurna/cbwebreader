@@ -93,7 +93,7 @@ export default {
     this.progress = (this.data.unread ? 0 : this.data.progress / this.data.total * 100)
   },
   beforeUpdate() {
-    this.progress = this.data.progress / this.data.total * 100
+    this.progress = (this.data.unread ? 0 : this.data.progress / this.data.total * 100)
     this.unread = this.data.total - this.data.progress
   }
 }

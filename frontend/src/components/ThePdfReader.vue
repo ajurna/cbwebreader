@@ -73,10 +73,10 @@ export default {
         .then(response => {
           this.pdfdata = pdfvuer.createLoadingTask('/api/read/' + this.selector + '/pdf/');
           this.pdfdata.then(pdf => {
-
             this.numPages = pdf.numPages;
             this.loaded = true
-            this.page = response.data.last_read_page
+            this.page = response.data.last_read_page+1
+            this.setReadPage(this.page)
             this.next_comic = response.data.next_comic
             this.prev_comic = response.data.prev_comic
             this.hammertime = new Hammer(this.$refs.pdfContainer.$el, {})

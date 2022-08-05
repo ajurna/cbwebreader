@@ -27,7 +27,6 @@ export default {
       let comic_data_url = '/api/read/' + this.selector + '/type/'
       api.get(comic_data_url)
           .then(response => {
-            console.log('resp')
             if (response.data.type === 'pdf'){
               this.pdf_loaded = true
               this.comic_loaded = false
