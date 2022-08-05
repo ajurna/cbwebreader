@@ -10,7 +10,7 @@
     <CCardFooter class="pl-0 pr-0 pt-0">
       <CProgress class="mb-1 position-relative" >
         <CProgressBar :value="this.progress" />
-        <small class="justify-content-center d-flex position-absolute w-100 h-100" style="line-height: normal">{{data.progress}} / {{data.total}}</small>
+        <small class="justify-content-center d-flex position-absolute w-100 h-100" style="line-height: normal">{{ (this.data.unread ? 0 : data.progress) }} / {{data.total}}</small>
       </CProgress>
       <CButtonGroup class="w-100">
         <CButton color="primary" @click="updateComic('mark_unread')" ><font-awesome-icon icon='book' /></CButton>
@@ -90,7 +90,7 @@ export default {
       this.updateThumbnail()
     }
     this.unread = this.data.total - this.data.progress
-    this.progress = this.data.progress / this.data.total * 100
+    this.progress = (this.data.unread ? 0 : this.data.progress / this.data.total * 100)
   },
   beforeUpdate() {
     this.progress = this.data.progress / this.data.total * 100

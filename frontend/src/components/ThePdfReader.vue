@@ -128,7 +128,7 @@ export default {
     setReadPage(num){
       this.$refs.pdfWindow.$el.scrollIntoView()
       let payload = {
-          page: num
+          page: num-1
       }
       api.put('/api/set_read/'+ this.selector +'/', payload)
     },
