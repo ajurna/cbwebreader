@@ -1,7 +1,7 @@
 <template>
   <the-breadcrumbs :selector="selector" />
-  <the-comic-reader :comic_data="comic_data" v-if="comic_loaded" />
-  <the-pdf-reader :comic_data="comic_data" v-if="pdf_loaded"/>
+  <the-comic-reader :selector="selector" v-if="comic_loaded" :key="selector" />
+  <the-pdf-reader :selector="selector" v-if="pdf_loaded" :key="selector" />
 </template>
 
 <script>
@@ -22,18 +22,28 @@ export default {
       pdf_loaded: false
     }
   },
+  methods: {
+    updateType() {
+      let comic_data_url = '/api/read/' + this.selector + '/type/'
+      api.get(comic_data_url)
+          .then(response => {
+            console.log('resp')
+            if (response.data.type === 'pdf'){
+              this.pdf_loaded = true
+              this.comic_loaded = false
+            } else {
+              this.comic_loaded = true
+              this.pdf_loaded = false
+            }
+          })
+          .catch((error) => {console.log(error)})
+      }
+  },
   mounted () {
-    let comic_data_url = '/api/read/' + this.selector + '/'
-    api.get(comic_data_url)
-        .then(response => {
-          this.comic_data = response.data
-          if (this.comic_data.title.toLowerCase().endsWith('.pdf')){
-            this.pdf_loaded = true
-          } else {
-            this.comic_loaded = true
-          }
-        })
-        .catch((error) => {console.log(error)})
+    this.updateType()
+  },
+  beforeUpdate() {
+    this.updateType()
   }
 }
 </script>

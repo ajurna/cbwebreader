@@ -138,7 +138,7 @@ class BrowseViewSet(viewsets.ViewSet):
 
         file_db_query = file_db_query.annotate(
             total=Count('comicpage', distinct=True),
-            progress=F('comicstatus__last_read_page'),
+            progress=F('comicstatus__last_read_page') + 1,
             finished=F('comicstatus__finished'),
             unread=F('comicstatus__unread'),
             user=F('comicstatus__user'),
@@ -228,14 +228,21 @@ class PageSerializer(serializers.Serializer):
     page_file_name = serializers.CharField()
     content_type = serializers.CharField()
 
+class DirectionSerializer(serializers.Serializer):
+    route = serializers.ChoiceField(choices=['read', 'browse'])
+    selector = serializers.UUIDField(required=False)
 
 class ReadSerializer(serializers.Serializer):
     selector = serializers.UUIDField()
     title = serializers.CharField()
     last_read_page = serializers.IntegerField()
-    prev_comic = serializers.DictField()
-    next_comic = serializers.DictField()
+    prev_comic = DirectionSerializer()
+    next_comic = DirectionSerializer()
     pages = PageSerializer(many=True)
+
+
+class TypeSerializer(serializers.Serializer):
+    type = serializers.CharField()
 
 
 class ReadViewSet(viewsets.ViewSet):
@@ -243,12 +250,13 @@ class ReadViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'selector'
 
+    @swagger_auto_schema(responses={status.HTTP_200_OK: ReadSerializer})
     def retrieve(self, request: Request, selector: UUID) -> Response:
         comic = get_object_or_404(models.ComicBook, selector=selector)
         misc, _ = models.UserMisc.objects.get_or_create(user=request.user)
         pages = models.ComicPage.objects.filter(Comic=comic)
-        status, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
-        comic_list = list(models.ComicBook.objects.filter(directory=comic.directory))
+        comic_status, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
+        comic_list = list(models.ComicBook.objects.filter(directory=comic.directory).order_by('file_name'))
         comic_index = comic_list.index(comic)
         try:
             prev_comic = {'route': 'browse', 'selector': comic.directory.selector} if comic_index == 0 else \
@@ -256,14 +264,14 @@ class ReadViewSet(viewsets.ViewSet):
         except AttributeError:
             prev_comic = {'route': 'browse'}
         try:
-            next_comic = {'route': 'browse', 'selector': comic.directory.selector} if comic_index+1 == len(comic_list) else \
-                {'route': 'read', 'selector': comic_list[comic_index+1].selector}
+            next_comic = {'route': 'browse', 'selector': comic.directory.selector} if comic_index+1 == len(comic_list) \
+                else {'route': 'read', 'selector': comic_list[comic_index+1].selector}
         except AttributeError:
             next_comic = {'route': 'browse'}
         data = {
             "selector": comic.selector,
             "title": comic.file_name,
-            "last_read_page": status.last_read_page,
+            "last_read_page": comic_status.last_read_page,
             "prev_comic": prev_comic,
             "next_comic": next_comic,
             "pages": pages,
@@ -271,6 +279,8 @@ class ReadViewSet(viewsets.ViewSet):
         serializer = self.serializer_class(data)
         return Response(serializer.data)
 
+    @swagger_auto_schema(responses={status.HTTP_200_OK: 'PDF Binary Data',
+                                    status.HTTP_400_BAD_REQUEST: 'User below classification allowed'})
     @action(methods=['get'], detail=True)
     def pdf(self, request: Request, selector: UUID) -> Union[FileResponse, Response]:
         book = models.ComicBook.objects.get(selector=selector)
@@ -281,6 +291,12 @@ class ReadViewSet(viewsets.ViewSet):
         except AttributeError:
             pass
         return FileResponse(open(book.get_pdf(), 'rb'), content_type='application/pdf')
+
+    @swagger_auto_schema(responses={status.HTTP_200_OK: TypeSerializer})
+    @action(methods=['get'], detail=True)
+    def type(self, request: Request, selector: UUID) -> Response:
+        book = models.ComicBook.objects.get(selector=selector)
+        return Response({'type': book.file_name.split('.')[-1].lower()})
 
 
 class ReadPageSerializer(serializers.Serializer):
@@ -371,7 +387,7 @@ class RecentComicsView(mixins.ListModelMixin, viewsets.GenericViewSet):
             total_pages=Count('comicpage'),
             unread=Case(When(comicstatus__user=user, then='comicstatus__unread')),
             finished=Case(When(comicstatus__user=user, then='comicstatus__finished')),
-            last_read_page=Case(When(comicstatus__user=user, then='comicstatus__last_read_page')),
+            last_read_page=Case(When(comicstatus__user=user, then='comicstatus__last_read_page')) + 1,
             classification=Case(
                 When(directory__isnull=True, then=models.Directory.Classification.C_18),
                 default=F('directory__classification'),

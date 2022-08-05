@@ -1,8 +1,8 @@
 <template>
   <div class="reveal" id="comic_box" ref="comic_box" >
     <div id="slides_div" class="slides"  ref="slides">
-      <section class="" v-for="(page, index) in comic_data.pages" :key="page.index" :data-menu-title="page.page_file_name" hidden>
-        <img :data-src="'/api/read/' + comic_data.selector + '/image/' + page.index + '/'" class="w-100"  :alt="page.page_file_name">
+      <section class="" v-for="(page, index) in pages" :key="page.index" :data-menu-title="page.page_file_name" hidden>
+        <img :data-src="'/api/read/' + selector + '/image/' + page.index + '/'" class="w-100"  :alt="page.page_file_name">
       </section>
     </div>
   </div>
@@ -10,15 +10,15 @@
     <CListGroup :layout="'horizontal'">
       <CListGroupItem class="p-1 pt-2 page-link pl-2 pr-2" @click="prevComic">Prev&nbsp;Comic</CListGroupItem>
       <paginate
-        v-model="this.paginate_page"
-        :page-count="this.comic_data.pages.length"
+        v-model="paginate_page"
+        :page-count="pages.length"
         :click-handler="this.setPage"
         :prev-text="'Prev'"
         :next-text="'Next'"
         :container-class="'pagination'"
       >
       </paginate>
-      <CListGroupItem  class="p-1 pt-2 page-link pl-2 pr-2">Next&nbsp;Comic</CListGroupItem>
+      <CListGroupItem  class="p-1 pt-2 page-link pl-2 pr-2" @click="nextComic">Next&nbsp;Comic</CListGroupItem>
     </CListGroup>
   </CRow>
 
@@ -39,11 +39,15 @@ export default {
     return {
       current_page: 0,
       paginate_page: 1,
-      deck: null
+      deck: null,
+      title: '',
+      prev_comic: {},
+      next_comic: {},
+      pages: [],
     }
   },
   props: {
-    comic_data: Object
+    selector: String
   },
   methods: {
     prevPage(){
@@ -56,22 +60,19 @@ export default {
     },
     prevComic(){
       this.$router.push({
-        name: this.comic_data.prev_comic.route,
-        params: {selector: this.comic_data.prev_comic.selector}
+        name: this.prev_comic.route,
+        params: {selector: this.prev_comic.selector}
       })
     },
     nextComic(){
       this.$router.push({
-        name: this.comic_data.next_comic.route,
-        params: {selector: this.comic_data.next_comic.selector}
+        name: this.next_comic.route,
+        params: {selector: this.next_comic.selector}
       })
     },
     nextPage(){
       if (this.deck.isLastSlide()){
-        this.$router.push({
-          name: this.comic_data.next_comic.route,
-          params: {selector: this.comic_data.next_comic.selector}
-        })
+        this.nextComic()
       } else {
         this.current_page += 1
         this.deck.slide(this.current_page)
@@ -81,6 +82,29 @@ export default {
       this.current_page = pageNum-1
       this.deck.slide(this.current_page)
     },
+    keyPressDebounce(e){
+      clearTimeout(this.key_timeout)
+      this.key_timeout = setTimeout(() => {this.keyPress(e)}, 50)
+    },
+    keyPress(e) {
+      if (e.key === 'ArrowRight') {
+        this.nextPage()
+      } else if (e.key === 'ArrowLeft') {
+        this.prevPage()
+      } else if (e.key === 'ArrowUp') {
+        window.scrollTo({
+          top: window.scrollY-window.innerHeight*.7,
+          left: 0,
+          behavior: 'smooth'
+        });
+      } else if (e.key === 'ArrowDown') {
+        window.scrollTo({
+          top: window.scrollY+window.innerHeight*.7,
+          left: 0,
+          behavior: 'smooth'
+        });
+      }
+    }
   },
   watch: {
     'current_page' (new_page) {
@@ -88,45 +112,63 @@ export default {
     }
   },
   mounted () {
-    const set_read_url = this.$store.state.base_url + '/api/set_read/' + this.comic_data.selector + '/'
-    this.current_page = this.comic_data.last_read_page
-    this.paginate_page = this.current_page + 1
-    this.deck = Reveal(this.$refs.comic_box)
-    this.deck.initialize({
-      controls: false,
-      width: "100%",
-      height: "100%",
-      margin: 0,
-      minScale: 1,
-      maxScale: 1,
-      keyboard: {
-          37: () => {this.prevPage()},
-          39: () => {this.nextPage()},
-          38: () => {window.scrollTo({ top: window.scrollY-window.innerHeight*.6, left: 0, behavior: 'smooth' })},
-          40: () => {window.scrollTo({ top: window.scrollY+window.innerHeight*.6, left: 0, behavior: 'smooth' })},
-        },
-      touch: false,
-      transition: 'slide',
-      plugins: [  ]
-    }).then(() => {
-      this.deck.slide(this.current_page)
-      this.deck.on( 'slidechanged', () => {
-        this.$refs.comic_box.scrollIntoView({behavior: 'smooth'})
-        api.put(set_read_url, {page: event.indexh})
-      });
-    })
+    const set_read_url = this.$store.state.base_url + '/api/set_read/' + this.selector + '/'
+    let comic_data_url = '/api/read/' + this.selector + '/'
+    window.addEventListener('keyup', this.keyPressDebounce)
+    api.get(comic_data_url)
+    .then(response => {
+      this.title = response.data.title
+      this.current_page = response.data.last_read_page
+      this.prev_comic = response.data.prev_comic
+      this.next_comic = response.data.next_comic
+      this.pages = response.data.pages
 
-    this.hammertime = new Hammer(this.$refs.comic_box, {})
-    this.hammertime.on('swipeleft', (_e, self=this) => {
-      self.nextPage()
+      this.deck = Reveal(this.$refs.comic_box)
+      this.deck.initialize({
+        controls: false,
+        width: "100%",
+        height: "100%",
+        margin: 0,
+        minScale: 1,
+        maxScale: 1,
+        keyboard: null,
+        touch: false,
+        transition: 'slide',
+        embedded: true,
+        plugins: [  ]
+      }).then(() => {
+        this.deck.slide(this.current_page)
+        this.deck.on( 'slidechanged', () => {
+          this.$refs.comic_box.scrollIntoView({behavior: 'smooth'})
+          api.put(set_read_url, {page: event.indexh})
+        });
+      })
+
+      this.hammertime = new Hammer(this.$refs.comic_box.$el, {})
+      this.hammertime.on('swipeleft', (_e, self=this) => {
+        self.nextPage()
+      })
+      this.hammertime.on('swiperight', (_e, self=this) => {
+        self.prevPage()
+      })
+      this.hammertime.on('tap', (_e, self=this) => {
+        self.nextPage()
+      })
+
     })
-    this.hammertime.on('swiperight', (_e, self=this) => {
-      self.prevPage()
-    })
-    this.hammertime.on('tap', (_e, self=this) => {
-      self.nextPage()
-    })
+    .catch((error) => {console.log(error)})
   },
+  beforeUnmount() {
+    window.removeEventListener('keyup', this.keyPressDebounce)
+    try {
+      this.hammertime.off('swipeleft')
+      this.hammertime.off('swiperight')
+      this.hammertime.off('tap')
+    } catch (e) {
+
+    }
+
+  }
 }
 </script>
 

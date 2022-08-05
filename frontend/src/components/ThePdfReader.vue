@@ -47,11 +47,13 @@ export default {
       scale: 'page-width',
       loaded: false,
       key_timeout: null,
-      hammertime: null
+      hammertime: null,
+      next_comic: {},
+      prev_comic: {}
     }
   },
   props: {
-    comic_data: Object
+    selector: String
   },
   computed: {
   },
@@ -59,53 +61,64 @@ export default {
     this.getPdf()
     window.addEventListener('keyup', this.keyPressDebounce)
   },
-  unmounted() {
+  beforeUnmount() {
     window.removeEventListener('keyup', this.keyPressDebounce)
   },
   watch: {
   },
   methods: {
     getPdf () {
-      this.pdfdata = pdfvuer.createLoadingTask('/api/read/' + this.comic_data.selector + '/pdf/');
-      this.pdfdata.then(pdf => {
-        this.numPages = pdf.numPages;
-        this.loaded = true
-        this.page = this.comic_data.last_read_page
+      let comic_data_url = '/api/read/' + this.selector + '/'
+      api.get(comic_data_url)
+        .then(response => {
+          this.pdfdata = pdfvuer.createLoadingTask('/api/read/' + this.selector + '/pdf/');
+          this.pdfdata.then(pdf => {
 
-        this.hammertime = new Hammer(this.$refs.pdfContainer.$el, {})
-        this.hammertime.on('swipeleft', (_e, self=this) => {
-          self.nextPage()
-        })
-        this.hammertime.on('swiperight', (_e, self=this) => {
-          self.prevPage()
-        })
-        this.hammertime.on('tap', (_e, self=this) => {
-          self.nextPage()
-        })
-      });
+            this.numPages = pdf.numPages;
+            this.loaded = true
+            this.page = response.data.last_read_page
+            this.next_comic = response.data.next_comic
+            this.prev_comic = response.data.prev_comic
+            this.hammertime = new Hammer(this.$refs.pdfContainer.$el, {})
+            this.hammertime.on('swipeleft', (_e, self=this) => {
+              self.nextPage()
+            })
+            this.hammertime.on('swiperight', (_e, self=this) => {
+              self.prevPage()
+            })
+            this.hammertime.on('tap', (_e, self=this) => {
+              self.nextPage()
+            })
+          }).catch(e => {console.log(e)});
+      })
+
     },
     prevComic(){
       this.$router.push({
-        name: this.comic_data.prev_comic.route,
-        params: {selector: this.comic_data.prev_comic.selector}
+        name: this.prev_comic.route,
+        params: {selector: this.prev_comic.selector}
       })
     },
     nextComic(){
       this.$router.push({
-        name: this.comic_data.next_comic.route,
-        params: {selector: this.comic_data.next_comic.selector}
+        name: this.next_comic.route,
+        params: {selector: this.next_comic.selector}
       })
     },
     nextPage () {
       if (this.page < this.numPages){
         this.page += 1
         this.setReadPage(this.page)
+      } else {
+        this.nextComic()
       }
     },
     prevPage() {
       if (this.page > 1){
         this.page -= 1
         this.setReadPage(this.page)
+      } else {
+        this.prevComic()
       }
     },
     setPage(num) {
@@ -117,7 +130,7 @@ export default {
       let payload = {
           page: num
       }
-      api.put('/api/set_read/'+ this.comic_data.selector +'/', payload)
+      api.put('/api/set_read/'+ this.selector +'/', payload)
     },
     keyPressDebounce(e){
       clearTimeout(this.key_timeout)
