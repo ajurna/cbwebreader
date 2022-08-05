@@ -1,9 +1,9 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 import LoginView from "@/views/LoginView";
 import ReadView from "@/views/ReadView";
 import RecentView from "@/views/RecentView";
 import AccountView from "@/views/AccountView";
+import BrowseView from "@/views/BrowseView";
 
 const routes = [
   {
@@ -15,7 +15,7 @@ const routes = [
   {
     path: '/browse/:selector?',
     name: 'browse',
-    component: HomeView,
+    component: BrowseView,
     props: true
   },
   {
