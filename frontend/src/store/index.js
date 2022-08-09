@@ -25,7 +25,14 @@ export default createStore({
     jwt: get_jwt_from_storage(),
     base_url: 'http://localhost:8000',
     filters: {},
-    user: get_user_from_storage()
+    user: get_user_from_storage(),
+    classifications: [
+      {label: 'G', value: '0'},
+      {label: 'PG', value: '1'},
+      {label: '12', value: '2'},
+      {label: '15', value: '3'},
+      {label: '18', value: '4'},
+    ],
   },
   getters: {
     is_superuser (state) {

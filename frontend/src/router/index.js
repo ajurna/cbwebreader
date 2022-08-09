@@ -43,7 +43,8 @@ const routes = [
   {
     path: '/user/:userid?',
     name: 'user',
-    component: UserView
+    component: UserView,
+    props: true
   },
   {
     path: '/about',

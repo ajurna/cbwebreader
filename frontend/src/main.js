@@ -2,7 +2,7 @@ import * as Vue from 'vue'
 import App from './App.vue'
 import ToastPlugin from 'vue-toast-notification';
 
-import '@coreui/vue'
+import CoreuiVue from '@coreui/vue';
 import '@coreui/coreui/dist/css/coreui.min.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'vue-toast-notification/dist/theme-default.css';
@@ -25,4 +25,4 @@ import axios from 'axios'
 import VueAxios from 'vue-axios'
 
 
-Vue.createApp(App).use(ToastPlugin).use(store).use(VueAxios, axios).use(router).component('font-awesome-icon', FontAwesomeIcon).mount('#app')
+Vue.createApp(App).use(CoreuiVue).use(ToastPlugin).use(store).use(VueAxios, axios).use(router).component('font-awesome-icon', FontAwesomeIcon).mount('#app')

@@ -48,6 +48,9 @@ export default {
   watch: {
     selector() {
       this.updateBreadcrumbs()
+    },
+    manual_crumbs () {
+      this.updateBreadcrumbs()
     }
   },
   mounted () {

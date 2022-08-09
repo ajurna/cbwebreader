@@ -1,4 +1,4 @@
-<template>
+<template xmlns="">
   <CTable striped bordered>
     <CTableHead>
       <CTableRow>
@@ -10,13 +10,15 @@
       </CTableRow>
     </CTableHead>
     <CTableBody>
-      <template v-for="(item, index) in comics" :key="item.id">
+      <template v-for="(item, index) in users" :key="item.id">
         <CTableRow>
-          <CTableHeaderCell scope="row"><input ref="comic_selector" class="form-check-input m-0 position-relative mt-1" type="checkbox" :value="item.selector"></CTableHeaderCell>
-          <CTableDataCell class=""><font-awesome-icon icon='book' class="" /></CTableDataCell>
-          <CTableDataCell><router-link :to="{name: 'read', params: { selector: item.selector }}" class="" >{{ item.file_name }}</router-link></CTableDataCell>
-          <CTableDataCell>{{ timeago(item.date_added) }}</CTableDataCell>
-          <CTableDataCell>{{ get_status(item) }}</CTableDataCell>
+          <CTableHeaderCell scope="row">{{ item.id }}</CTableHeaderCell>
+          <CTableDataCell class="">
+            <router-link :to="{'name': 'user', params: { userid: item.id }}">{{ item.username }}</router-link>
+          </CTableDataCell>
+          <CTableDataCell>{{ item.email }}</CTableDataCell>
+          <CTableDataCell>{{ item.is_superuser }}</CTableDataCell>
+          <CTableDataCell>{{ this.$store.state.classifications.find(i => i.value === item.usermisc.toString()).label }}</CTableDataCell>
         </CTableRow>
       </template>
     </CTableBody>
@@ -24,10 +26,11 @@
 </template>
 
 <script>
-import {CTable, CTableHead, CTableBody, CTableRow, CTableHeaderCell, CTableDataCell} from "@coreui/vue";
 export default {
   name: "UserList",
-  components: {CTable, CTableHead, CTableBody, CTableRow, CTableHeaderCell, CTableDataCell}
+  props: {
+    users: Object
+  }
 }
 </script>
 

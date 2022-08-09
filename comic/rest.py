@@ -8,6 +8,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db.models import Count, Case, When, F, PositiveSmallIntegerField, Max, Q
+
 from django.http import FileResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, serializers, mixins, permissions, status, renderers
@@ -25,16 +26,64 @@ class UserSerializer(serializers.ModelSerializer):
     usermisc = serializers.SlugRelatedField(many=False, read_only=True, slug_field='allowed_to_read')
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'groups', 'is_superuser', 'usermisc']
+        fields = ['id', 'username', 'email', 'is_superuser', 'usermisc']
+
+
+class AdminPasswordResetSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(required=False)
+
+
+class ClassificationSerializer(serializers.Serializer):
+    classification = serializers.IntegerField()
+
+    def validate_classification(self, data):
+        if data in models.Directory.Classification:
+            return data
+        raise serializers.ValidationError('Invalid Classification sent.')
+
 
 
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
-    queryset = User.objects.all().order_by('-date_joined')
+    queryset = User.objects.all().order_by('username')
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
+
+    @action(methods=['patch'], detail=True, serializer_class=AdminPasswordResetSerializer)
+    def reset_password(self, request: Request, pk: int) -> Response:
+        """
+        This will return a new password set on the user.
+        """
+        target_user = get_object_or_404(User, id=pk)
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            if target_user.username == serializer.data['username']:
+                password = User.objects.make_random_password()
+                target_user.set_password(password)
+                resp_serializer = self.get_serializer({
+                    'username': target_user.username,
+                    'password': password
+                })
+                return Response(resp_serializer.data)
+
+        return Response({'errors': ['Invalid request']}, status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=['patch'], detail=True, serializer_class=ClassificationSerializer)
+    def set_classification(self, request: Request, pk: int) -> Response:
+        """
+        API Endpoint that will set the classification on the specified user.
+        """
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            misc, _ = models.UserMisc.objects.get_or_create(user_id=pk)
+            misc.allowed_to_read = serializer.data['classification']
+            misc.save()
+            return Response(data={'classification': misc.allowed_to_read})
+        else:
+            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
 
 class UserMiscSerializer(serializers.ModelSerializer):
@@ -47,6 +96,7 @@ class UserMiscViewSet(viewsets.ModelViewSet):
     queryset = models.UserMisc.objects.all()
     serializer_class = UserMiscSerializer
     permission_classes = [permissions.IsAdminUser]
+
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

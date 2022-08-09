@@ -6,7 +6,6 @@
         label="Username"
         readonly
         v-model="username"
-
       />
       <CFormInput
         type="email"
