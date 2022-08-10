@@ -630,3 +630,17 @@ class AccountViewSet(viewsets.GenericViewSet):
             return Response(account.data)
         else:
             return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+
+class DirectorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Directory
+        fields = ['selector', 'classification']
+
+
+class DirectoryViewSet(mixins.UpdateModelMixin, viewsets.GenericViewSet):
+    serializer_class = DirectorySerializer
+    queryset = models.Directory.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+    lookup_field = 'selector'

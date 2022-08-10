@@ -3,6 +3,7 @@
     <CCardImage orientation="top" :src="thumbnail" @click="console.log('click')"/>
     <CCardBody class="pb-0 pt-0 pl-1 pr-1 card-img-overlay d-flex">
       <span class="badge rounded-pill bg-primary unread-badge" v-if="this.unread > 0 && data.type === 'Directory'">{{ this.unread }}</span>
+      <span class="badge rounded-pill bg-warning classification-badge" v-if="card_type === 'Directory'" >{{ this.$store.state.classifications.find(i => i.value === classification).label }}</span>
       <CCardTitle class="align-self-end pb-5 mb-4 text-break" style="">
         <router-link :to="(data.type === 'Directory' ? {'name': 'browse', params: { selector: data.selector }} : {'name': 'read', params: { selector: data.selector }})">{{ data.title }}</router-link>
       </CCardTitle>
@@ -21,37 +22,42 @@
             <CDropdownItem @click="updateComic('mark_unread')"><font-awesome-icon icon='book' />Mark Un-read</CDropdownItem>
             <CDropdownItem @click="updateComic('mark_read')"><font-awesome-icon icon='book-open' />Mark read</CDropdownItem>
             <CDropdownItem v-if="data.type === 'ComicBook'" @click="$emit('markPreviousRead', data.selector)"><font-awesome-icon icon='book' /><font-awesome-icon icon='turn-up' />Mark previous comics read</CDropdownItem>
-            <CDropdownItem v-if="data.type === 'Directory'"><font-awesome-icon icon='edit' />Edit comic</CDropdownItem>
+            <CDropdownItem v-if="data.type === 'Directory'" @click="editDirectoryVisible = true"><font-awesome-icon icon='edit' />Edit comic</CDropdownItem>
           </CDropdownMenu>
         </CDropdown>
       </CButtonGroup>
     </CCardFooter>
   </CCard>
+  <CModal :visible="editDirectoryVisible" @close="editDirectoryVisible = false">
+    <CModalHeader>
+      <CModalTitle>{{ data.title }}</CModalTitle>
+    </CModalHeader>
+    <CForm @submit="updateDirectory">
+      <CModalBody>
+        <CFormSelect
+          label="Classification"
+          aria-label="Set Classification"
+          v-model="new_classification"
+          :options="[...this.$store.state.classifications]">
+        </CFormSelect>
+      </CModalBody>
+      <CModalFooter>
+        <CButton color="secondary" @click="editDirectoryVisible = false ">
+          Close
+        </CButton>
+        <CButton color="primary" type="submit">Save changes</CButton>
+      </CModalFooter>
+    </CForm>
+  </CModal>
 </template>
 
 <script>
-import {CCard, CCardImage, CCardBody, CCardTitle, CCardText, CButton, CProgress, CProgressBar, CButtonGroup, CDropdown,
-  CDropdownToggle, CDropdownMenu, CDropdownItem, CCardFooter} from '@coreui/vue'
 import {useToast} from "vue-toast-notification";
 import api from "@/api";
 
 export default {
   name: "ComicCard",
   components: {
-    CCard,
-    CCardImage,
-    CCardBody,
-    CCardTitle,
-    CCardText,
-    CButton,
-    CProgress,
-    CProgressBar,
-    CButtonGroup,
-    CDropdown,
-    CDropdownToggle,
-    CDropdownMenu,
-    CDropdownItem,
-    CCardFooter
   },
   props: {
     data: Object
@@ -60,7 +66,11 @@ export default {
     return {
       thumbnail: '/static/img/placeholder.png',
       unread: 0,
-      progress: 0
+      progress: 0,
+      classification: '0',
+      new_classification: '0',
+      card_type: '',
+      editDirectoryVisible: false
     }},
   methods: {
     updateThumbnail () {
@@ -82,6 +92,17 @@ export default {
         useToast().error('action: ' + action + ' Failed', {position:'top'});
       })
     },
+    updateDirectory() {
+      let payload = {
+        selector: this.data.selector,
+        classification: this.new_classification
+      }
+      api.put('/api/directory/' + this.data.selector + '/', payload).then(response => {
+        this.classification = response.data.classification.toString()
+        useToast().success('Change classification of ' + this.data.title + ' to "' + this.$store.state.classifications.find(i => i.value === this.classification).label + '"', {position:'top'});
+        this.editDirectoryVisible = false
+      })
+    }
   },
   mounted () {
     if (this.data.thumbnail) {
@@ -91,11 +112,15 @@ export default {
     }
     this.unread = this.data.total - this.data.progress
     this.progress = (this.data.unread ? 0 : this.data.progress / this.data.total * 100)
+    this.classification = this.data.classification.toString()
+    this.new_classification = this.classification
+    this.card_type = this.data.type
   },
   beforeUpdate() {
     this.progress = (this.data.unread ? 0 : this.data.progress / this.data.total * 100)
     this.unread = this.data.total - this.data.progress
-  }
+  },
+  emits: ['updateComicList', 'markPreviousRead']
 }
 </script>
 
@@ -113,5 +138,12 @@ export default {
 }
 .dropdown-item {
   cursor: pointer;
+}
+.card .classification-badge {
+  position:absolute;
+  top:10px;
+  right: 10px;
+  padding:5px;
+  color:black;
 }
 </style>

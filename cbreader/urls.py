@@ -36,7 +36,7 @@ schema_view = get_schema_view(
       license=openapi.License(name="MIT License"),
    ),
    public=True,
-   permission_classes=(permissions.AllowAny, ),
+   permission_classes=[permissions.AllowAny]
 )
 
 
@@ -58,6 +58,7 @@ router.register(r'recent', rest.RecentComicsView, basename="recent")
 router.register(r'action', rest.ActionViewSet, basename='action')
 router.register(r'rss_id', rest.RSSViewSet, basename='rss_id')
 router.register(r'account', rest.AccountViewSet, basename='account')
+router.register(r'directory', rest.DirectoryViewSet, basename='directory')
 
 
 urlpatterns = [
