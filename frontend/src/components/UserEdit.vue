@@ -73,7 +73,6 @@ export default {
           username: this.username,
           classification: this.usermisc
         }
-        console.log(this.usermisc)
         api.patch('/api/users/' + this.user.id + '/set_classification/', payload).then(response => {
           this.messages.push({
             color: 'success',

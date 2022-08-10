@@ -64,7 +64,6 @@ export default {
           this.$emit('user-added')
         })
       }).catch(err => {
-        console.log(err)
         this.messages.push({
           color: 'danger',
           text: 'Cannot create user "' + this.username + '" with error "' + (err.response.data.username? err.response.data.username: err.response.data.email) + '".'
