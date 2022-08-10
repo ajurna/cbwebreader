@@ -38,7 +38,7 @@ export default {
   methods: {
     updateBreadcrumbs () {
       if (this.selector) {
-        let breadcrumb_url = this.$store.state.base_url + '/api/breadcrumbs/' + this.selector + '/'
+        let breadcrumb_url = this.$store.state.base_url + '/api/browse/' + this.selector + '/breadcrumbs/'
         api.get(breadcrumb_url)
             .then(response => {
               this.crumbs = response.data

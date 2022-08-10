@@ -24,8 +24,6 @@
 </template>
 
 <script>
-import {CContainer, CRow, CInputGroup, CFormInput, CButton, CDropdown, CDropdownToggle, CDropdownMenu,
-  CDropdownItem} from "@coreui/vue"
 import ComicCard from "@/components/ComicCard";
 import api from '@/api'
 import TheBreadcrumbs from "@/components/TheBreadcrumbs";
@@ -33,8 +31,7 @@ import store from "@/store";
 
 export default {
   name: "TheComicList",
-  components: {TheBreadcrumbs, CRow, ComicCard, CContainer, CInputGroup, CFormInput, CButton, CDropdown,
-    CDropdownToggle, CDropdownMenu, CDropdownItem},
+  components: {TheBreadcrumbs, ComicCard},
   data () {
     return {
       comics: [],

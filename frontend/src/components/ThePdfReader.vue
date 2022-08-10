@@ -130,7 +130,7 @@ export default {
       let payload = {
           page: num-1
       }
-      api.put('/api/set_read/'+ this.selector +'/', payload)
+      api.put('/api/read/'+ this.selector +'/set_page/', payload)
     },
     keyPressDebounce(e){
       clearTimeout(this.key_timeout)

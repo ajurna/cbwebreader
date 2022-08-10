@@ -1,6 +1,6 @@
 from itertools import chain
 from pathlib import Path
-from typing import Union
+from typing import Union, List
 from uuid import UUID
 
 from django.conf import settings
@@ -125,20 +125,46 @@ class BrowseSerializer(serializers.Serializer):
     unread = serializers.BooleanField()
 
 
-class BrowseViewSet(viewsets.ViewSet):
+class BreadcrumbSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    selector = serializers.UUIDField()
+    name = serializers.CharField()
+
+
+class BrowseViewSet(viewsets.GenericViewSet):
     serializer_class = BrowseSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'selector'
 
     def list(self, request):
         queryset = []
-        serializer = self.serializer_class(self.generate_directory(request.user), many=True)
+        serializer = self.get_serializer(self.generate_directory(request.user), many=True)
         return Response(serializer.data)
 
     def retrieve(self, request, selector: UUID):
         queryset = []
         directory = models.Directory.objects.get(selector=selector)
-        serializer = self.serializer_class(self.generate_directory(request.user, directory), many=True)
+        serializer = self.get_serializer(self.generate_directory(request.user, directory), many=True)
+        return Response(serializer.data)
+
+    @swagger_auto_schema(responses={status.HTTP_200_OK: BreadcrumbSerializer(many=True)})
+    @action(methods=['get'], detail=True, serializer_class=BreadcrumbSerializer)
+    def breadcrumbs(self, request: Request, selector: UUID) -> Response:
+        queryset = []
+        comic = False
+        try:
+            directory = models.Directory.objects.get(selector=selector)
+        except models.Directory.DoesNotExist:
+            comic = models.ComicBook.objects.get(selector=selector)
+            directory = comic.directory
+
+        for index, item in enumerate(generate_breadcrumbs_from_path(directory, comic)):
+            queryset.append({
+                "id": index,
+                "selector": item.selector,
+                "name": item.name,
+            })
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
     @staticmethod
@@ -222,36 +248,6 @@ class BrowseViewSet(viewsets.ViewSet):
         return files
 
 
-class BreadcrumbSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    selector = serializers.UUIDField()
-    name = serializers.CharField()
-
-
-class BreadcrumbViewSet(viewsets.ViewSet):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = BreadcrumbSerializer
-    lookup_field = 'selector'
-
-    def retrieve(self, request, selector: UUID):
-        queryset = []
-        comic = False
-        try:
-            directory = models.Directory.objects.get(selector=selector)
-        except models.Directory.DoesNotExist:
-            comic = models.ComicBook.objects.get(selector=selector)
-            directory = comic.directory
-
-        for index, item in enumerate(generate_breadcrumbs_from_path(directory, comic)):
-            queryset.append({
-                "id": index,
-                "selector": item.selector,
-                "name": item.name,
-            })
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
-
-
 class GenerateThumbnailSerializer(serializers.Serializer):
     selector = serializers.UUIDField()
     thumbnail = serializers.FileField()
@@ -307,7 +303,11 @@ class TypeSerializer(serializers.Serializer):
     type = serializers.CharField()
 
 
-class ReadViewSet(viewsets.ViewSet):
+class ReadPageSerializer(serializers.Serializer):
+    page = serializers.IntegerField(source='last_read_page')
+
+
+class ReadViewSet(viewsets.GenericViewSet):
     serializer_class = ReadSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'selector'
@@ -360,35 +360,26 @@ class ReadViewSet(viewsets.ViewSet):
         book = models.ComicBook.objects.get(selector=selector)
         return Response({'type': book.file_name.split('.')[-1].lower()})
 
+    @swagger_auto_schema(responses={status.HTTP_200_OK: ReadPageSerializer}, request_body=ReadPageSerializer)
+    @action(methods=['put'], detail=True, serializer_class=ReadPageSerializer)
+    def set_page(self, request: Request, selector: UUID) -> Response:
 
-class ReadPageSerializer(serializers.Serializer):
-    page = serializers.IntegerField()
-
-
-class SetReadViewSet(viewsets.ViewSet):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = ReadPageSerializer
-    lookup_field = 'selector'
-
-    @swagger_auto_schema(operation_description="PUT /set_read/{selector}/", request_body=ReadPageSerializer)
-    def update(self, request, selector):
-        serializer = ReadPageSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
-            comic_status, _ = models.ComicStatus.objects.get_or_create(comic_id=selector, user=request.user)
+            comic_status, _ = models.ComicStatus.objects.annotate(page_count=Count('comic__comicpage'))\
+                .get_or_create(comic_id=selector, user=request.user)
             comic_status.last_read_page = serializer.data['page']
             comic_status.unread = False
-            if models.ComicPage.objects.filter(Comic=comic_status.comic).aggregate(Max("index"))["index__max"] \
-                    == comic_status.last_read_page:
+            if comic_status.page_count == comic_status.last_read_page:
                 comic_status.finished = True
             else:
                 comic_status.finished = False
 
             comic_status.save()
-            return Response({'status': 'page set'})
+            return Response(self.get_serializer(comic_status).data)
         else:
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PassthroughRenderer(renderers.BaseRenderer):
