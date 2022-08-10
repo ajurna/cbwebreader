@@ -17,7 +17,7 @@
       />
       <CFormSelect
         aria-label="Default select example"
-        v-model="usermisc"
+        v-model="classification"
         :options="[...this.$store.state.classifications]">
       </CFormSelect>
       <CRow class="mt-2">
@@ -46,7 +46,7 @@ export default {
     return {
       username: '',
       email: '',
-      usermisc: '0',
+      classification: '0',
       new_password: null,
     }
   },
@@ -68,10 +68,10 @@ export default {
           })
         })
       }
-      if (this.usermisc !== this.user.usermisc.toString()){
+      if (this.classification !== this.user.classification.toString()){
         let payload = {
           username: this.username,
-          classification: this.usermisc
+          classification: this.classification
         }
         api.patch('/api/users/' + this.user.id + '/set_classification/', payload).then(response => {
           this.messages.push({
@@ -109,7 +109,7 @@ export default {
   mounted() {
     this.username = this.user.username
     this.email = this.user.email
-    this.usermisc = this.user.usermisc.toString()
+    this.classification = this.user.classification.toString()
   }
 }
 </script>

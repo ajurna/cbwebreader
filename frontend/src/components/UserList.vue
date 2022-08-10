@@ -18,7 +18,7 @@
           </CTableDataCell>
           <CTableDataCell>{{ item.email }}</CTableDataCell>
           <CTableDataCell>{{ item.is_superuser }}</CTableDataCell>
-          <CTableDataCell>{{ this.$store.state.classifications.find(i => i.value === item.usermisc.toString()).label }}</CTableDataCell>
+          <CTableDataCell>{{ this.$store.state.classifications.find(i => i.value === item.classification.toString()).label }}</CTableDataCell>
         </CTableRow>
       </template>
     </CTableBody>
