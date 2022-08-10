@@ -19,10 +19,7 @@
       <CFormSelect
         aria-label="Default select example"
         v-model="usermisc"
-        :options="[
-            'Please Select a classification limit',
-            ...this.$store.state.classifications
-        ]">
+        :options="[...this.$store.state.classifications]">
       </CFormSelect>
       <CRow class="mt-2">
         <CCol>
