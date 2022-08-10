@@ -3,8 +3,8 @@
   <CContainer>
     <messages :messages="messages" />
     <user-list :users="users" v-if="!userid"/>
-    <user-edit v-if="user_data" :user="user_data" :messages="messages"/>
-    <add-user v-if="!userid" :messages="messages" :updateUsers="updateUsers"/>
+    <user-edit v-if="user_data" :user="user_data" :messages="messages" />
+    <add-user v-if="!userid" :messages="messages" @user-added="updateUsers"/>
   </CContainer>
 </template>
 
@@ -15,6 +15,7 @@ import api from "@/api";
 import UserEdit from "@/components/UserEdit";
 import Messages from "@/components/Messages";
 import AddUser from "@/components/AddUser";
+import router from "@/router";
 
 const default_crumbs = [
   {id: 0, selector: '', name: 'Home'},
@@ -44,6 +45,12 @@ export default {
       api.get('/api/users/' + this.userid + '/').then(response => {
         this.user_data = response.data
         this.crumbs.push({id: 1, selector: '', name: response.data.username})
+      }).catch(() => {
+        this.messages.push({
+          color: 'danger',
+          text: 'User with id "' + this.userid + '" does not exist.'
+        })
+        router.push({name: 'user'})
       })
     }
   },
@@ -54,6 +61,7 @@ export default {
     }
   },
   beforeUpdate() {
+    this.updateUsers()
     this.crumbs = [...default_crumbs]
     if (this.userid){
       this.getUser()

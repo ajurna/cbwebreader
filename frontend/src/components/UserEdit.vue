@@ -23,7 +23,8 @@
       <CRow class="mt-2">
         <CCol>
           <CButton color="primary" type="submit" class="mr-5">Save</CButton>
-          <confirm-button label="Reset Password" :action="resetPassword"/>
+          <confirm-button class="mr-5" label="Reset Password" :action="resetPassword" />
+          <confirm-button label="Delete User" :action="deleteUser" />
         </CCol>
       </CRow>
 
@@ -36,6 +37,7 @@
 import api from "@/api";
 import ConfirmButton from "@/components/ConfirmButton";
 import Messages from "@/components/Messages";
+import router from "@/router";
 
 export default {
   name: "UserEdit",
@@ -50,7 +52,7 @@ export default {
   },
   props: {
     user: Object,
-    messages: Array
+    messages: Array,
   },
   methods: {
     saveForm () {
@@ -90,6 +92,15 @@ export default {
           text: 'Password reset with new password "' + response.data.password + '"'
         })
         this.new_password = response.data.password
+      })
+    },
+    deleteUser() {
+      api.delete('/api/users/' + this.user.id + '/').then(response => {
+        this.messages.push({
+          color: 'danger',
+          text: 'User "' + this.username + '" has been deleted.'
+        })
+        router.push({name: 'user'})
       })
     }
   },

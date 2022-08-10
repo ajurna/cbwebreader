@@ -42,7 +42,6 @@ export default {
   },
   props: {
     messages: Array,
-    updateUsers: {}
   },
   methods: {
     addUser(e) {
@@ -61,12 +60,20 @@ export default {
             color: 'success',
             text: 'New user "' + response.data.username + '" created with password "' + response2.data.password + '".'
           })
-          this.updateUsers()
           this.visible=false
+          this.$emit('user-added')
         })
+      }).catch(err => {
+        console.log(err)
+        this.messages.push({
+          color: 'danger',
+          text: 'Cannot create user "' + this.username + '" with error "' + (err.response.data.username? err.response.data.username: err.response.data.email) + '".'
+        })
+        this.visible = false
       })
     }
-  }
+  },
+  emits: ['user-added']
 }
 </script>
 
