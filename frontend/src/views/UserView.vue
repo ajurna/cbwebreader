@@ -4,6 +4,7 @@
     <messages :messages="messages" />
     <user-list :users="users" v-if="!userid"/>
     <user-edit v-if="user_data" :user="user_data" :messages="messages"/>
+    <add-user v-if="!userid" :messages="messages" :updateUsers="updateUsers"/>
   </CContainer>
 </template>
 
@@ -13,6 +14,7 @@ import UserList from "@/components/UserList";
 import api from "@/api";
 import UserEdit from "@/components/UserEdit";
 import Messages from "@/components/Messages";
+import AddUser from "@/components/AddUser";
 
 const default_crumbs = [
   {id: 0, selector: '', name: 'Home'},
@@ -20,7 +22,7 @@ const default_crumbs = [
 ]
 export default {
   name: "UserView",
-  components: {Messages, UserEdit, UserList, TheBreadcrumbs},
+  components: {AddUser, Messages, UserEdit, UserList, TheBreadcrumbs},
   props: {
     userid: String
   },
