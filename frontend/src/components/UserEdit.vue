@@ -1,6 +1,5 @@
 <template>
   <CContainer>
-    <messages :messages="messages"></messages>
     <CForm @submit="saveForm">
       <CFormInput
         type="text"
@@ -47,11 +46,11 @@ export default {
       email: '',
       usermisc: '0',
       new_password: null,
-      messages: []
     }
   },
   props: {
-    user: Object
+    user: Object,
+    messages: Array
   },
   methods: {
     saveForm () {
@@ -80,7 +79,6 @@ export default {
           })
         })
       }
-
     },
     resetPassword() {
       let payload = {

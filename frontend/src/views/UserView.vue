@@ -1,8 +1,9 @@
 <template>
   <the-breadcrumbs :manual_crumbs="this.crumbs" />
   <CContainer>
+    <messages :messages="messages" />
     <user-list :users="users" v-if="!userid"/>
-    <user-edit v-if="user_data" :user="user_data"/>
+    <user-edit v-if="user_data" :user="user_data" :messages="messages"/>
   </CContainer>
 </template>
 
@@ -11,14 +12,15 @@ import TheBreadcrumbs from "@/components/TheBreadcrumbs";
 import UserList from "@/components/UserList";
 import api from "@/api";
 import UserEdit from "@/components/UserEdit";
+import Messages from "@/components/Messages";
 
 const default_crumbs = [
   {id: 0, selector: '', name: 'Home'},
-  {id: 1, selector: '', name: 'Users'}
+  {id: 1, route: {'name': 'user'}, name: 'Users'}
 ]
 export default {
   name: "UserView",
-  components: {UserEdit, UserList, TheBreadcrumbs},
+  components: {Messages, UserEdit, UserList, TheBreadcrumbs},
   props: {
     userid: String
   },
@@ -27,7 +29,8 @@ export default {
       crumbs: [...default_crumbs],
       users: [],
       viewUserList: true,
-      user_data: null
+      user_data: null,
+      messages: []
   }},
   methods: {
     updateUsers() {
