@@ -205,7 +205,7 @@ class BrowseViewSet(viewsets.ViewSet):
             unread=F('comicstatus__unread'),
             user=F('comicstatus__user'),
             classification=Case(
-                When(directory__isnull=True, then=models.Directory.Classification.C_18),
+                When(directory__isnull=True, then=models.Directory.Classification.C_G),
                 default=F('directory__classification'),
                 output_field=PositiveSmallIntegerField(choices=models.Directory.Classification.choices)
             )
