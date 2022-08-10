@@ -23,10 +23,10 @@ from comic.util import generate_breadcrumbs_from_path
 
 
 class UserSerializer(serializers.ModelSerializer):
-    usermisc = serializers.SlugRelatedField(many=False, read_only=True, slug_field='allowed_to_read')
+    classification = serializers.SlugRelatedField(many=False, read_only=True, slug_field='allowed_to_read', source='usermisc')
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'is_superuser', 'usermisc']
+        fields = ['id', 'username', 'email', 'is_superuser', 'classification']
 
 
 class AdminPasswordResetSerializer(serializers.Serializer):
