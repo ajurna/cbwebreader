@@ -544,19 +544,6 @@ class RSSSerializer(serializers.Serializer):
     feed_id = serializers.UUIDField()
 
 
-class RSSViewSet(viewsets.ViewSet):
-    serializer_class = RSSSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def list(self, request):
-        user_misc = models.UserMisc.objects.get(user=request.user)
-        queryset = {
-            "feed_id": user_misc.feed_id
-        }
-        serializer = self.serializer_class(queryset)
-        return Response(serializer.data)
-
-
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -596,7 +583,7 @@ class AccountViewSet(viewsets.GenericViewSet):
     lookup_field = 'username'
     serializer_class = AccountSerializer
 
-    @swagger_auto_schema(method='patch', responses={200: AccountSerializer})
+    @swagger_auto_schema(responses={200: AccountSerializer})
     @action(detail=False, methods=['PATCH'], serializer_class=PasswordResetSerializer)
     def reset_password(self, request: Request) -> Response:
         serializer = self.get_serializer(data=request.data)
@@ -615,7 +602,7 @@ class AccountViewSet(viewsets.GenericViewSet):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
-    @swagger_auto_schema(method='patch', responses={200: AccountSerializer})
+    @swagger_auto_schema(responses={200: AccountSerializer})
     @action(detail=False, methods=['PATCH'], serializer_class=UpdateEmailSerializer)
     def update_email(self, request: Request) -> Response:
         serializer = self.get_serializer(data=request.data)
@@ -630,6 +617,16 @@ class AccountViewSet(viewsets.GenericViewSet):
             return Response(account.data)
         else:
             return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+    @swagger_auto_schema(responses={status.HTTP_200_OK: RSSSerializer})
+    @action(methods=['get'], detail=False, serializer_class=RSSSerializer)
+    def feed_id(self, request: Request):
+        """
+        Return the RSS feed id needed to get users RSS Feed.
+        """
+        user_misc = get_object_or_404(models.UserMisc, user=request.user)
+        serializer = self.get_serializer(user_misc)
+        return Response(serializer.data)
 
 
 class DirectorySerializer(serializers.ModelSerializer):

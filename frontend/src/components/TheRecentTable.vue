@@ -75,7 +75,6 @@
 </template>
 
 <script>
-import { CTable, CTableHead, CTableRow, CTableHeaderCell, CTableBody, CTableDataCell, CFormCheck, CContainer, CRow, CCol } from '@coreui/vue'
 import api from "@/api";
 import * as timeago from 'timeago.js';
 import Paginate from "vuejs-paginate-next";
@@ -83,16 +82,6 @@ import Paginate from "vuejs-paginate-next";
 export default {
   name: "TheRecentTable",
   components: {
-    CTable,
-    CTableHead,
-    CTableRow,
-    CTableHeaderCell,
-    CTableBody,
-    CTableDataCell,
-    CFormCheck,
-    CContainer,
-    CRow,
-    CCol,
     Paginate
   },
   data () {
@@ -180,7 +169,7 @@ export default {
   },
   mounted() {
     this.updateComicList()
-    let comic_mark_unread = this.$store.state.base_url + '/api/rss_id/'
+    let comic_mark_unread = this.$store.state.base_url + '/api/account/feed_id/'
     api.get(comic_mark_unread).then((response) => {
       this.feed_id = response.data.feed_id
     })
