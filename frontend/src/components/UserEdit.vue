@@ -79,10 +79,8 @@ export default {
         api.patch('/api/users/' + this.user.id + '/set_classification/', payload).then(response => {
           this.messages.push({
             color: 'success',
-            text: 'Classification Limit now set to "' + this.$store.state.classifications.find(i => i.value === response.data.classification).label + '"'
+            text: 'Classification Limit now set to "' + this.$store.state.classifications.find(i => i.value === response.data.classification.toString()).label + '"'
           })
-          // this.usermisc = response.data.classification.toString()
-          // this.user.usermisc = response.data.classification
         })
       }
 
