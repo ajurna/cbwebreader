@@ -1,7 +1,7 @@
 <template>
   <div class="reveal" id="comic_box" ref="comic_box" >
     <div id="slides_div" class="slides"  ref="slides">
-      <section class="" v-for="(page, index) in pages" :key="page.index" :data-menu-title="page.page_file_name" hidden>
+      <section class="" v-for="page in pages" :key="page.index" :data-menu-title="page.page_file_name" hidden>
         <img :data-src="'/api/read/' + selector + '/image/' + page.index + '/'" class="w-100"  :alt="page.page_file_name">
       </section>
     </div>
@@ -28,13 +28,12 @@
 import Reveal from "reveal.js";
 import api from "@/api";
 import 'reveal.js-menu/menu.css'
-import {CPagination, CPaginationItem, CRow, CButton, CCol, CListGroup, CListGroupItem} from "@coreui/vue";
 import Paginate from "vuejs-paginate-next";
 import * as Hammer from 'hammerjs'
 
 export default {
   name: "TheComicReader",
-  components: {CPagination, CPaginationItem, Paginate, CRow, CButton, CCol, CListGroup, CListGroupItem},
+  components: {Paginate},
   data () {
     return {
       current_page: 0,
@@ -165,7 +164,7 @@ export default {
       this.hammertime.off('swiperight')
       this.hammertime.off('tap')
     } catch (e) {
-
+      console.log(e)
     }
 
   }

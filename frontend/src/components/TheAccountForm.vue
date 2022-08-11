@@ -84,7 +84,7 @@ export default {
         this.new_password_confirm = ''
       })
     },
-    updateAccount (data) {
+    updateAccount () {
       if (!this.current_password) {
         toast.error('Please enter your current password.', {position:'top'});
       } else {
@@ -120,7 +120,7 @@ export default {
       }
     },
     validateEmail(mail){
-      return (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(mail))
+      return (/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(mail))
     },
     checkNewPassword(pass){
       return (pass.length >= 9)

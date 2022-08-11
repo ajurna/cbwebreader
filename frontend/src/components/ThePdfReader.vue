@@ -26,7 +26,6 @@
 </template>
 
 <script>
-import {CContainer, CRow, CButtonGroup, CButton, CListGroup, CListGroupItem} from "@coreui/vue";
 import pdfvuer from 'pdfvuer'
 import api from "@/api";
 import Paginate from "vuejs-paginate-next";
@@ -36,7 +35,7 @@ import * as Hammer from 'hammerjs'
 export default {
   name: "ThePdfReader",
   components: {
-    CContainer, CRow, CButtonGroup, CButton, pdf: pdfvuer, Paginate, CListGroup, CListGroupItem
+    pdf: pdfvuer, Paginate
   },
   data () {
     return {
