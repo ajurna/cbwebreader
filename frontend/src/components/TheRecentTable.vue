@@ -43,7 +43,7 @@
           </CTableRow>
         </CTableHead>
         <CTableBody>
-          <template v-for="(item, index) in comics" :key="item.id">
+          <template v-for="item in comics" :key="item.id">
             <CTableRow>
               <CTableHeaderCell scope="row"><input ref="comic_selector" class="form-check-input m-0 position-relative mt-1" type="checkbox" :value="item.selector"></CTableHeaderCell>
               <CTableDataCell class=""><font-awesome-icon icon='book' class="" /></CTableDataCell>
