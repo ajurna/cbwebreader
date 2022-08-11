@@ -1,12 +1,12 @@
 <template>
-  <CAlert :color="message.color" dismissible  v-for="message in messages">
+  <CAlert :color="message.color" dismissible  v-for="message in messages" :key="message.text">
     {{message.text}}
   </CAlert>
 </template>
 
 <script>
 export default {
-  name: "Messages",
+  name: "AlertMessages",
   data() {
     return {
 

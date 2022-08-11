@@ -44,9 +44,7 @@ export default {
     messages: Array,
   },
   methods: {
-    addUser(e) {
-      console.log(e)
-
+    addUser() {
       let payload = {
         username: this.username,
         email: this.email
@@ -56,7 +54,7 @@ export default {
           username: response.data.username
         }
         api.patch('/api/users/' + response.data.id + '/reset_password/', payload).then(response2 => {
-          this.messages.push({
+          this.$emit('add-message', {
             color: 'success',
             text: 'New user "' + response.data.username + '" created with password "' + response2.data.password + '".'
           })
@@ -64,7 +62,7 @@ export default {
           this.$emit('user-added')
         })
       }).catch(err => {
-        this.messages.push({
+        this.$emit('add-message', {
           color: 'danger',
           text: 'Cannot create user "' + this.username + '" with error "' + (err.response.data.username? err.response.data.username: err.response.data.email) + '".'
         })
@@ -72,7 +70,7 @@ export default {
       })
     }
   },
-  emits: ['user-added']
+  emits: ['user-added', 'add-message']
 }
 </script>
 

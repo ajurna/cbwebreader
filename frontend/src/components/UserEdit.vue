@@ -36,7 +36,7 @@
 
 import api from "@/api";
 import ConfirmButton from "@/components/ConfirmButton";
-import Messages from "@/components/Messages";
+import Messages from "@/components/AlertMessages";
 import router from "@/router";
 
 export default {
@@ -52,7 +52,6 @@ export default {
   },
   props: {
     user: Object,
-    messages: Array,
   },
   methods: {
     saveForm () {
@@ -62,7 +61,7 @@ export default {
           email: this.email
         }
         api.patch('/api/users/'+ this.user.id + '/', payload).then(response => {
-          this.messages.push({
+          this.$emit('add-message',{
             color: 'success',
             text: 'Email address now set to "' + response.data.email + '"'
           })
@@ -74,7 +73,7 @@ export default {
           classification: this.classification
         }
         api.patch('/api/users/' + this.user.id + '/set_classification/', payload).then(response => {
-          this.messages.push({
+          this.$emit('add-message', {
             color: 'success',
             text: 'Classification Limit now set to "' + this.$store.state.classifications.find(i => i.value === response.data.classification.toString()).label + '"'
           })
@@ -86,7 +85,7 @@ export default {
         username: this.username
       }
       api.patch('/api/users/' + this.user.id + '/reset_password/', payload).then(response => {
-        this.messages.push({
+        this.$emit('add-message', {
           color: 'success',
           text: 'Password reset with new password "' + response.data.password + '"'
         })
@@ -95,7 +94,7 @@ export default {
     },
     deleteUser() {
       api.delete('/api/users/' + this.user.id + '/').then(response => {
-        this.messages.push({
+        this.$emit('add-message', {
           color: 'danger',
           text: 'User "' + this.username + '" has been deleted.'
         })

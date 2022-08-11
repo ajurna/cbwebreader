@@ -1,10 +1,10 @@
 <template>
   <the-breadcrumbs :manual_crumbs="this.crumbs" />
   <CContainer>
-    <messages :messages="messages" />
+    <alert-messages :messages="messages" />
     <user-list :users="users" v-if="!userid"/>
-    <user-edit v-if="user_data" :user="user_data" :messages="messages" />
-    <add-user v-if="!userid" :messages="messages" @user-added="updateUsers"/>
+    <user-edit v-if="user_data" :user="user_data" @add-message="addMessage"/>
+    <add-user v-if="!userid" @user-added="updateUsers" @add-message="addMessage"/>
   </CContainer>
 </template>
 
@@ -13,7 +13,7 @@ import TheBreadcrumbs from "@/components/TheBreadcrumbs";
 import UserList from "@/components/UserList";
 import api from "@/api";
 import UserEdit from "@/components/UserEdit";
-import Messages from "@/components/Messages";
+import alertMessages from "@/components/AlertMessages";
 import AddUser from "@/components/AddUser";
 import router from "@/router";
 
@@ -23,7 +23,7 @@ const default_crumbs = [
 ]
 export default {
   name: "UserView",
-  components: {AddUser, Messages, UserEdit, UserList, TheBreadcrumbs},
+  components: {AddUser, alertMessages, UserEdit, UserList, TheBreadcrumbs},
   props: {
     userid: String
   },
@@ -52,6 +52,9 @@ export default {
         })
         router.push({name: 'user'})
       })
+    },
+    addMessage(message){
+      this.messages.push(message)
     }
   },
   mounted() {
