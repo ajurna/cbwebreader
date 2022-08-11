@@ -93,7 +93,7 @@ export default createStore({
             this.commit('updateToken', response.data)
           })
         .catch((error)=>{
-            // console.log(error)
+            console.log(error)
             // router.push({name: 'login', query: {area: 'store'}})
           })
     },
