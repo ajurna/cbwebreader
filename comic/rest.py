@@ -43,7 +43,6 @@ class ClassificationSerializer(serializers.Serializer):
         raise serializers.ValidationError('Invalid Classification sent.')
 
 
-
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
@@ -371,7 +370,7 @@ class ReadViewSet(viewsets.GenericViewSet):
                 .get_or_create(comic_id=selector, user=request.user)
             comic_status.last_read_page = serializer.data['page']
             comic_status.unread = False
-            if comic_status.page_count == comic_status.last_read_page:
+            if comic_status.page_count-1 == comic_status.last_read_page:
                 comic_status.finished = True
             else:
                 comic_status.finished = False

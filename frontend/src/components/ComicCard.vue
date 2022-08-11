@@ -10,8 +10,8 @@
     </CCardBody>
     <CCardFooter class="pl-0 pr-0 pt-0">
       <CProgress class="mb-1 position-relative" >
-        <CProgressBar :value="this.progress" />
-        <small class="justify-content-center d-flex position-absolute w-100 h-100" style="line-height: normal">{{ (this.data.unread ? 0 : data.progress) }} / {{data.total}}</small>
+        <CProgressBar :value="progressPercentCalc" />
+        <small class="justify-content-center d-flex position-absolute w-100 h-100" style="line-height: normal">{{ progressCalc }} / {{data.total}}</small>
       </CProgress>
       <CButtonGroup class="w-100">
         <CButton color="primary" @click="updateComic('mark_unread')" ><font-awesome-icon icon='book' /></CButton>
@@ -111,16 +111,30 @@ export default {
       this.updateThumbnail()
     }
     this.unread = this.data.total - this.data.progress
-    this.progress = (this.data.unread ? 0 : this.data.progress / this.data.total * 100)
     this.classification = this.data.classification.toString()
     this.new_classification = this.classification
     this.card_type = this.data.type
   },
   beforeUpdate() {
-    this.progress = (this.data.unread ? 0 : this.data.progress / this.data.total * 100)
     this.unread = this.data.total - this.data.progress
   },
-  emits: ['updateComicList', 'markPreviousRead']
+  emits: ['updateComicList', 'markPreviousRead'],
+  computed: {
+    progressCalc () {
+      if (this.data.type === 'ComicBook'){
+        return (this.data.unread ? 0 : this.data.progress)
+      } else {
+        return this.data.progress
+      }
+    },
+    progressPercentCalc () {
+      if (this.data.type === 'ComicBook') {
+        return (this.data.unread ? 0 : this.data.progress / this.data.total * 100)
+      } else {
+        return this.data.progress / this.data.total * 100
+      }
+    }
+  }
 }
 </script>
 
