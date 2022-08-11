@@ -51,7 +51,8 @@ module.exports = (env = {}) => {
       }),
       new webpack.DefinePlugin({
         'process.env.BASE_URL': JSON.stringify(process.env.BASE_URL),
-      })
+      }),
+      new webpack.DefinePlugin({ __VUE_OPTIONS_API__: true, __VUE_PROD_DEVTOOLS__: true }),
     ],
     devServer: {
       headers: {
