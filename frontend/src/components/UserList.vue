@@ -1,4 +1,4 @@
-<template xmlns="">
+<template>
   <CTable striped bordered>
     <CTableHead>
       <CTableRow>
@@ -10,7 +10,7 @@
       </CTableRow>
     </CTableHead>
     <CTableBody>
-      <template v-for="(item, index) in users" :key="item.id">
+      <template v-for="item in users" :key="item.id">
         <CTableRow>
           <CTableHeaderCell scope="row">{{ item.id }}</CTableHeaderCell>
           <CTableDataCell class="">
