@@ -56,7 +56,7 @@ module.exports = (env = {}) => {
     ],
     devServer: {
       headers: {
-        "Access-Control-Allow-Origin":"\*"
+        "Access-Control-Allow-Origin":"*"
       },
       // public: 'http://0.0.0.0:8080',
       // inline: true,
