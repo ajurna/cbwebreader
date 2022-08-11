@@ -36,12 +36,11 @@
 
 import api from "@/api";
 import ConfirmButton from "@/components/ConfirmButton";
-import Messages from "@/components/AlertMessages";
 import router from "@/router";
 
 export default {
   name: "UserEdit",
-  components: {Messages, ConfirmButton},
+  components: {ConfirmButton},
   data () {
     return {
       username: '',
@@ -93,7 +92,7 @@ export default {
       })
     },
     deleteUser() {
-      api.delete('/api/users/' + this.user.id + '/').then(response => {
+      api.delete('/api/users/' + this.user.id + '/').then(() => {
         this.$emit('add-message', {
           color: 'danger',
           text: 'User "' + this.username + '" has been deleted.'
