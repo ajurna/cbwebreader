@@ -2,7 +2,7 @@
   <CContainer ref="pdfContainer">
     <CRow class="w-100 pb-5 mb-5" v-if="loaded" >
         <pdf :src="pdfdata"  :page="page" ref="pdfWindow" :resize="true">
-          <template slot="loading">
+          <template v-slot:loading>
             loading content here...
           </template>
         </pdf>
