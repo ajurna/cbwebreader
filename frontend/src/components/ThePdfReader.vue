@@ -125,7 +125,7 @@ export default {
       this.setReadPage(this.page)
     },
     setReadPage(num){
-      this.$refs.pdfWindow.$el.scrollIntoView()
+      this.$refs.pdfContainer.$el.scrollIntoView()
       let payload = {
           page: num-1
       }

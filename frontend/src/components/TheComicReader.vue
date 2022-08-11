@@ -143,7 +143,7 @@ export default {
         });
       })
 
-      this.hammertime = new Hammer(this.$refs.comic_box.$el, {})
+      this.hammertime = new Hammer(this.$refs.comic_box, {})
       this.hammertime.on('swipeleft', (_e, self=this) => {
         self.nextPage()
       })
