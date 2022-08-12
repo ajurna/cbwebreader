@@ -1,6 +1,6 @@
 <template>
   <CCard class="col-xl-2 col-lg-2 col-md-3 col-sm-4 p-0 m-1 ">
-    <CCardImage orientation="top" :src="thumbnail" @click="console.log('click')"/>
+    <CCardImage orientation="top" :src="thumbnail"/>
     <CCardBody class="pb-0 pt-0 pl-1 pr-1 card-img-overlay d-flex">
       <span class="badge rounded-pill bg-primary unread-badge" v-if="this.unread > 0 && data.type === 'Directory'">{{ this.unread }}</span>
       <span class="badge rounded-pill bg-warning classification-badge" v-if="card_type === 'Directory'" >{{ this.$store.state.classifications.find(i => i.value === classification).label }}</span>
@@ -40,6 +40,11 @@
           v-model="new_classification"
           :options="[...this.$store.state.classifications]">
         </CFormSelect>
+        <CFormCheck
+          label="Recursive"
+          class="mt-2"
+          v-model="recursive"
+        />
       </CModalBody>
       <CModalFooter>
         <CButton color="secondary" @click="editDirectoryVisible = false ">
@@ -70,7 +75,8 @@ export default {
       classification: '0',
       new_classification: '0',
       card_type: '',
-      editDirectoryVisible: false
+      editDirectoryVisible: false,
+      recursive: true
     }},
   methods: {
     updateThumbnail () {
@@ -80,8 +86,7 @@ export default {
             this.$emit('updateThumbnail', response.data)
             this.thumbnail = response.data.thumbnail
           }
-        }).catch((e) => {
-          console.log(e)
+        }).catch(() => {
           useToast().error('Error Generating Thumbnail: ' + this.data.title, {position:'top'});
         })
     },
@@ -96,13 +101,22 @@ export default {
     updateDirectory() {
       let payload = {
         selector: this.data.selector,
-        classification: this.new_classification
+        classification: ~~this.new_classification
       }
-      api.put('/api/directory/' + this.data.selector + '/', payload).then(response => {
-        this.classification = response.data.classification.toString()
-        useToast().success('Change classification of ' + this.data.title + ' to "' + this.$store.state.classifications.find(i => i.value === this.classification).label + '"', {position:'top'});
-        this.editDirectoryVisible = false
-      })
+      if (this.recursive){
+        api.put('/api/directory/' + this.data.selector + '/', payload).then(response => {
+          this.classification = response.data[0].classification.toString()
+          useToast().success('Change classification of ' + this.data.title + ' to "' + this.$store.state.classifications.find(i => i.value === this.classification).label + '"', {position:'top'});
+          this.editDirectoryVisible = false
+        })
+      } else {
+        api.patch('/api/directory/' + this.data.selector + '/', payload).then(response => {
+          this.classification = response.data.classification.toString()
+          useToast().success('Change classification of ' + this.data.title + ' to "' + this.$store.state.classifications.find(i => i.value === this.classification).label + '"', {position:'top'});
+          this.editDirectoryVisible = false
+        })
+      }
+
     }
   },
   mounted () {

@@ -625,6 +625,9 @@ class DirectorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Directory
         fields = ['selector', 'classification']
+        extra_kwargs = {
+            'selector': {'validators': []},
+        }
 
 
 class DirectoryViewSet(mixins.UpdateModelMixin, viewsets.GenericViewSet):
@@ -640,7 +643,8 @@ class DirectoryViewSet(mixins.UpdateModelMixin, viewsets.GenericViewSet):
         """
         main_parent = get_object_or_404(models.Directory, selector=selector)
 
-        serializer = self.get_serializer(main_parent, data=request.data)
+        serializer = self.get_serializer(data=request.data)
+
         if serializer.is_valid():
             main_parent.classification = serializer.data['classification']
             to_update = {main_parent}
@@ -653,7 +657,8 @@ class DirectoryViewSet(mixins.UpdateModelMixin, viewsets.GenericViewSet):
                     to_visit.add(child)
                     to_update.add(child)
             models.Directory.objects.bulk_update(to_update, fields=['classification'])
-            response = self.get_serializer(to_update, many=True)
+            data = models.Directory.objects.filter(directory__in=to_update)
+            response = self.get_serializer(data, many=True)
             return Response(response.data)
         else:
             return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
