@@ -56,6 +56,7 @@ router.register(r'recent', rest.RecentComicsView, basename="recent")
 router.register(r'action', rest.ActionViewSet, basename='action')
 router.register(r'account', rest.AccountViewSet, basename='account')
 router.register(r'directory', rest.DirectoryViewSet, basename='directory')
+router.register(r'initial_setup', rest.InitialSetup, basename='initial_setup')
 
 
 urlpatterns = [

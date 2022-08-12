@@ -9,6 +9,7 @@ import UserView from "@/views/UserView";
 const routes = [
   {
     path: '/',
+    name: 'home',
     redirect: () => {
       return { name: 'browse' }
     }

@@ -1,6 +1,6 @@
 <template>
   <CContainer>
-    <CRow>
+    <CRow v-if="!initialSetupRequired">
       <CCol lg="4"/>
       <CCol lg="4" id="login-col">
         <CForm @submit="login">
@@ -27,33 +27,38 @@
         </CForm>
       </CCol>
     </CRow>
+    <CRow>
+      <initial-setup v-if="initialSetupRequired" />
+    </CRow>
   </CContainer>
 </template>
 
 <script>
-import {CContainer, CRow, CCol, CForm, CFormInput, CButton} from "@coreui/vue";
+import InitialSetup from "@/components/InitialSetup";
+import axios from "axios";
 
 export default {
   name: "LoginView",
-  components: {
-    CForm,
-    CCol,
-    CContainer,
-    CRow,
-    CFormInput,
-    CButton,
-  },
+  components: {InitialSetup},
   data() {
     return {
       username: '',
       password: '',
-      password_alert: false
+      password_alert: false,
+      initialSetupRequired: false
     }
   },
   methods: {
     login () {
       this.$store.dispatch("obtainToken", {username: this.username, password: this.password})
     }
+  },
+  mounted() {
+    axios.get('/api/initial_setup/required/').then(response => {
+      if (response.data.required){
+        this.initialSetupRequired = true
+      }
+    })
   }
 }
 </script>

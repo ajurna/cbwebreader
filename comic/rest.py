@@ -668,3 +668,43 @@ class DirectoryViewSet(mixins.UpdateModelMixin, viewsets.GenericViewSet):
         This will set the classification of a directory and none of its children.
         """
         return super().update(request, *args, **kwargs)
+
+
+class InitialSetupSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    email = serializers.EmailField(required=False, allow_blank=True)
+    password = serializers.CharField()
+
+
+class InitialSetupRequired(serializers.Serializer):
+    required = serializers.BooleanField()
+
+
+class InitialSetup(viewsets.GenericViewSet):
+    permission_classes = [permissions.AllowAny]
+
+    @swagger_auto_schema(responses={status.HTTP_200_OK: InitialSetupRequired(many=False)})
+    @action(detail=False, methods=['get'], serializer_class=InitialSetupRequired)
+    def required(self, _request: Request) -> Response:
+        serializer = self.get_serializer({'required': User.objects.count() == 0})
+        return Response(serializer.data)
+
+    @action(methods=['post'], detail=False, serializer_class=InitialSetupSerializer)
+    def create_user(self, request: Request) -> Response:
+        if User.objects.count() == 0:
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                admin = User(
+                    username=serializer.data['username'],
+                    email=serializer.data['email'],
+                    is_superuser=True,
+                    is_active=True,
+                    is_staff=True
+                )
+                admin.set_password(serializer.data['password'])
+                admin.save()
+                return Response(serializer.data, status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({}, status.HTTP_400_BAD_REQUEST)
