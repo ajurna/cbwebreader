@@ -1,7 +1,7 @@
 <template>
   <CNavbar expand="lg" color-scheme="light" class="bg-light">
     <CContainer fluid>
-      <CNavbarBrand href="#">Navbar</CNavbarBrand>
+      <CNavbarBrand href="#"><img src="/static/img/logo.svg" width="35" class="d-inline-block align-top" alt="CB"> Web Reader</CNavbarBrand>
       <CNavbarToggler @click="visible = !visible"/>
       <CCollapse class="navbar-collapse" :visible="visible">
         <CNavbarNav>
