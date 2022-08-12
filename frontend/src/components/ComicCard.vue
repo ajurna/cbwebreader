@@ -77,9 +77,11 @@ export default {
       api.get('/api/generate_thumbnail/' + this.data.selector + '/')
         .then((response) => {
           if (response.data.thumbnail) {
+            this.$emit('updateThumbnail', response.data)
             this.thumbnail = response.data.thumbnail
           }
-        }).catch(() => {
+        }).catch((e) => {
+          console.log(e)
           useToast().error('Error Generating Thumbnail: ' + this.data.title, {position:'top'});
         })
     },
@@ -117,7 +119,7 @@ export default {
   beforeUpdate() {
     this.unread = this.data.total - this.data.progress
   },
-  emits: ['updateComicList', 'markPreviousRead'],
+  emits: ['updateComicList', 'markPreviousRead', 'updateThumbnail'],
   computed: {
     progressCalc () {
       if (this.data.type === 'ComicBook'){

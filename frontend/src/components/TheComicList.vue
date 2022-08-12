@@ -17,7 +17,7 @@
     </CRow>
     <CRow>
       <template v-for="comic in filteredComics" :key="comic.selector" >
-        <comic-card :data="comic" @updateComicList="updateComicList" @markPreviousRead="markPreviousRead" />
+        <comic-card :data="comic" @updateComicList="updateComicList" @markPreviousRead="markPreviousRead" @updateThumbnail="updateThumbnail" />
       </template>
     </CRow>
   </CContainer>
@@ -83,6 +83,9 @@ export default {
       api.put('/api/action/' + action + '/', payload).then(() => {
         this.updateComicList()
       })
+    },
+    updateThumbnail(resp){
+      this.comics.find(i => i.selector === resp.selector).thumbnail = resp.thumbnail
     }
   },
   computed: {
