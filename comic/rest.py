@@ -1,29 +1,30 @@
 from itertools import chain
 from pathlib import Path
-from typing import Union, List
+from typing import Union
 from uuid import UUID
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.db.models import Count, Case, When, F, PositiveSmallIntegerField, Max, Q
-
+from django.db.models import Count, Case, When, F, PositiveSmallIntegerField, Q
 from django.http import FileResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, serializers, mixins, permissions, status, renderers
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
 from rest_framework.request import Request
+from rest_framework.response import Response
 
 from comic import models
 from comic.util import generate_breadcrumbs_from_path
 
 
 class UserSerializer(serializers.ModelSerializer):
-    classification = serializers.SlugRelatedField(many=False, read_only=True, slug_field='allowed_to_read', source='usermisc')
+    classification = serializers.SlugRelatedField(many=False, read_only=True, slug_field='allowed_to_read',
+                                                  source='usermisc')
+
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'is_superuser', 'classification']
@@ -136,19 +137,17 @@ class BrowseViewSet(viewsets.GenericViewSet):
     lookup_field = 'selector'
 
     def list(self, request):
-        queryset = []
         serializer = self.get_serializer(self.generate_directory(request.user), many=True)
         return Response(serializer.data)
 
     def retrieve(self, request, selector: UUID):
-        queryset = []
         directory = models.Directory.objects.get(selector=selector)
         serializer = self.get_serializer(self.generate_directory(request.user, directory), many=True)
         return Response(serializer.data)
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: BreadcrumbSerializer(many=True)})
     @action(methods=['get'], detail=True, serializer_class=BreadcrumbSerializer)
-    def breadcrumbs(self, request: Request, selector: UUID) -> Response:
+    def breadcrumbs(self, _request: Request, selector: UUID) -> Response:
         queryset = []
         comic = False
         try:
@@ -257,7 +256,7 @@ class GenerateThumbnailViewSet(viewsets.ViewSet):
     serializer_class = GenerateThumbnailSerializer
     lookup_field = 'selector'
 
-    def retrieve(self, request, selector: UUID):
+    def retrieve(self, _request, selector: UUID):
         try:
             directory = models.Directory.objects.get(selector=selector)
             if not directory.thumbnail:
@@ -285,9 +284,11 @@ class PageSerializer(serializers.Serializer):
     page_file_name = serializers.CharField()
     content_type = serializers.CharField()
 
+
 class DirectionSerializer(serializers.Serializer):
     route = serializers.ChoiceField(choices=['read', 'browse'])
     selector = serializers.UUIDField(required=False)
+
 
 class ReadSerializer(serializers.Serializer):
     selector = serializers.UUIDField()
@@ -311,7 +312,7 @@ class ReadViewSet(viewsets.GenericViewSet):
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'selector'
 
-    @swagger_auto_schema(responses={status.HTTP_200_OK: ReadSerializer})
+    @swagger_auto_schema(responses={status.HTTP_200_OK: ReadSerializer()})
     def retrieve(self, request: Request, selector: UUID) -> Response:
         comic = get_object_or_404(models.ComicBook, selector=selector)
         misc, _ = models.UserMisc.objects.get_or_create(user=request.user)
@@ -353,13 +354,13 @@ class ReadViewSet(viewsets.GenericViewSet):
             pass
         return FileResponse(open(book.get_pdf(), 'rb'), content_type='application/pdf')
 
-    @swagger_auto_schema(responses={status.HTTP_200_OK: TypeSerializer})
+    @swagger_auto_schema(responses={status.HTTP_200_OK: TypeSerializer()})
     @action(methods=['get'], detail=True)
-    def type(self, request: Request, selector: UUID) -> Response:
+    def type(self, _request: Request, selector: UUID) -> Response:
         book = models.ComicBook.objects.get(selector=selector)
         return Response({'type': book.file_name.split('.')[-1].lower()})
 
-    @swagger_auto_schema(responses={status.HTTP_200_OK: ReadPageSerializer}, request_body=ReadPageSerializer)
+    @swagger_auto_schema(responses={status.HTTP_200_OK: ReadPageSerializer()}, request_body=ReadPageSerializer)
     @action(methods=['put'], detail=True, serializer_class=ReadPageSerializer)
     def set_page(self, request: Request, selector: UUID) -> Response:
 
@@ -397,7 +398,7 @@ class ImageViewSet(viewsets.ViewSet):
     lookup_field = 'page'
     renderer_classes = [PassthroughRenderer]
 
-    def retrieve(self, request, parent_lookup_selector, page):
+    def retrieve(self, _request, parent_lookup_selector, page):
         book = models.ComicBook.objects.get(selector=parent_lookup_selector)
         img, content = book.get_image(int(page))
         self.renderer_classes[0].media_type = content
@@ -573,7 +574,7 @@ class AccountViewSet(viewsets.GenericViewSet):
     lookup_field = 'username'
     serializer_class = AccountSerializer
 
-    @swagger_auto_schema(responses={200: AccountSerializer})
+    @swagger_auto_schema(responses={200: AccountSerializer()})
     @action(detail=False, methods=['PATCH'], serializer_class=PasswordResetSerializer)
     def reset_password(self, request: Request) -> Response:
         serializer = self.get_serializer(data=request.data)
@@ -592,7 +593,7 @@ class AccountViewSet(viewsets.GenericViewSet):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
-    @swagger_auto_schema(responses={200: AccountSerializer})
+    @swagger_auto_schema(responses={200: AccountSerializer()})
     @action(detail=False, methods=['PATCH'], serializer_class=UpdateEmailSerializer)
     def update_email(self, request: Request) -> Response:
         serializer = self.get_serializer(data=request.data)
@@ -608,7 +609,7 @@ class AccountViewSet(viewsets.GenericViewSet):
         else:
             return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-    @swagger_auto_schema(responses={status.HTTP_200_OK: RSSSerializer})
+    @swagger_auto_schema(responses={status.HTTP_200_OK: RSSSerializer()})
     @action(methods=['get'], detail=False, serializer_class=RSSSerializer)
     def feed_id(self, request: Request):
         """
@@ -631,3 +632,34 @@ class DirectoryViewSet(mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = models.Directory.objects.all()
     permission_classes = [permissions.IsAdminUser]
     lookup_field = 'selector'
+
+    @swagger_auto_schema(responses={200: DirectorySerializer(many=True)})
+    def update(self, request: Request, selector: UUID) -> Response:
+        """
+        This will set the classification of a directory and all it's children.
+        """
+        main_parent = get_object_or_404(models.Directory, selector=selector)
+
+        serializer = self.get_serializer(main_parent, data=request.data)
+        if serializer.is_valid():
+            main_parent.classification = serializer.data['classification']
+            to_update = {main_parent}
+            to_visit = {main_parent}
+
+            while to_visit:
+                parent = to_visit.pop()
+                for child in models.Directory.objects.filter(parent=parent):
+                    child.classification = serializer.data['classification']
+                    to_visit.add(child)
+                    to_update.add(child)
+            models.Directory.objects.bulk_update(to_update, fields=['classification'])
+            response = self.get_serializer(to_update, many=True)
+            return Response(response.data)
+        else:
+            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        This will set the classification of a directory and none of its children.
+        """
+        return super().update(request, *args, **kwargs)
