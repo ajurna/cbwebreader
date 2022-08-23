@@ -1,6 +1,7 @@
+import mimetypes
 from itertools import chain
 from pathlib import Path
-from typing import Union
+from typing import Union, NamedTuple, List
 from uuid import UUID
 
 from django.conf import settings
@@ -18,6 +19,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from comic import models
+from comic.errors import NotCompatibleArchive
 from comic.util import generate_breadcrumbs_from_path
 
 
@@ -138,6 +140,11 @@ class BreadcrumbSerializer(serializers.Serializer):
     name = serializers.CharField()
 
 
+class ArchiveFile(NamedTuple):
+    file_name: str
+    mime_type: str
+
+
 class BrowseViewSet(viewsets.GenericViewSet):
     serializer_class = BrowseSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -185,16 +192,48 @@ class BrowseViewSet(viewsets.GenericViewSet):
         for stale_directory in dir_db_set - dir_list:
             models.Directory.objects.get(name=stale_directory.name, parent=directory).delete()
 
-    @staticmethod
-    def clean_files(files, user, dir_path, directory=None):
+    def get_archive_files(self, archive) -> List[ArchiveFile]:
+        return [
+            ArchiveFile(x, mimetypes.guess_type(x)[0]) for x in sorted(archive.namelist())
+            if not x.endswith('/') and mimetypes.guess_type(x)[0]
+        ]
+
+    def clean_files(self, files, user, dir_path, directory=None):
         file_list = set([x for x in sorted(dir_path.glob('*')) if x.is_file()])
         files_db_set = set([Path(dir_path, x.file_name) for x in files])
 
         # Parse new comics
+        books_to_add = []
         for new_comic in file_list - files_db_set:
             if new_comic.suffix.lower() in [".rar", ".zip", ".cbr", ".cbz", ".pdf"]:
-                book = models.ComicBook.process_comic_book(new_comic, directory)
-                models.ComicStatus(user=user, comic=book).save()
+                books_to_add.append(
+                    models.ComicBook(file_name=new_comic.name, directory=directory)
+                )
+        models.ComicBook.objects.bulk_create(books_to_add)
+
+        pages_to_add = []
+        status_to_add = []
+        for book in books_to_add:
+            status_to_add.append(models.ComicStatus(user=user, comic=book))
+            try:
+                archive, archive_type = book.get_archive()
+                if archive_type == 'archive':
+                    pages_to_add.extend([
+                        models.ComicPage(
+                            Comic=book, index=idx, page_file_name=page.file_name, content_type=page.mime_type
+                        ) for idx, page in enumerate(self.get_archive_files(archive))
+                    ])
+                elif archive_type == 'pdf':
+                    pages_to_add.extend([
+                        models.ComicPage(
+                            Comic=book, index=idx, page_file_name=idx + 1, content_type='application/pdf'
+                        ) for idx in range(archive.page_count)
+                    ])
+            except NotCompatibleArchive:
+                pass
+
+        models.ComicStatus.objects.bulk_create(status_to_add)
+        models.ComicPage.objects.bulk_create(pages_to_add)
 
         # Remove stale comic instances
         for stale_comic in files_db_set - file_list:

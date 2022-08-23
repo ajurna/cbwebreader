@@ -126,8 +126,6 @@ RECAPTCHA_PUBLIC_KEY = os.getenv("DJANGO_RECAPTCHA_PUBLIC_KEY", '')
 
 COMIC_BOOK_VOLUME = Path(os.getenv("COMIC_BOOK_VOLUME"))
 
-COMIC_BOOK_VOLUME = Path('/comics')
-
 from .logger import LOGGING
 
 SILK_ENABLED = False
