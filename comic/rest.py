@@ -192,13 +192,15 @@ class BrowseViewSet(viewsets.GenericViewSet):
         for stale_directory in dir_db_set - dir_list:
             models.Directory.objects.get(name=stale_directory.name, parent=directory).delete()
 
-    def get_archive_files(self, archive) -> List[ArchiveFile]:
+    @staticmethod
+    def get_archive_files(archive) -> List[ArchiveFile]:
         return [
             ArchiveFile(x, mimetypes.guess_type(x)[0]) for x in sorted(archive.namelist())
             if not x.endswith('/') and mimetypes.guess_type(x)[0]
         ]
 
-    def clean_files(self, files, user, dir_path, directory=None):
+    @staticmethod
+    def clean_files(files, user, dir_path, directory=None):
         file_list = set([x for x in sorted(dir_path.glob('*')) if x.is_file()])
         files_db_set = set([Path(dir_path, x.file_name) for x in files])
 
@@ -221,7 +223,7 @@ class BrowseViewSet(viewsets.GenericViewSet):
                     pages_to_add.extend([
                         models.ComicPage(
                             Comic=book, index=idx, page_file_name=page.file_name, content_type=page.mime_type
-                        ) for idx, page in enumerate(self.get_archive_files(archive))
+                        ) for idx, page in enumerate(BrowseViewSet.get_archive_files(archive))
                     ])
                 elif archive_type == 'pdf':
                     pages_to_add.extend([
