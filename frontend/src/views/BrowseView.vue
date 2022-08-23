@@ -1,6 +1,6 @@
 <template>
   <the-breadcrumbs :selector="selector"/>
-  <the-comic-list :selector="selector" />
+  <the-comic-list :selector="selector" :key="selector" />
 </template>
 
 <script>

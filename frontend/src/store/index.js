@@ -87,7 +87,7 @@ export default createStore({
       const payload = {
         refresh: this.state.jwt.refresh
       }
-      return axios.post(this.state.base_url + '/api/token/refresh/', payload)
+      return axios.post('/api/token/refresh/', payload)
         .then((response)=>{
             this.commit('updateToken', response.data)
           })

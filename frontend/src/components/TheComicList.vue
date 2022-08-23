@@ -16,9 +16,14 @@
       </CInputGroup>
     </CRow>
     <CRow>
-      <template v-for="comic in filteredComics" :key="comic.selector" >
+      <template v-for="comic in filteredComics" :key="comic.selector" v-if="!loading">
         <comic-card :data="comic" @updateComicList="updateComicList" @markPreviousRead="markPreviousRead" @updateThumbnail="updateThumbnail" />
       </template>
+      <CCol v-if="loading">
+        <CProgress class="mt-3" >
+          <CProgressBar color="success" variant="striped" animated  :value="100"/>
+        </CProgress>
+      </CCol>
     </CRow>
   </CContainer>
 </template>
@@ -41,13 +46,15 @@ export default {
         search_string: '',
         filter_read: false,
         filter_unread: false
-      }
+      },
+      loading: true
   }},
   props: {
     selector: String
   },
   methods: {
     updateComicList () {
+      this.loading = true
       let comic_list_url = '/api/browse/'
       if (this.selector) {
         comic_list_url += this.selector + '/'
@@ -55,6 +62,7 @@ export default {
       api.get(comic_list_url)
       .then(response => {
         this.comics = response.data
+        this.loading = false
       })
       .catch((error) => {console.log(error)})
     },
@@ -121,9 +129,6 @@ export default {
     }
   },
   watch: {
-    selector() {
-      this.updateComicList()
-    },
     filters() {
       let filter_id = ( this.selector ? this.selector : 'home')
       store.state.filters[filter_id] = this.filters
