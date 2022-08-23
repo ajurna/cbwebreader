@@ -16,14 +16,18 @@
       </CInputGroup>
     </CRow>
     <CRow>
-      <template v-for="comic in filteredComics" :key="comic.selector" v-if="!loading">
-        <comic-card :data="comic" @updateComicList="updateComicList" @markPreviousRead="markPreviousRead" @updateThumbnail="updateThumbnail" />
+      <template v-if="loading">
+        <CCol>
+          <CProgress class="mt-3" >
+            <CProgressBar color="success" variant="striped" animated  :value="100"/>
+          </CProgress>
+        </CCol>
       </template>
-      <CCol v-if="loading">
-        <CProgress class="mt-3" >
-          <CProgressBar color="success" variant="striped" animated  :value="100"/>
-        </CProgress>
-      </CCol>
+      <template v-else>
+        <template v-for="comic in filteredComics" :key="comic.selector" >
+          <comic-card :data="comic" @updateComicList="updateComicList" @markPreviousRead="markPreviousRead" @updateThumbnail="updateThumbnail" />
+        </template>
+      </template>
     </CRow>
   </CContainer>
 </template>

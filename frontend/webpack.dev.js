@@ -3,7 +3,7 @@ const { VueLoaderPlugin } = require('vue-loader')
 const BundleTracker = require('webpack-bundle-tracker');
 const webpack = require('webpack')
 
-module.exports = (env = {}) => {
+module.exports = () => {
   return {
 
     mode: 'development',
