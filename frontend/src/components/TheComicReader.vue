@@ -111,7 +111,7 @@ export default {
     }
   },
   mounted () {
-    const set_read_url = this.$store.state.base_url + '/api/read/' + this.selector + '/set_page/'
+    const set_read_url = '/api/read/' + this.selector + '/set_page/'
     let comic_data_url = '/api/read/' + this.selector + '/'
     window.addEventListener('keyup', this.keyPressDebounce)
     api.get(comic_data_url)

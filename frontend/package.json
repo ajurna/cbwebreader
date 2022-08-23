@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "webpack-dev-server",
-    "build": "npx webpack --config webpack.config.js",
+    "serve": "webpack-dev-server --config webpack.dev.js",
+    "build": "npx webpack --config webpack.prod.js",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
@@ -15,6 +15,7 @@
     "@fortawesome/vue-fontawesome": "^3.0.1",
     "axios": "^0.27.2",
     "axios-jwt": "^1.8.0",
+    "bootstrap": "^4.6.2",
     "core-js": "^3.8.3",
     "hammerjs": "^2.0.8",
     "jwt-decode": "^3.1.2",
@@ -30,6 +31,7 @@
     "vue-toast-notification": "3.0",
     "vuejs-paginate-next": "^1.0.2",
     "vuex": "^4.0.0",
+    "webpack": "^5.74.0",
     "webpack-bundle-tracker": "^1.6.0"
   },
   "devDependencies": {

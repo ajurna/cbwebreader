@@ -70,7 +70,12 @@ export default {
       let comic_data_url = '/api/read/' + this.selector + '/'
       api.get(comic_data_url)
         .then(response => {
-          this.pdfdata = pdfvuer.createLoadingTask('/api/read/' + this.selector + '/pdf/');
+          let parameter = {
+            url: '/api/read/' + this.selector + '/pdf/',
+            httpHeaders: { Authorization: 'Bearer ' + this.$store.state.jwt.access },
+            withCredentials: true,
+          }
+          this.pdfdata = pdfvuer.createLoadingTask(parameter);
           this.pdfdata.then(pdf => {
             this.numPages = pdf.numPages;
             this.loaded = true

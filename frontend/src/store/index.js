@@ -23,7 +23,6 @@ function get_user_from_storage(){
 export default createStore({
   state: {
     jwt: get_jwt_from_storage(),
-    base_url: 'http://localhost:8000',
     filters: {},
     user: get_user_from_storage(),
     classifications: [

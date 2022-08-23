@@ -4,14 +4,14 @@ const BundleTracker = require('webpack-bundle-tracker');
 const webpack = require('webpack')
 
 module.exports = (env = {}) => {
-  env.prod = false
+  env.prod = true
   return {
 
-    mode: env.prod ? 'production' : 'development',
-    devtool: env.prod ? 'source-map' : 'eval-cheap-source-map',
+    mode: 'production',
+    devtool: false,
     entry: path.resolve(__dirname, './src/main.js'),
     output: {
-      path: path.resolve(__dirname, './dist'),
+      path: path.resolve(__dirname, './dist/bundles/'),
     },
     module: {
       rules: [
@@ -47,23 +47,12 @@ module.exports = (env = {}) => {
       new VueLoaderPlugin(),
       new BundleTracker({
         filename: './webpack-stats.json',
-        publicPath: 'http://localhost:8080/'
+        publicPath: '/static/bundles/'
       }),
       new webpack.DefinePlugin({
         'process.env.BASE_URL': JSON.stringify(process.env.BASE_URL),
       }),
-      new webpack.DefinePlugin({ __VUE_OPTIONS_API__: true, __VUE_PROD_DEVTOOLS__: true }),
-    ],
-    devServer: {
-      headers: {
-        "Access-Control-Allow-Origin":"*"
-      },
-      // public: 'http://0.0.0.0:8080',
-      // inline: true,
-      hot: true,
-      // stats: "minimal",
-      // contentBase: __dirname,
-      // overlay: true
-    }
+      new webpack.DefinePlugin({ __VUE_OPTIONS_API__: true, __VUE_PROD_DEVTOOLS__: false }),
+    ]
   };
 }

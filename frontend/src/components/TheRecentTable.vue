@@ -99,7 +99,7 @@ export default {
   },
   methods: {
     updateComicList () {
-      let comic_list_url = this.$store.state.base_url + '/api/recent/'
+      let comic_list_url = '/api/recent/'
       let params = { params: { page: this.page, page_size: this.page_size } }
 
       if (this.search_text) {
@@ -149,14 +149,14 @@ export default {
         }
       })
       if (this.func_selected === 'mark_read') {
-        let comic_mark_read = this.$store.state.base_url + '/api/action/mark_read/'
+        let comic_mark_read = '/api/action/mark_read/'
         const payload = { selectors: selected_ids }
         api.put(comic_mark_read, payload).then(() => {
           this.updateComicList()
           this.func_selected = "choose"
         })
       } else if (this.func_selected === 'mark_unread') {
-        let comic_mark_unread = this.$store.state.base_url + '/api/action/mark_unread/'
+        let comic_mark_unread = '/api/action/mark_unread/'
         const payload = { selectors: selected_ids }
         api.put(comic_mark_unread, payload).then(() => {
           this.updateComicList()
@@ -169,7 +169,7 @@ export default {
   },
   mounted() {
     this.updateComicList()
-    let comic_mark_unread = this.$store.state.base_url + '/api/account/feed_id/'
+    let comic_mark_unread = '/api/account/feed_id/'
     api.get(comic_mark_unread).then((response) => {
       this.feed_id = response.data.feed_id
     })

@@ -23,24 +23,20 @@ COPY requirements.txt /src
 COPY package.json /src
 COPY package-lock.json /src
 
-#RUN apt install -y  build-essential postgresql libmariadb-dev libmupdf-dev python3-dev libfreetype-dev libffi-dev libjbig2dec0-dev libjpeg-dev libharfbuzz-dev npm\
-#    && apt install tini bash unrar python3 mariadb-connector-c jpeg postgresql-libs jbig2dec jpeg openjpeg harfbuzz mupdf postgresql-client\
-#    && npm install \
-#    && pip install --upgrade pip \
-#    && pip install -r requirements.txt \
-#    && apt remove build-essential postgresql-dev mariadb-dev mariadb-connector-c-dev mupdf-dev python3-dev freetype-dev libffi-dev jbig2dec-dev jpeg-dev openjpeg-dev harfbuzz-dev npm
-
 RUN apt install -y software-properties-common \
     && apt install -y npm cron unrar \
-    && npm install \
     && pip install --upgrade pip \
     && pip install -r requirements.txt \
-    && apt remove -y npm \
     && apt -y auto-remove
 
-COPY entrypoint.sh /src
-
 COPY . /src/
+
+WORKDIR /src/frontend
+
+RUN npm install
+RUN npm run build
+WORKDIR /src
+
 
 RUN cat /src/cbreader/crontab >> /etc/cron.daily/cbreader
 

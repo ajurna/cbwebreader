@@ -113,13 +113,20 @@ class GroupViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 
+class BrowseFileField(serializers.FileField):
+    def to_representation(self, value):
+        if not value:
+            return None
+        return Path(settings.MEDIA_URL, value.name).as_posix()
+
+
 class BrowseSerializer(serializers.Serializer):
     selector = serializers.UUIDField()
     title = serializers.CharField()
     progress = serializers.IntegerField()
     total = serializers.IntegerField()
     type = serializers.CharField()
-    thumbnail = serializers.FileField()
+    thumbnail = BrowseFileField()
     classification = serializers.IntegerField()
     finished = serializers.BooleanField()
     unread = serializers.BooleanField()
@@ -248,7 +255,7 @@ class BrowseViewSet(viewsets.GenericViewSet):
 
 class GenerateThumbnailSerializer(serializers.Serializer):
     selector = serializers.UUIDField()
-    thumbnail = serializers.FileField()
+    thumbnail = BrowseFileField()
 
 
 class GenerateThumbnailViewSet(viewsets.ViewSet):

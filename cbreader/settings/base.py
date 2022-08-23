@@ -22,9 +22,9 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", None)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DJANGO_DEBUG', False) == 'True'
+# DEBUG = False
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
-
 
 # Application definition
 
@@ -102,7 +102,9 @@ STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
     Path(BASE_DIR, "static"),
-    Path(BASE_DIR, "node_modules")
+    # Path(BASE_DIR, "node_modules"),
+    Path(BASE_DIR, "frontend", "node_modules"),
+    Path(BASE_DIR, "frontend", "dist")
 ]
 
 STATIC_ROOT = os.getenv('STATIC_ROOT', None)
@@ -123,6 +125,8 @@ RECAPTCHA_PRIVATE_KEY = os.getenv("DJANGO_RECAPTCHA_PRIVATE_KEY", '')
 RECAPTCHA_PUBLIC_KEY = os.getenv("DJANGO_RECAPTCHA_PUBLIC_KEY", '')
 
 COMIC_BOOK_VOLUME = Path(os.getenv("COMIC_BOOK_VOLUME"))
+
+COMIC_BOOK_VOLUME = Path('/comics')
 
 from .logger import LOGGING
 

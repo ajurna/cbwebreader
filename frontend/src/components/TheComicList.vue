@@ -48,7 +48,7 @@ export default {
   },
   methods: {
     updateComicList () {
-      let comic_list_url = this.$store.state.base_url + '/api/browse/'
+      let comic_list_url = '/api/browse/'
       if (this.selector) {
         comic_list_url += this.selector + '/'
       }
