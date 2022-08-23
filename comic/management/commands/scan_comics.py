@@ -74,6 +74,8 @@ class Command(BaseCommand):
                     next_directory.save()
                 self.scan_directory(next_directory)
             else:
+                if file.suffix.lower() not in settings.SUPPORTED_FILES:
+                    continue
                 if self.OUTPUT:
                     logger.info(f"Scanning File {file}")
                 try:

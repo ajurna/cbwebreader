@@ -244,3 +244,5 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+SUPPORTED_FILES = [".rar", ".zip", ".cbr", ".cbz", ".pdf"]

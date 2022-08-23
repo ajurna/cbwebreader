@@ -207,7 +207,7 @@ class BrowseViewSet(viewsets.GenericViewSet):
         # Parse new comics
         books_to_add = []
         for new_comic in file_list - files_db_set:
-            if new_comic.suffix.lower() in [".rar", ".zip", ".cbr", ".cbz", ".pdf"]:
+            if new_comic.suffix.lower() in settings.SUPPORTED_FILES:
                 books_to_add.append(
                     models.ComicBook(file_name=new_comic.name, directory=directory)
                 )

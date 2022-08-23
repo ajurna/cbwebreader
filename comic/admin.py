@@ -23,6 +23,7 @@ class ComicBookAdmin(admin.ModelAdmin):
     )
     list_filter = ('date_added',)
     raw_id_fields = ('directory',)
+    search_fields = ['file_name']
 
 
 @admin.register(ComicPage)
