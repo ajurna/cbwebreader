@@ -13,8 +13,8 @@ services:
     expose:
       - 8000
     volumes:
-#      - ${COMIC_BOOK_VOLUME}:${COMIC_BOOK_VOLUME}
-      - c:/comics:/comics
+      - ${COMIC_BOOK_VOLUME}:${COMIC_BOOK_VOLUME}
+#      - c:/comics:/comics
       - static_files:/static
       - media_files:/media
       - .env:/src/.env

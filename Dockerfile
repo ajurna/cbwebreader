@@ -20,23 +20,19 @@ RUN apt-add-repository non-free
 RUN apt update
 
 COPY requirements.txt /src
-COPY package.json /src
-COPY package-lock.json /src
-
-RUN apt install -y software-properties-common \
-    && apt install -y npm cron unrar \
-    && pip install --upgrade pip \
-    && pip install -r requirements.txt \
-    && apt -y auto-remove
 
 COPY . /src/
 
-WORKDIR /src/frontend
+RUN apt install -y npm cron unrar \
+    && pip install --upgrade pip \
+    && pip install -r requirements.txt \
+    && cd frontend \
+    && npm install \
+    && npm run build \
+    && rm -r node_modules \
+    && apt -y auto-remove
 
-RUN npm install
-RUN npm run build
 WORKDIR /src
-
 
 RUN cat /src/cbreader/crontab >> /etc/cron.daily/cbreader
 
