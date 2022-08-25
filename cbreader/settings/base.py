@@ -61,7 +61,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # 'silk.middleware.SilkyMiddleware',
-    # 'csp.middleware.CSPMiddleware',
+    'csp.middleware.CSPMiddleware',
 ]
 
 ROOT_URLCONF = "cbreader.urls"
@@ -120,9 +120,6 @@ LOGIN_URL = "/login/"
 
 UNRAR_TOOL = os.getenv("DJANGO_UNRAR_TOOL", None)
 
-CBREADER_USE_RECAPTCHA = os.getenv("DJANGO_CBREADER_USE_RECAPTCHA", False)
-RECAPTCHA_PRIVATE_KEY = os.getenv("DJANGO_RECAPTCHA_PRIVATE_KEY", '')
-RECAPTCHA_PUBLIC_KEY = os.getenv("DJANGO_RECAPTCHA_PUBLIC_KEY", '')
 
 COMIC_BOOK_VOLUME = Path(os.getenv("COMIC_BOOK_VOLUME"))
 
@@ -145,14 +142,14 @@ BOOTSTRAP4 = {
         "crossorigin": "anonymous",
     },
 }
-# CSP_DEFAULT_SRC = ("'none'",)
-# CSP_STYLE_SRC = ("'self'",)
-# CSP_IMG_SRC = ("'self'", "data:")
-# CSP_FONT_SRC = ("'self'",)
-# CSP_SCRIPT_SRC = ("'self'", "'sha256-khnq7MWUoC3fJlH98ZjaCbVOvyd5+vnfVyue/ca55JA='")
-# CSP_CONNECT_SRC = ("'self'",)
-# CSP_INCLUDE_NONCE_IN = ['script-src']
-# CSP_SCRIPT_SRC_ATTR = ("'self'",)# "'unsafe-inline'")
+CSP_DEFAULT_SRC = ("'none'",)
+CSP_STYLE_SRC = ("'self'", "'sha256-MBVp6JYxbC/wICelYC6eULCRpgi9kGezXXSaq/TS2+I='")
+CSP_IMG_SRC = ("'self'", "data:")
+CSP_FONT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'",)
+CSP_CONNECT_SRC = ("'self'",)
+CSP_INCLUDE_NONCE_IN = ['script-src']
+CSP_SCRIPT_SRC_ATTR = ("'self'",)# "'unsafe-inline'")
 
 PERMISSIONS_POLICY = {
     "accelerometer": [],
@@ -224,6 +221,7 @@ WEBPACK_LOADER = {
         'CACHE': not DEBUG,
         'BUNDLE_DIR_NAME': '/bundles/',  # must end with slash
         'STATS_FILE': os.path.join(FRONTEND_DIR, 'webpack-stats.json'),
+        'INTEGRITY': True,
     }
 }
 

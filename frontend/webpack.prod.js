@@ -1,7 +1,11 @@
 const path = require('path')
 const { VueLoaderPlugin } = require('vue-loader')
 const BundleTracker = require('webpack-bundle-tracker');
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+
+
 const webpack = require('webpack')
+
 
 module.exports = (env = {}) => {
   env.prod = true
@@ -29,10 +33,7 @@ module.exports = (env = {}) => {
         },
         {
           test: /\.css$/,
-          use: [
-            'style-loader',
-            'css-loader'
-          ]
+          use: [MiniCssExtractPlugin.loader, "css-loader"],
         }
       ]
     },
@@ -47,12 +48,19 @@ module.exports = (env = {}) => {
       new VueLoaderPlugin(),
       new BundleTracker({
         filename: './webpack-stats.json',
-        publicPath: '/static/bundles/'
+        publicPath: '/static/bundles/',
+        integrity: true
       }),
       new webpack.DefinePlugin({
         'process.env.BASE_URL': JSON.stringify(process.env.BASE_URL),
       }),
       new webpack.DefinePlugin({ __VUE_OPTIONS_API__: true, __VUE_PROD_DEVTOOLS__: false }),
-    ]
+      new MiniCssExtractPlugin(),
+    ],
+    optimization: {
+      splitChunks: {
+        chunks: 'all',
+      },
+    },
   };
 }

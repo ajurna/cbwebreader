@@ -180,14 +180,14 @@ Django = ">3.2"
 
 [[package]]
 name = "django"
-version = "4.1"
+version = "4.0.7"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 category = "main"
 optional = false
 python-versions = ">=3.8"
 
 [package.dependencies]
-asgiref = ">=3.5.2,<4"
+asgiref = ">=3.4.1,<4"
 sqlparse = ">=0.2.2"
 tzdata = {version = "*", markers = "sys_platform == \"win32\""}
 
@@ -1024,7 +1024,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "27e83e25d99c871563be768ad1dbdd3ece34f240a99d498322b27fc0231af036"
+content-hash = "4a1018e12d5d29a99175c79c0afd14a4faaf846a535f2544b670842739d867e0"
 
 [metadata.files]
 appnope = [

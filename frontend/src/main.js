@@ -14,15 +14,16 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 /* import specific icons */
-import { fas } from '@fortawesome/free-solid-svg-icons'
-library.add(fas)
+import {faBook, faBookOpen, faEdit, faTurnUp} from '@fortawesome/free-solid-svg-icons'
+library.add(faBook, faBookOpen, faEdit, faTurnUp)
 
 import router from './router'
 import store from './store'
 
-/* add icons to the library */
-import axios from 'axios'
-import VueAxios from 'vue-axios'
-
-
-Vue.createApp(App).use(CoreuiVue).use(ToastPlugin).use(store).use(VueAxios, axios).use(router).component('font-awesome-icon', FontAwesomeIcon).mount('#app')
+Vue.createApp(App)
+    .use(CoreuiVue)
+    .use(ToastPlugin)
+    .use(store)
+    .use(router)
+    .component('font-awesome-icon', FontAwesomeIcon)
+    .mount('#app')

@@ -1,10 +1,11 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import LoginView from "@/views/LoginView";
-import ReadView from "@/views/ReadView";
-import RecentView from "@/views/RecentView";
-import AccountView from "@/views/AccountView";
-import BrowseView from "@/views/BrowseView";
-import UserView from "@/views/UserView";
+
+const ReadView = () => import('@/views/ReadView')
+const RecentView = () => import('@/views/RecentView')
+const AccountView = () => import('@/views/AccountView')
+const BrowseView = () => import('@/views/BrowseView')
+const UserView = () => import('@/views/UserView')
+const LoginView = () => import('@/views/LoginView')
 
 const routes = [
   {
