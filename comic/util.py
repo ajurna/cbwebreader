@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from dataclasses import dataclass
+from itertools import chain
 from pathlib import Path
 from typing import Union, Iterable
 
@@ -37,6 +38,7 @@ class Breadcrumb:
     def __init__(self):
         self.name = "Home"
         self.url = "/comic/"
+        self.selector = ''
 
     def __str__(self):
         return self.name
@@ -60,11 +62,13 @@ def generate_breadcrumbs_from_path(directory=False, book=False):
         bc = Breadcrumb()
         bc.name = item.name
         bc.url = "/comic/" + urlsafe_base64_encode(item.selector.bytes)
+        bc.selector = item.selector
         output.append(bc)
     if book:
         bc = Breadcrumb()
         bc.name = book.file_name
         bc.url = "/read/" + urlsafe_base64_encode(book.selector.bytes)
+        bc.selector = book.selector
         output.append(bc)
 
     return output
@@ -87,9 +91,9 @@ class DirFile:
     item_type: str = ''
     percent: int = 0
     selector: str = ''
-    total: int = None
-    total_read: int = None
-    total_unread: int = None
+    total: int = 0
+    total_read: int = 0
+    total_unread: int = 0
 
     def __post_init__(self):
         self.item_type = type(self.obj).__name__
@@ -111,36 +115,40 @@ class DirFile:
             self.name = self.obj.name
         elif isinstance(self.obj, ComicBook):
             self.name = self.obj.file_name
+    @property
+    def type(self):
+        return 'ComicBook'
 
+    @property
+    def title(self):
+        return self.name
 
-def generate_directory(user: User, directory=False):
+    @property
+    def progress(self):
+        return self.total_read
+
+    @property
+    def thumbnail(self):
+        return '/error.jpg'
+
+def generate_directory(user: User, directory=None):
     """
     :type user: User
     :type directory: Directory
     """
     base_dir = settings.COMIC_BOOK_VOLUME
     files = []
-    if directory:
-        dir_path = Path(base_dir, directory.path)
-        dir_list = [x for x in sorted(dir_path.glob('*')) if Path(base_dir, directory.path, x).is_dir()]
-    else:
-        dir_path = base_dir
-        dir_list = [x for x in sorted(dir_path.glob('*')) if Path(base_dir, x).is_dir()]
+    dir_path = Path(base_dir, directory.path) if directory else base_dir
+    dir_list = [x for x in sorted(dir_path.glob('*')) if x.is_dir()]
+
     file_list = [x for x in sorted(dir_path.glob('*')) if x.is_file()]
-    if directory:
-        dir_list_obj = Directory.objects.filter(name__in=[x.name for x in dir_list], parent=directory)
-        file_list_obj = ComicBook.objects.filter(file_name__in=[x.name for x in file_list], directory=directory)
-    else:
-        dir_list_obj: Iterable[Directory] = Directory.objects.filter(name__in=[x.name for x in dir_list], parent__isnull=True)
-        file_list_obj: Iterable[ComicBook] = ComicBook.objects.filter(file_name__in=[x.name for x in file_list], directory__isnull=True)
-    for file in file_list_obj:
+    dir_list_obj = Directory.objects.filter(name__in=[x.name for x in dir_list], parent=directory)
+    file_list_obj = ComicBook.objects.filter(file_name__in=[x.name for x in file_list], directory=directory)
+
+    for file in chain(file_list_obj, dir_list_obj):
         if file.thumbnail and not Path(file.thumbnail.path).exists():
             file.thumbnail.delete()
             file.save()
-    for folder in dir_list_obj:
-        if folder.thumbnail and not Path(folder.thumbnail.path).exists():
-            folder.thumbnail.delete()
-            folder.save()
 
     dir_list_obj = dir_list_obj.annotate(
         total=Count('comicbook', distinct=True),
@@ -186,10 +194,27 @@ def generate_directory(user: User, directory=False):
         files.append(DirFile(directory_obj))
     files = [file for file in files if file.obj.classification <= user.usermisc.allowed_to_read]
 
+    comics_to_annotate = []
     for file_name in file_list:
         if file_name.suffix.lower() in [".rar", ".zip", ".cbr", ".cbz", ".pdf"]:
             book = ComicBook.process_comic_book(file_name, directory)
-            files.append(DirFile(book))
+            ComicStatus(user=user, comic=book).save()
+            comics_to_annotate.append(book.selector)
+    if comics_to_annotate:
+        new_comics = ComicBook.objects.filter(selector__in=comics_to_annotate).annotate(
+                total=Count('comicpage', distinct=True),
+                total_read=F('comicstatus__last_read_page'),
+                finished=F('comicstatus__finished'),
+                unread=F('comicstatus__unread'),
+                user=F('comicstatus__user'),
+                classification=Case(
+                    When(directory__isnull=True, then=Directory.Classification.C_18),
+                    default=F('directory__classification'),
+                    output_field=PositiveSmallIntegerField(choices=Directory.Classification.choices)
+                )
+            ).filter(Q(user__isnull=True) | Q(user=user.id))
+
+        files.extend([DirFile(b) for b in new_comics])
     files.sort(key=lambda x: x.name)
     files.sort(key=lambda x: x.item_type, reverse=True)
     return files

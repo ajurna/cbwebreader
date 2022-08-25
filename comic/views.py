@@ -339,6 +339,16 @@ def get_image(request, comic_selector, page):
     return FileResponse(img, content_type=content)
 
 
+@login_required
+def get_image_api(request, selector, page):
+    book = ComicBook.objects.get(selector=selector)
+    misc, _ = UserMisc.objects.get_or_create(user=request.user)
+    if book.directory and book.directory.classification > misc.allowed_to_read:
+        return HttpResponse(status=401)
+    img, content = book.get_image(int(page))
+    return FileResponse(img, content_type=content)
+
+
 @xframe_options_sameorigin
 @login_required
 def comic_thumbnail(request, comic_selector):

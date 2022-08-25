@@ -14,24 +14,25 @@ services:
       - 8000
     volumes:
       - ${COMIC_BOOK_VOLUME}:${COMIC_BOOK_VOLUME}
+#      - c:/comics:/comics
       - static_files:/static
       - media_files:/media
       - .env:/src/.env
-    command:  /bin/bash entrypoint.sh
+    command:  /bin/bash /src/entrypoint.sh
 
-  cbwebreader-cron:
-    build: .
-    env_file: .env
-    links:
-      - database
-    depends_on:
-      database:
-        condition: service_healthy
-    volumes:
-      - ${COMIC_BOOK_VOLUME}:${COMIC_BOOK_VOLUME}
-      - media_files:/media
-      - .env:/src/.env
-    command: /bin/bash entrypoint-cron.sh
+#  cbwebreader-cron:
+#    build: .
+#    env_file: .env
+#    links:
+#      - database
+#    depends_on:
+#      database:
+#        condition: service_healthy
+#    volumes:
+#      - ${COMIC_BOOK_VOLUME}:${COMIC_BOOK_VOLUME}
+#      - media_files:/media
+#      - .env:/src/.env
+#    command: /bin/bash entrypoint-cron.sh
 
   database:
     image: postgres:11.4-alpine

@@ -14,6 +14,7 @@ from django.conf import settings
 from django.contrib.auth.models import User, AbstractUser
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
+from django.db.models import UniqueConstraint
 from django.db.transaction import atomic
 from django.templatetags.static import static
 from django.utils.http import urlsafe_base64_encode
@@ -36,7 +37,7 @@ class Directory(models.Model):
         C_18 = 4, '18'
 
     name = models.CharField(max_length=100)
-    parent = models.ForeignKey("Directory", null=True, blank=True, on_delete=models.CASCADE)
+    parent = models.ForeignKey("Directory", null=True, blank=True, on_delete=models.CASCADE, to_field="selector")
     selector = models.UUIDField(unique=True, default=uuid.uuid4, db_index=True)
     thumbnail = ProcessedImageField(upload_to='thumbs',
                                     processors=[ResizeToFill(200, 300)],
@@ -54,6 +55,14 @@ class Directory(models.Model):
 
     def __str__(self):
         return "Directory: {0}; {1}".format(self.name, self.parent)
+
+    @property
+    def title(self):
+        return self.name
+
+    @property
+    def type(self):
+        return 'Directory'
 
     def mark_read(self, user):
         books = ComicBook.objects.filter(directory=self)
@@ -124,7 +133,7 @@ class Directory(models.Model):
 class ComicBook(models.Model):
     file_name = models.TextField()
     date_added = models.DateTimeField(auto_now_add=True)
-    directory = models.ForeignKey(Directory, blank=True, null=True, on_delete=models.CASCADE)
+    directory = models.ForeignKey(Directory, blank=True, null=True, on_delete=models.CASCADE, to_field="selector")
     selector = models.UUIDField(unique=True, default=uuid.uuid4, db_index=True)
     version = models.IntegerField(default=1)
     thumbnail = ProcessedImageField(upload_to='thumbs',
@@ -134,8 +143,21 @@ class ComicBook(models.Model):
                                     null=True)
     thumbnail_index = models.PositiveIntegerField(default=0)
 
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['directory', 'file_name'], name='one_comic_name_per_directory')
+        ]
+
     def __str__(self):
         return self.file_name
+
+    @property
+    def title(self):
+        return self.file_name
+
+    @property
+    def type(self):
+        return 'ComicBook'
 
     def mark_read(self, user: User):
         status, _ = ComicStatus.objects.get_or_create(comic=self, user=user)
@@ -158,7 +180,10 @@ class ComicBook(models.Model):
 
     def get_pdf(self) -> Path:
         base_dir = settings.COMIC_BOOK_VOLUME
-        return Path(base_dir, self.directory.get_path(), self.file_name)
+        if self.directory:
+            return Path(base_dir, self.directory.get_path(), self.file_name)
+        else:
+            return Path(base_dir, self.file_name)
 
     def get_image(self, page: int):
         base_dir = settings.COMIC_BOOK_VOLUME
@@ -468,10 +493,15 @@ class ComicPage(models.Model):
 
 class ComicStatus(models.Model):
     user = models.ForeignKey(User, unique=False, null=False, on_delete=models.CASCADE)
-    comic = models.ForeignKey(ComicBook, unique=False, null=False, on_delete=models.CASCADE)
+    comic = models.ForeignKey(ComicBook, unique=False, blank=False, null=False, on_delete=models.CASCADE, to_field="selector")
     last_read_page = models.IntegerField(default=0)
     unread = models.BooleanField(default=True)
     finished = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['user', 'comic'], name='one_per_user_per_comic')
+        ]
 
     def mark_read(self):
         page_count = ComicPage.objects.filter(Comic=self.comic).count()

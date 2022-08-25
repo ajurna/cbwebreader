@@ -4,6 +4,7 @@ Django settings for cbreader project.
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
@@ -21,9 +22,9 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", None)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DJANGO_DEBUG', False) == 'True'
+# DEBUG = False
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
-
 
 # Application definition
 
@@ -34,7 +35,8 @@ INSTALLED_APPS = (
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "snowpenguin.django.recaptcha2",
+    'drf_yasg',
+    'webpack_loader',
     'bootstrap4',
     "comic",
     "comic_auth",
@@ -42,37 +44,28 @@ INSTALLED_APPS = (
     'imagekit',
     'django_boost',
     'sri',
+    "corsheaders",
+    'django_filters',
+    'rest_framework',
+    # 'silk'
 )
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django_permissions_policy.PermissionsPolicyMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # 'silk.middleware.SilkyMiddleware',
     'csp.middleware.CSPMiddleware',
 ]
 
 ROOT_URLCONF = "cbreader.urls"
 
-TEMPLATES = [
-    {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ["templates"],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "context_processors": [
-                "django.template.context_processors.debug",
-                "django.template.context_processors.request",
-                "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
-            ]
-        },
-    }
-]
 
 WSGI_APPLICATION = "cbreader.wsgi.application"
 
@@ -109,7 +102,9 @@ STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
     Path(BASE_DIR, "static"),
-    Path(BASE_DIR, "node_modules")
+    # Path(BASE_DIR, "node_modules"),
+    Path(BASE_DIR, "frontend", "node_modules"),
+    Path(BASE_DIR, "frontend", "dist")
 ]
 
 STATIC_ROOT = os.getenv('STATIC_ROOT', None)
@@ -125,9 +120,6 @@ LOGIN_URL = "/login/"
 
 UNRAR_TOOL = os.getenv("DJANGO_UNRAR_TOOL", None)
 
-CBREADER_USE_RECAPTCHA = os.getenv("DJANGO_CBREADER_USE_RECAPTCHA", False)
-RECAPTCHA_PRIVATE_KEY = os.getenv("DJANGO_RECAPTCHA_PRIVATE_KEY", '')
-RECAPTCHA_PUBLIC_KEY = os.getenv("DJANGO_RECAPTCHA_PUBLIC_KEY", '')
 
 COMIC_BOOK_VOLUME = Path(os.getenv("COMIC_BOOK_VOLUME"))
 
@@ -151,10 +143,10 @@ BOOTSTRAP4 = {
     },
 }
 CSP_DEFAULT_SRC = ("'none'",)
-CSP_STYLE_SRC = ("'self'",)
+CSP_STYLE_SRC = ("'self'", "'sha256-MBVp6JYxbC/wICelYC6eULCRpgi9kGezXXSaq/TS2+I='")
 CSP_IMG_SRC = ("'self'", "data:")
 CSP_FONT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "'sha256-khnq7MWUoC3fJlH98ZjaCbVOvyd5+vnfVyue/ca55JA='")
+CSP_SCRIPT_SRC = ("'self'",)
 CSP_CONNECT_SRC = ("'self'",)
 CSP_INCLUDE_NONCE_IN = ['script-src']
 CSP_SCRIPT_SRC_ATTR = ("'self'",)# "'unsafe-inline'")
@@ -177,10 +169,78 @@ PERMISSIONS_POLICY = {
     "usb": [],
 }
 
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_SAMESITE = 'Strict'
-CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'Strict'
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# SESSION_COOKIE_HTTPONLY = True
+# SESSION_COOKIE_SECURE = True
+# SESSION_COOKIE_SAMESITE = 'Strict'
+# CSRF_COOKIE_HTTPONLY = True
+# CSRF_COOKIE_SECURE = True
+# CSRF_COOKIE_SAMESITE = 'Strict'
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    )
+}
+
+CORS_ALLOW_ALL_ORIGINS = True
+SIMPLE_JWT = {
+    "ROTATE_REFRESH_TOKENS": True,
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
+    'LEEWAY': timedelta(minutes=5),
+}
+
+TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
+FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [TEMPLATES_DIR, ],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ]
+        },
+    }
+]
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'CACHE': not DEBUG,
+        'BUNDLE_DIR_NAME': '/bundles/',  # must end with slash
+        'STATS_FILE': os.path.join(FRONTEND_DIR, 'webpack-stats.json'),
+        'INTEGRITY': True,
+    }
+}
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 9,
+        }
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+SUPPORTED_FILES = [".rar", ".zip", ".cbr", ".cbz", ".pdf"]
