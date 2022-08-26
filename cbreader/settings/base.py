@@ -117,7 +117,7 @@ LOGIN_URL = "/login/"
 UNRAR_TOOL = os.getenv("DJANGO_UNRAR_TOOL", None)
 
 
-COMIC_BOOK_VOLUME = Path(os.getenv("COMIC_BOOK_VOLUME"))
+COMIC_BOOK_VOLUME = Path(os.getenv("COMIC_BOOK_VOLUME", '/comics'))
 
 from .logger import LOGGING
 
@@ -185,13 +185,12 @@ SIMPLE_JWT = {
     'LEEWAY': timedelta(minutes=5),
 }
 
-TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')
 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [TEMPLATES_DIR, ],
+        "DIRS": [],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
