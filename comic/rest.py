@@ -5,7 +5,7 @@ from typing import Union, NamedTuple, List
 from uuid import UUID
 
 from django.conf import settings
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db.models import Count, Case, When, F, PositiveSmallIntegerField, Q
@@ -86,33 +86,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(data={'classification': misc.allowed_to_read})
         else:
             return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-
-
-class UserMiscSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.UserMisc
-        fields = ['user', 'feed_id', 'allowed_to_read']
-
-
-class UserMiscViewSet(viewsets.ModelViewSet):
-    queryset = models.UserMisc.objects.all()
-    serializer_class = UserMiscSerializer
-    permission_classes = [permissions.IsAdminUser]
-
-
-class GroupSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = Group
-        fields = ['url', 'name']
-
-
-class GroupViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
-    queryset = Group.objects.all()
-    serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
 class BrowseFileField(serializers.FileField):
