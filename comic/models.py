@@ -64,26 +64,6 @@ class Directory(models.Model):
     def type(self):
         return 'Directory'
 
-    def mark_read(self, user):
-        books = ComicBook.objects.filter(directory=self)
-        for book in books:
-            book.mark_read(user)
-
-    def mark_unread(self, user):
-        books = ComicBook.objects.filter(directory=self)
-        for book in books:
-            book.mark_unread(user)
-
-    def get_thumbnail_url(self):
-        if self.thumbnail:
-            return self.thumbnail.url
-        else:
-            self.generate_thumbnail()
-            if self.thumbnail:
-                return self.thumbnail.url
-            else:
-                return static('img/placeholder.png')
-
     def generate_thumbnail(self):
         book: ComicBook = ComicBook.objects.filter(directory=self).order_by('file_name').first()
         if not book:
@@ -121,14 +101,6 @@ class Directory(models.Model):
             self.parent.get_path_objects(p)
         return p
 
-    @property
-    def url_safe_selector(self):
-        return urlsafe_base64_encode(self.selector.bytes)
-
-    def set_classification(self, form_data):
-        self.classification = form_data['classification']
-        self.save()
-
 
 class ComicBook(models.Model):
     file_name = models.TextField()
@@ -159,25 +131,6 @@ class ComicBook(models.Model):
     def type(self):
         return 'ComicBook'
 
-    def mark_read(self, user: User):
-        status, _ = ComicStatus.objects.get_or_create(comic=self, user=user)
-        status.mark_read()
-
-    def mark_unread(self, user: User):
-        status, _ = ComicStatus.objects.get_or_create(comic=self, user=user)
-        status.mark_unread()
-
-    def mark_previous(self, user):
-        books = ComicBook.objects.filter(directory=self.directory).order_by('file_name')
-        for book in books:
-            if book == self:
-                break
-            book.mark_read(user)
-
-    @property
-    def url_safe_selector(self):
-        return urlsafe_base64_encode(self.selector.bytes)
-
     def get_pdf(self) -> Path:
         base_dir = settings.COMIC_BOOK_VOLUME
         if self.directory:
@@ -206,13 +159,6 @@ class ComicBook(models.Model):
             page_obj = ComicPage.objects.get(Comic=self, index=page)
             out = (archive.open(page_obj.page_file_name), page_obj.content_type)
         return out
-
-    def get_thumbnail_url(self):
-        if self.thumbnail:
-            return self.thumbnail.url
-        else:
-            self.generate_thumbnail()
-            return self.thumbnail.url
 
     def generate_thumbnail(self, page_index: int = None):
 
@@ -262,113 +208,9 @@ class ComicBook(models.Model):
         img.seek(0)
         return img, pil_data
 
-    def is_last_page(self, page):
-        if (self.page_count - 1) == page:
-            return True
-        return False
-
     @property
     def page_count(self):
         return ComicPage.objects.filter(Comic=self).count()
-
-    def nav(self, user):
-        next_path, next_type = self.nav_get_next_comic(user)
-        prev_path, prev_type = self.nav_get_prev_comic(user)
-        return {
-            "next_path": next_path,
-            "next_type": next_type,
-            "prev_path": prev_path,
-            "prev_type": prev_type,
-            "cur_path": urlsafe_base64_encode(self.selector.bytes)
-        }
-
-    def nav_get_prev_comic(self, user) -> str:
-        base_dir = settings.COMIC_BOOK_VOLUME
-        if self.directory:
-            folder = Path(base_dir, self.directory.path)
-        else:
-            folder = base_dir
-        dir_list = ComicBook.get_ordered_dir_list(folder)
-        comic_index = dir_list.index(self.file_name)
-        if comic_index == 0:
-            if self.directory:
-                comic_path = urlsafe_base64_encode(self.directory.selector.bytes), type(self.directory).__name__
-            else:
-                comic_path = "", None
-        else:
-            prev_comic = dir_list[comic_index - 1]
-
-            if Path(folder, prev_comic).is_dir():
-                if self.directory:
-                    comic_path = urlsafe_base64_encode(self.directory.selector.bytes), type(self.directory).__name__
-                else:
-                    comic_path = "", None
-            else:
-                try:
-                    if self.directory:
-                        book = ComicBook.objects.get(file_name=prev_comic, directory=self.directory)
-                    else:
-                        book = ComicBook.objects.get(file_name=prev_comic, directory__isnull=True)
-                except ComicBook.DoesNotExist:
-                    if self.directory:
-                        book = ComicBook.process_comic_book(Path(prev_comic), self.directory)
-                    else:
-                        book = ComicBook.process_comic_book(Path(prev_comic))
-                cs, _ = ComicStatus.objects.get_or_create(comic=book, user=user)
-                comic_path = urlsafe_base64_encode(book.selector.bytes), type(book).__name__
-
-        return comic_path
-
-    def nav_get_next_comic(self, user):
-        base_dir = settings.COMIC_BOOK_VOLUME
-        if self.directory:
-            folder = Path(base_dir, self.directory.path)
-        else:
-            folder = base_dir
-        dir_list = ComicBook.get_ordered_dir_list(folder)
-        comic_index = dir_list.index(self.file_name)
-        try:
-            next_comic = dir_list[comic_index + 1]
-            try:
-                if self.directory:
-                    book = ComicBook.objects.get(file_name=next_comic, directory=self.directory)
-                else:
-                    book = ComicBook.objects.get(file_name=next_comic, directory__isnull=True)
-            except ComicBook.DoesNotExist:
-                if self.directory:
-                    book = ComicBook.process_comic_book(Path(next_comic), self.directory)
-                else:
-                    book = ComicBook.process_comic_book(Path(next_comic))
-            except ComicBook.MultipleObjectsReturned:
-                if self.directory:
-                    books = ComicBook.objects.filter(file_name=next_comic, directory=self.directory).order_by('id')
-                else:
-                    books = ComicBook.objects.get(file_name=next_comic, directory__isnull=True).order_by('id')
-                book = books.first()
-                books = books.exclude(id=book.id)
-                books.delete()
-            if type(book) is str:
-                raise IndexError
-            comic_path = urlsafe_base64_encode(book.selector.bytes), type(book).__name__
-        except IndexError:
-            if self.directory:
-                comic_path = urlsafe_base64_encode(self.directory.selector.bytes), type(self.directory).__name__
-            else:
-                comic_path = "", None
-        return comic_path
-
-    class DirFile:
-        def __init__(self):
-            self.name = ""
-            self.isdir = False
-            self.icon = ""
-            self.iscb = False
-            self.location = ""
-            self.label = ""
-            self.cur_page = 0
-
-        def __str__(self):
-            return self.name
 
     @staticmethod
     def process_comic_book(comic_file_path: Path, directory: "Directory" = False) -> Union["ComicBook", Path]:
@@ -403,17 +245,6 @@ class ComicBook(models.Model):
                     )
                     page.save()
         return book
-
-    @staticmethod
-    def get_ordered_dir_list(folder: Path) -> List[str]:
-        directories = []
-        files = []
-        for item in folder.glob('*'):
-            if item.is_dir():
-                directories.append(item)
-            else:
-                files.append(item)
-        return [x.name for x in chain(sorted(directories), sorted(files))]
 
     @property
     def get_archive_path(self):
@@ -502,19 +333,6 @@ class ComicStatus(models.Model):
         constraints = [
             UniqueConstraint(fields=['user', 'comic'], name='one_per_user_per_comic')
         ]
-
-    def mark_read(self):
-        page_count = ComicPage.objects.filter(Comic=self.comic).count()
-        self.unread = False
-        self.finished = True
-        self.last_read_page = page_count - 1
-        self.save()
-
-    def mark_unread(self):
-        self.unread = True
-        self.finished = False
-        self.last_read_page = 0
-        self.save()
 
     def __str__(self):
         return self.__repr__()
