@@ -133,7 +133,7 @@ jinja2 = "*"
 name = "coverage"
 version = "6.4.4"
 description = "Code coverage measurement for Python"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 
@@ -295,14 +295,6 @@ six = "*"
 async = ["django-celery (>=3.0)"]
 async_dramatiq = ["django-dramatiq (>=0.4.0)"]
 async_rq = ["django-rq (>=0.6.0)"]
-
-[[package]]
-name = "django-node-assets"
-version = "0.9.11"
-description = "The Django application that allows install and serve assets via Node.js package manager infrastructure."
-category = "main"
-optional = false
-python-versions = "*"
 
 [[package]]
 name = "django-permissions-policy"
@@ -549,17 +541,6 @@ win32-setctime = {version = ">=1.0.0", markers = "sys_platform == \"win32\""}
 
 [package.extras]
 dev = ["colorama (>=0.3.4)", "docutils (==0.16)", "flake8 (>=3.7.7)", "tox (>=3.9.0)", "pytest (>=4.6.2)", "pytest-cov (>=2.7.1)", "black (>=19.10b0)", "isort (>=5.1.1)", "Sphinx (>=4.1.1)", "sphinx-autobuild (>=0.7.1)", "sphinx-rtd-theme (>=0.4.3)"]
-
-[[package]]
-name = "markdown"
-version = "3.4.1"
-description = "Python implementation of Markdown."
-category = "main"
-optional = false
-python-versions = ">=3.7"
-
-[package.extras]
-testing = ["coverage", "pyyaml"]
 
 [[package]]
 name = "markupsafe"
@@ -1024,7 +1005,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "4a1018e12d5d29a99175c79c0afd14a4faaf846a535f2544b670842739d867e0"
+content-hash = "02ffb9bcd22babd30fb99e50a293f2ed1421375c4c36e5ee534c5530b63ca4e8"
 
 [metadata.files]
 appnope = [
@@ -1176,10 +1157,6 @@ django-imagekit = [
     {file = "django-imagekit-4.1.0.tar.gz", hash = "sha256:e559aeaae43a33b34f87631a9fa5696455e4451ffa738a42635fde442fedac5c"},
     {file = "django_imagekit-4.1.0-py2.py3-none-any.whl", hash = "sha256:87e36f8dc1d8745647881f4366ef4965225f048042dacebbee0dcb87425defef"},
 ]
-django-node-assets = [
-    {file = "django-node-assets-0.9.11.tar.gz", hash = "sha256:df6ca9aeb868aa9692cbf8f6265132b6159798866b15ac95d7d0d4dd5f3cb6da"},
-    {file = "django_node_assets-0.9.11-py3-none-any.whl", hash = "sha256:4d37659c07976dc4ebccb6704051c25204e3381aa5e4f98a4a76b57e33cb1776"},
-]
 django-permissions-policy = []
 django-silk = []
 django-sri = []
@@ -1216,7 +1193,6 @@ loguru = [
     {file = "loguru-0.6.0-py3-none-any.whl", hash = "sha256:4e2414d534a2ab57573365b3e6d0234dfb1d84b68b7f3b948e6fb743860a77c3"},
     {file = "loguru-0.6.0.tar.gz", hash = "sha256:066bd06758d0a513e9836fd9c6b5a75bfb3fd36841f4b996bc60b547a309d41c"},
 ]
-markdown = []
 markupsafe = [
     {file = "MarkupSafe-2.1.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:86b1f75c4e7c2ac2ccdaec2b9022845dbb81880ca318bb7a0a01fbf7813e3812"},
     {file = "MarkupSafe-2.1.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:f121a1420d4e173a5d96e47e9a0c0dcff965afdf1626d28de1460815f7c4ee7a"},

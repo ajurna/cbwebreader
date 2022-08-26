@@ -22,7 +22,6 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", None)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DJANGO_DEBUG', False) == 'True'
-# DEBUG = False
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
 
@@ -39,7 +38,6 @@ INSTALLED_APPS = (
     'webpack_loader',
     'bootstrap4',
     "comic",
-    "comic_auth",
     'django_extensions',
     'imagekit',
     'django_boost',
@@ -102,8 +100,6 @@ STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
     Path(BASE_DIR, "static"),
-    # Path(BASE_DIR, "node_modules"),
-    Path(BASE_DIR, "frontend", "node_modules"),
     Path(BASE_DIR, "frontend", "dist")
 ]
 
@@ -168,14 +164,6 @@ PERMISSIONS_POLICY = {
     "payment": [],
     "usb": [],
 }
-
-# SESSION_COOKIE_HTTPONLY = True
-# SESSION_COOKIE_SECURE = True
-# SESSION_COOKIE_SAMESITE = 'Strict'
-# CSRF_COOKIE_HTTPONLY = True
-# CSRF_COOKIE_SECURE = True
-# CSRF_COOKIE_SAMESITE = 'Strict'
-# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 REST_FRAMEWORK = {

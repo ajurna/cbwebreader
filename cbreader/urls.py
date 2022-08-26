@@ -18,14 +18,14 @@ from django.conf.urls import include
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, re_path
-from rest_framework import routers, permissions
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework_extensions.routers import ExtendedDefaultRouter
-
 from django.views.generic import TemplateView
-
-from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
+from rest_framework_extensions.routers import ExtendedDefaultRouter
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+from comic import rest, feeds
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -39,15 +39,8 @@ schema_view = get_schema_view(
    permission_classes=[permissions.AllowAny]
 )
 
-
-import comic.views
-import comic_auth.views
-from comic import rest, feeds
-
 router = ExtendedDefaultRouter()
 router.register(r'users', rest.UserViewSet)
-# router.register(r'usermisc', rest.UserMiscViewSet)
-# router.register(r'groups', rest.GroupViewSet)
 router.register(r'browse', rest.BrowseViewSet, basename='browse')
 router.register(r'generate_thumbnail', rest.GenerateThumbnailViewSet, basename='generate_thumbnail')
 router.register(r'read', rest.ReadViewSet, basename='read')\
@@ -60,11 +53,6 @@ router.register(r'initial_setup', rest.InitialSetup, basename='initial_setup')
 
 
 urlpatterns = [
-    # url(r"^$", comic.views.comic_redirect),
-    # url(r"^login/", comic_auth.views.comic_login),
-    # url(r"^logout/", comic_auth.views.comic_logout),
-    # url(r"^setup/", comic.views.initial_setup),
-    # url(r"^comic/", include("comic.urls")),
     path('admin/', admin.site.urls),
     path("feed/<user_selector>/", feeds.RecentComicsAPI()),
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
