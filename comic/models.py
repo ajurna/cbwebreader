@@ -3,21 +3,20 @@ import mimetypes
 import uuid
 import zipfile
 from functools import reduce
-from itertools import zip_longest, chain
+from itertools import zip_longest
 from pathlib import Path
-from typing import Optional, List, Union, Tuple
+from typing import Optional, List, Union, Tuple, Final
 
 import fitz
 import rarfile
 from PIL import Image, UnidentifiedImageError
+from PIL.Image import Image as Image_type
 from django.conf import settings
 from django.contrib.auth.models import User, AbstractUser
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.db.transaction import atomic
-from django.templatetags.static import static
-from django.utils.http import urlsafe_base64_encode
 from django_boost.models.fields import AutoOneToOneField
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
@@ -57,14 +56,14 @@ class Directory(models.Model):
         return "Directory: {0}; {1}".format(self.name, self.parent)
 
     @property
-    def title(self):
+    def title(self) -> str:
         return self.name
 
     @property
-    def type(self):
+    def type(self) -> str:
         return 'Directory'
 
-    def generate_thumbnail(self):
+    def generate_thumbnail(self) -> None:
         book: ComicBook = ComicBook.objects.filter(directory=self).order_by('file_name').first()
         if not book:
             return
@@ -85,7 +84,7 @@ class Directory(models.Model):
         else:
             return Path(path_items[0])
 
-    def get_path_items(self, p: Optional[List] = None) -> List[str]:
+    def get_path_items(self, p: Optional[List] = None) -> List[Path]:
         if p is None:
             p = []
         p.append(self.name)
@@ -93,7 +92,7 @@ class Directory(models.Model):
             self.parent.get_path_items(p)
         return p
 
-    def get_path_objects(self, p=None):
+    def get_path_objects(self, p=None) -> List["Directory"]:
         if p is None:
             p = []
         p.append(self)
@@ -120,15 +119,15 @@ class ComicBook(models.Model):
             UniqueConstraint(fields=['directory', 'file_name'], name='one_comic_name_per_directory')
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.file_name
 
     @property
-    def title(self):
+    def title(self) -> str:
         return self.file_name
 
     @property
-    def type(self):
+    def type(self) -> str:
         return 'ComicBook'
 
     def get_pdf(self) -> Path:
@@ -138,7 +137,7 @@ class ComicBook(models.Model):
         else:
             return Path(base_dir, self.file_name)
 
-    def get_image(self, page: int):
+    def get_image(self, page: int) -> Union[Tuple[io.BytesIO, Image_type], Tuple[bool, bool]]:
         base_dir = settings.COMIC_BOOK_VOLUME
         if self.directory:
             archive_path = Path(base_dir, self.directory.path, self.file_name)
@@ -149,7 +148,7 @@ class ComicBook(models.Model):
         except rarfile.NotRarFile:
             archive = zipfile.ZipFile(archive_path)
         except zipfile.BadZipfile:
-            return False
+            return False, False
 
         page_obj = ComicPage.objects.get(Comic=self, index=page)
         try:
@@ -160,32 +159,34 @@ class ComicBook(models.Model):
             out = (archive.open(page_obj.page_file_name), page_obj.content_type)
         return out
 
-    def generate_thumbnail(self, page_index: int = None):
+    def generate_thumbnail_pdf(self, page_index: int = 0) -> Tuple[io.BytesIO, Image_type, str]:
+        img, pil_data = self._get_pdf_image(page_index if page_index else 0)
+        return img, pil_data, 'Image/JPEG'
+
+    def generate_thumbnail_archive(self, page_index: int = 0) -> Union[Tuple[io.BytesIO, Image_type, str],
+                                                                       Tuple[bool, bool, bool]]:
+        img, content_type, pil_data = False, False, False
+        if page_index:
+            img, content_type = self.get_image(page_index)
+            pil_data = Image.open(img)
+        else:
+            for x in range(ComicPage.objects.filter(Comic=self).count()):
+                try:
+                    img, content_type = self.get_image(x)
+                    pil_data = Image.open(img)
+                    break
+                except UnidentifiedImageError:
+                    continue
+        return img, pil_data, content_type
+
+    def generate_thumbnail(self, page_index: int = None) -> None:
 
         if Path(self.file_name).suffix.lower() == '.pdf':
-            if page_index:
-                img, pil_data = self._get_pdf_image(page_index)
-            else:
-                img, pil_data = self._get_pdf_image(0)
-            content_type = 'Image/JPEG'
+            img, pil_data, content_type = self.generate_thumbnail_pdf(page_index if page_index else 0)
         else:
-            if page_index:
-                img, content_type = self.get_image(page_index)
-                pil_data = Image.open(img)
-            else:
-                for x in range(ComicPage.objects.filter(Comic=self).count()):
-                    try:
-                        img, content_type = self.get_image(x)
-                        pil_data = Image.open(img)
-                        break
-                    except UnidentifiedImageError:
-                        continue
-                try:
-                    img
-                    content_type
-                    pil_data
-                except NameError:
-                    return
+            img, pil_data, content_type = self.generate_thumbnail_archive(page_index)
+        if not img:
+            return
         self.thumbnail = InMemoryUploadedFile(
             img,
             None,
@@ -196,20 +197,21 @@ class ComicBook(models.Model):
         )
         self.save()
 
-    def _get_pdf_image(self, page_index: int):
+    def _get_pdf_image(self, page_index: int) -> Tuple[io.BytesIO, Image_type]:
         # noinspection PyTypeChecker
         doc = fitz.open(self.get_pdf())
         page = doc[page_index]
         pix = page.get_pixmap()
-        mode = "RGBA" if pix.alpha else "RGB"
-        pil_data = Image.frombytes(mode, [pix.width, pix.height], pix.samples)
+        mode: Final = "RGBA" if pix.alpha else "RGB"
+        # noinspection PyTypeChecker
+        pil_data = Image.frombytes(mode, (pix.width, pix.height), pix.samples)
         img = io.BytesIO()
         pil_data.save(img, format="JPEG")
         img.seek(0)
         return img, pil_data
 
     @property
-    def page_count(self):
+    def page_count(self) -> int:
         return ComicPage.objects.filter(Comic=self).count()
 
     @staticmethod
@@ -247,7 +249,7 @@ class ComicBook(models.Model):
         return book
 
     @property
-    def get_archive_path(self):
+    def get_archive_path(self) -> Path:
         if self.directory:
             return Path(settings.COMIC_BOOK_VOLUME, self.directory.get_path(), self.file_name)
         else:
@@ -272,13 +274,13 @@ class ComicBook(models.Model):
         raise NotCompatibleArchive
 
     @staticmethod
-    def get_archive_files(archive):
+    def get_archive_files(archive) -> List[Tuple[str, str]]:
         return [
             (x, mimetypes.guess_type(x)[0]) for x in sorted(archive.namelist())
             if not x.endswith('/') and mimetypes.guess_type(x)[0]
         ]
 
-    def verify_pages(self, pages: Optional["ComicPage"] = None):
+    def verify_pages(self, pages: Optional["ComicPage"] = None) -> None:
         if not pages:
             pages = ComicPage.objects.filter(Comic=self)
 
@@ -334,10 +336,10 @@ class ComicStatus(models.Model):
             UniqueConstraint(fields=['user', 'comic'], name='one_per_user_per_comic')
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__repr__()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"<ComicStatus:{self.user.username}:{self.comic.file_name}:{self.last_read_page}:"
             f"{self.unread}:{self.finished}"
