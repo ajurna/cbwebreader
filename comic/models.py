@@ -7,6 +7,7 @@ from itertools import zip_longest
 from pathlib import Path
 from typing import Optional, List, Union, Tuple, Final
 
+# noinspection PyPackageRequirements
 import fitz
 import rarfile
 from PIL import Image, UnidentifiedImageError
@@ -198,7 +199,7 @@ class ComicBook(models.Model):
         self.save()
 
     def _get_pdf_image(self, page_index: int) -> Tuple[io.BytesIO, Image_type]:
-        # noinspection PyTypeChecker
+        # noinspection PyUnresolvedReferences
         doc = fitz.open(self.get_pdf())
         page = doc[page_index]
         pix = page.get_pixmap()
@@ -216,11 +217,6 @@ class ComicBook(models.Model):
 
     @staticmethod
     def process_comic_book(comic_file_path: Path, directory: "Directory" = False) -> Union["ComicBook", Path]:
-        """
-
-        :type comic_file_path: str
-        :type directory: Directory
-        """
         try:
             book = ComicBook.objects.get(file_name=comic_file_path.name, version=0)
             book.directory = directory
@@ -326,7 +322,8 @@ class ComicPage(models.Model):
 
 class ComicStatus(models.Model):
     user = models.ForeignKey(User, unique=False, null=False, on_delete=models.CASCADE)
-    comic = models.ForeignKey(ComicBook, unique=False, blank=False, null=False, on_delete=models.CASCADE, to_field="selector")
+    comic = models.ForeignKey(ComicBook, unique=False, blank=False, null=False, on_delete=models.CASCADE,
+                              to_field="selector")
     last_read_page = models.IntegerField(default=0)
     unread = models.BooleanField(default=True)
     finished = models.BooleanField(default=False)
