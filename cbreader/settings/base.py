@@ -59,7 +59,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # 'silk.middleware.SilkyMiddleware',
-    'csp.middleware.CSPMiddleware',
+    # 'csp.middleware.CSPMiddleware',
 ]
 
 ROOT_URLCONF = "cbreader.urls"
@@ -147,6 +147,7 @@ CSP_CONNECT_SRC = ("'self'",)
 CSP_INCLUDE_NONCE_IN = ['script-src']
 CSP_SCRIPT_SRC_ATTR = ("'self'",)# "'unsafe-inline'")
 
+
 PERMISSIONS_POLICY = {
     "accelerometer": [],
     "ambient-light-sensor": [],
@@ -208,7 +209,7 @@ WEBPACK_LOADER = {
         'CACHE': not DEBUG,
         'BUNDLE_DIR_NAME': '/bundles/',  # must end with slash
         'STATS_FILE': os.path.join(FRONTEND_DIR, 'webpack-stats.json'),
-        'INTEGRITY': True,
+        'INTEGRITY': not DEBUG,
     }
 }
 

@@ -411,7 +411,7 @@ validation = ["swagger-spec-validator (>=2.1.0)"]
 
 [[package]]
 name = "executing"
-version = "0.10.0"
+version = "1.0.0"
 description = "Get the currently executing AST node of a frame, and other information"
 category = "dev"
 optional = false
@@ -875,7 +875,7 @@ python-versions = ">=3.5"
 
 [[package]]
 name = "stack-data"
-version = "0.4.0"
+version = "0.5.0"
 description = "Extract data from python stack frames and tracebacks for informative displays"
 category = "dev"
 optional = false
@@ -934,7 +934,7 @@ python-versions = ">=2"
 
 [[package]]
 name = "ua-parser"
-version = "0.16.0"
+version = "0.16.1"
 description = "Python port of Browserscope's user agent parser"
 category = "main"
 optional = false

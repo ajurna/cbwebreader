@@ -1,5 +1,5 @@
 <template>
-  <CContainer>
+  <CContainer fluid>
     <CRow>
       <CInputGroup>
         <CFormInput placeholder="Search" aria-label="Filter comics by name" v-model="this.filters.search_string"/>
@@ -15,7 +15,7 @@
         </CDropdown>
       </CInputGroup>
     </CRow>
-    <CRow>
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 row-cols-xl-auto" >
       <template v-if="loading">
         <CCol>
           <CProgress class="mt-3" >
@@ -28,7 +28,7 @@
           <comic-card :data="comic" @updateComicList="updateComicList" @markPreviousRead="markPreviousRead" @updateThumbnail="updateThumbnail" />
         </template>
       </template>
-    </CRow>
+    </div>
   </CContainer>
 </template>
 
