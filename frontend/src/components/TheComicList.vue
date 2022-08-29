@@ -15,13 +15,13 @@
         </CDropdown>
       </CInputGroup>
     </CRow>
-    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 row-cols-xl-auto" >
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 row-cols-xl-auto mt-1" >
       <template v-if="loading">
-        <CCol>
+        <div class="col-12 col-xl-12 col-lg-12 col-md-12 col-sm-12 col-xs-12">
           <CProgress class="mt-3" >
             <CProgressBar color="success" variant="striped" animated  :value="100"/>
           </CProgress>
-        </CCol>
+        </div>
       </template>
       <template v-else>
         <template v-for="comic in filteredComics" :key="comic.selector" >
