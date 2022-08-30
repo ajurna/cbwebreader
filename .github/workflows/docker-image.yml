@@ -25,6 +25,8 @@ jobs:
       uses: abatilo/actions-poetry@v2.0.0
       with:
         poetry-version: ${{ matrix.poetry-version }}
+    - name: Generate Requirements
+      run: poetry export --without-hashes -f requirements.txt --output requirements.txt
     - name: Set env
       run: echo "CB_VERSION=$(poetry version -s)" >> $GITHUB_ENV
     - name: Build the Docker image
