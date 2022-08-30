@@ -1,5 +1,4 @@
 # File: .readthedocs.yaml
-
 version: 2
 
 # Explicitly set the version of Python and its requirements
