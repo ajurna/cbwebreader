@@ -120,7 +120,7 @@ export default {
       }
     },
     validateEmail(mail){
-      return (/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(mail))
+      return (/\S+@\S+\.\S+/.test(mail))
     },
     checkNewPassword(pass){
       return (pass.length >= 9)
