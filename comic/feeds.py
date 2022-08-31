@@ -13,8 +13,8 @@ class RecentComicsAPI(Feed):
     description = "Recently added Comics"
     user: User
 
-    def get_object(self, request: HttpRequest, user_selector: str, *args, **kwargs) -> UserMisc:
-        user_misc = get_object_or_404(UserMisc, feed_id=user_selector)
+    def get_object(self, request: HttpRequest, *args, **kwargs) -> UserMisc:
+        user_misc = get_object_or_404(UserMisc, feed_id=kwargs["user_selector"])
         self.user = user_misc.user
         return user_misc.user
 

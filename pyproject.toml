@@ -1,6 +1,15 @@
 [tool.black]
 line_length = 119
 
+[tool.pylint]
+max-line-length=120
+ignore-paths=".*/migrations"
+load-plugins = ["pylint_django "]
+disable = ["missing-class-docstring", "missing-function-docstring", "abstract-method", "missing-module-docstring",
+"imported-auth-user"]
+good-names=["pk"]
+
+
 [tool.poetry]
 name = "cbwebreader"
 version = "1.0.5"
@@ -43,6 +52,10 @@ pyOpenSSL = "^22.0.0"
 ipython = "^8.4.0"
 coverage = "^6.2"
 pre-commit = "^2.20.0"
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^2.15.0"
+pylint-django = "^2.5.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

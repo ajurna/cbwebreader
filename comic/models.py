@@ -13,7 +13,7 @@ import rarfile
 from PIL import Image, UnidentifiedImageError
 from PIL.Image import Image as Image_type
 from django.conf import settings
-from django.contrib.auth.models import User, AbstractUser
+from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
 from django.db.models import UniqueConstraint
@@ -54,7 +54,7 @@ class Directory(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return "Directory: {0}; {1}".format(self.name, self.parent)
+        return f"Directory: {self.name}; {self.parent}"
 
     @property
     def title(self) -> str:
@@ -81,25 +81,25 @@ class Directory(models.Model):
         path_items = self.get_path_items()
         path_items.reverse()
         if len(path_items) >= 2:
+            # pylint: disable=unnecessary-lambda
             return reduce(lambda x, y: Path(x, y), path_items)
-        else:
-            return Path(path_items[0])
+        return Path(path_items[0])
 
-    def get_path_items(self, p: Optional[List] = None) -> List[Path]:
-        if p is None:
-            p = []
-        p.append(self.name)
+    def get_path_items(self, path_items: Optional[List] = None) -> List[Path]:
+        if path_items is None:
+            path_items = []
+        path_items.append(self.name)
         if self.parent:
-            self.parent.get_path_items(p)
-        return p
+            self.parent.get_path_items(path_items)
+        return path_items
 
-    def get_path_objects(self, p=None) -> List["Directory"]:
-        if p is None:
-            p = []
-        p.append(self)
+    def get_path_objects(self, path_items=None) -> List["Directory"]:
+        if path_items is None:
+            path_items = []
+        path_items.append(self)
         if self.parent:
-            self.parent.get_path_objects(p)
-        return p
+            self.parent.get_path_objects(path_items)
+        return path_items
 
 
 class ComicBook(models.Model):
@@ -135,8 +135,7 @@ class ComicBook(models.Model):
         base_dir = settings.COMIC_BOOK_VOLUME
         if self.directory:
             return Path(base_dir, self.directory.get_path(), self.file_name)
-        else:
-            return Path(base_dir, self.file_name)
+        return Path(base_dir, self.file_name)
 
     def get_image(self, page: int) -> Union[Tuple[io.BytesIO, Image_type], Tuple[bool, bool]]:
         base_dir = settings.COMIC_BOOK_VOLUME
@@ -147,6 +146,7 @@ class ComicBook(models.Model):
         try:
             archive = rarfile.RarFile(archive_path)
         except rarfile.NotRarFile:
+            # pylint: disable=consider-using-with
             archive = zipfile.ZipFile(archive_path)
         except zipfile.BadZipfile:
             return False, False
@@ -171,9 +171,9 @@ class ComicBook(models.Model):
             img, content_type = self.get_image(page_index)
             pil_data = Image.open(img)
         else:
-            for x in range(ComicPage.objects.filter(Comic=self).count()):
+            for page_number in range(ComicPage.objects.filter(Comic=self).count()):
                 try:
-                    img, content_type = self.get_image(x)
+                    img, content_type = self.get_image(page_number)
                     pil_data = Image.open(img)
                     break
                 except UnidentifiedImageError:
@@ -248,8 +248,7 @@ class ComicBook(models.Model):
     def get_archive_path(self) -> Path:
         if self.directory:
             return Path(settings.COMIC_BOOK_VOLUME, self.directory.get_path(), self.file_name)
-        else:
-            return Path(settings.COMIC_BOOK_VOLUME, self.file_name)
+        return Path(settings.COMIC_BOOK_VOLUME, self.file_name)
 
     def get_archive(self) -> Tuple[Union[rarfile.RarFile, zipfile.ZipFile, fitz.Document], str]:
         archive_path = self.get_archive_path

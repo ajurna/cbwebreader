@@ -61,8 +61,8 @@ def generate_directory(user: User, directory=None):
 
 
 def clean_directories(directories, dir_path, directory=None):
-    dir_db_set = set([Path(settings.COMIC_BOOK_VOLUME, x.path) for x in directories])
-    dir_list = set([x for x in sorted(dir_path.glob('*')) if x.is_dir()])
+    dir_db_set = set(Path(settings.COMIC_BOOK_VOLUME, x.path) for x in directories)
+    dir_list = set(x for x in sorted(dir_path.glob('*')) if x.is_dir())
     # Create new directories db instances
     for new_directory in dir_list - dir_db_set:
         models.Directory(name=new_directory.name, parent=directory).save()
@@ -73,8 +73,8 @@ def clean_directories(directories, dir_path, directory=None):
 
 
 def clean_files(files, user, dir_path, directory=None):
-    file_list = set([x for x in sorted(dir_path.glob('*')) if x.is_file()])
-    files_db_set = set([Path(dir_path, x.file_name) for x in files])
+    file_list = set(x for x in sorted(dir_path.glob('*')) if x.is_file())
+    files_db_set = set(Path(dir_path, x.file_name) for x in files)
 
     # Parse new comics
     books_to_add = []

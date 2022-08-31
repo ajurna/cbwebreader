@@ -44,7 +44,7 @@ class ClassificationSerializer(serializers.Serializer):
         raise serializers.ValidationError('Invalid Classification sent.')
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     """
     API endpoint that allows users to be viewed or edited.
     """
@@ -82,8 +82,7 @@ class UserViewSet(viewsets.ModelViewSet):
             misc.allowed_to_read = serializer.data['classification']
             misc.save()
             return Response(data={'classification': misc.allowed_to_read})
-        else:
-            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
 
 class BrowseFileField(serializers.FileField):
@@ -217,19 +216,20 @@ class ReadViewSet(viewsets.GenericViewSet):
     @swagger_auto_schema(responses={status.HTTP_200_OK: ReadSerializer()})
     def retrieve(self, request: Request, selector: UUID) -> Response:
         comic = get_object_or_404(models.ComicBook, selector=selector)
-        misc, _ = models.UserMisc.objects.get_or_create(user=request.user)
+        _, _ = models.UserMisc.objects.get_or_create(user=request.user)
         pages = models.ComicPage.objects.filter(Comic=comic)
         comic_status, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
         comic_list = list(models.ComicBook.objects.filter(directory=comic.directory).order_by('file_name'))
         comic_index = comic_list.index(comic)
         try:
             prev_comic = {'route': 'browse', 'selector': comic.directory.selector} if comic_index == 0 else \
-                {'route': 'read', 'selector': comic_list[comic_index-1].selector}
+                {'route': 'read', 'selector': comic_list[comic_index - 1].selector}
         except AttributeError:
             prev_comic = {'route': 'browse'}
         try:
-            next_comic = {'route': 'browse', 'selector': comic.directory.selector} if comic_index+1 == len(comic_list) \
-                else {'route': 'read', 'selector': comic_list[comic_index+1].selector}
+            next_comic = {'route': 'browse', 'selector': comic.directory.selector} \
+                if comic_index + 1 == len(comic_list) \
+                else {'route': 'read', 'selector': comic_list[comic_index + 1].selector}
         except AttributeError:
             next_comic = {'route': 'browse'}
         data = {
@@ -269,22 +269,21 @@ class ReadViewSet(viewsets.GenericViewSet):
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
-            comic_status, _ = models.ComicStatus.objects.annotate(page_count=Count('comic__comicpage'))\
+            comic_status, _ = models.ComicStatus.objects.annotate(page_count=Count('comic__comicpage')) \
                 .get_or_create(comic_id=selector, user=request.user)
             comic_status.last_read_page = serializer.data['page']
             comic_status.unread = False
-            if comic_status.page_count-1 == comic_status.last_read_page:
+            if comic_status.page_count - 1 == comic_status.last_read_page:
                 comic_status.finished = True
             else:
                 comic_status.finished = False
 
             comic_status.save()
             return Response(self.get_serializer(comic_status).data)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class PassthroughRenderer(renderers.BaseRenderer):
+class PassthroughRenderer(renderers.BaseRenderer):  # pylint: disable=too-few-public-methods
     """
         Return data as-is. View should supply a Response.
     """
@@ -373,7 +372,7 @@ class ActionViewSet(viewsets.GenericViewSet):
             comic_status = comic_status.annotate(total_pages=Count('comic__comicpage'))
             status_to_update = []
             for c_status in comic_status:
-                c_status.last_read_page = c_status.total_pages-1
+                c_status.last_read_page = c_status.total_pages - 1
                 c_status.unread = False
                 c_status.finished = True
                 status_to_update.append(c_status)
@@ -388,37 +387,33 @@ class ActionViewSet(viewsets.GenericViewSet):
                 status_to_update.append(obj)
             models.ComicStatus.objects.bulk_update(status_to_update, ['unread', 'finished', 'last_read_page'])
             return Response({'status': 'marked_read'})
-        else:
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['PUT'])
     def mark_unread(self, request):
         serializer = ActionSerializer(data=request.data)
         if serializer.is_valid():
-            serializer = ActionSerializer(data=request.data)
-            if serializer.is_valid():
-                comics = self.get_comics(serializer.data['selectors'])
-                comic_status = models.ComicStatus.objects.filter(comic__selector__in=comics, user=request.user)
-                status_to_update = []
-                for c_status in comic_status:
-                    c_status.last_read_page = 0
-                    c_status.unread = True
-                    c_status.finished = False
-                    status_to_update.append(c_status)
-                    comics.remove(str(c_status.comic_id))
-                for new_status in comics:
-                    comic = models.ComicBook.objects.get(selector=new_status)
-                    obj, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
-                    obj.unread = True
-                    obj.finished = False
-                    obj.last_read_page = 0
-                    status_to_update.append(obj)
-                models.ComicStatus.objects.bulk_update(status_to_update, ['unread', 'finished', 'last_read_page'])
-                return Response({'status': 'marked_unread'})
-        else:
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+            comics = self.get_comics(serializer.data['selectors'])
+            comic_status = models.ComicStatus.objects.filter(comic__selector__in=comics, user=request.user)
+            status_to_update = []
+            for c_status in comic_status:
+                c_status.last_read_page = 0
+                c_status.unread = True
+                c_status.finished = False
+                status_to_update.append(c_status)
+                comics.remove(str(c_status.comic_id))
+            for new_status in comics:
+                comic = models.ComicBook.objects.get(selector=new_status)
+                obj, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
+                obj.unread = True
+                obj.finished = False
+                obj.last_read_page = 0
+                status_to_update.append(obj)
+            models.ComicStatus.objects.bulk_update(status_to_update, ['unread', 'finished', 'last_read_page'])
+            return Response({'status': 'marked_unread'})
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
 
     def get_comics(self, selectors):
         data = set()
@@ -461,8 +456,8 @@ class PasswordResetSerializer(serializers.Serializer):
             return data
         try:
             validate_password(data)
-        except ValidationError as e:
-            raise serializers.ValidationError(e)
+        except ValidationError as err:
+            raise serializers.ValidationError(err)
         return data
 
     def validate(self, attrs):
@@ -489,8 +484,7 @@ class AccountViewSet(viewsets.GenericViewSet):
             request.user.set_password(serializer.data['new_password'])
             request.user.save()
             return Response(AccountSerializer(request.user).data)
-        else:
-            return Response({"errors": serializer.errors}, status.HTTP_400_BAD_REQUEST)
+        return Response({"errors": serializer.errors}, status.HTTP_400_BAD_REQUEST)
 
     def list(self, request):
         serializer = self.get_serializer(request.user)
@@ -509,8 +503,7 @@ class AccountViewSet(viewsets.GenericViewSet):
             request.user.save()
             account = AccountSerializer(request.user)
             return Response(account.data)
-        else:
-            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: RSSSerializer()})
     @action(methods=['get'], detail=False, serializer_class=RSSSerializer)
@@ -524,7 +517,6 @@ class AccountViewSet(viewsets.GenericViewSet):
 
 
 class DirectorySerializer(serializers.ModelSerializer):
-
     class Meta:
         model = models.Directory
         fields = ['selector', 'classification']
@@ -540,7 +532,7 @@ class DirectoryViewSet(mixins.UpdateModelMixin, viewsets.GenericViewSet):
     lookup_field = 'selector'
 
     @swagger_auto_schema(responses={200: DirectorySerializer(many=True)})
-    def update(self, request: Request, selector: UUID) -> Response:
+    def update(self, request: Request, selector: UUID) -> Response: # pylint: disable=arguments-differ
         """
         This will set the classification of a directory and all it's children.
         """
@@ -563,8 +555,7 @@ class DirectoryViewSet(mixins.UpdateModelMixin, viewsets.GenericViewSet):
             data = models.Directory.objects.filter(directory__in=to_update)
             response = self.get_serializer(data, many=True)
             return Response(response.data)
-        else:
-            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, *args, **kwargs):
         """
@@ -607,7 +598,5 @@ class InitialSetup(viewsets.GenericViewSet):
                 admin.set_password(serializer.data['password'])
                 admin.save()
                 return Response(serializer.data, status.HTTP_201_CREATED)
-            else:
-                return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({}, status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+        return Response({}, status.HTTP_400_BAD_REQUEST)
