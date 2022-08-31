@@ -1,6 +1,6 @@
 # CBWebReader 
 
-CBWebReader is web-based CBR and CBZ file reader implemented in Django. The application allows a user to host their collection of digital comics (CBR, CBZ and PDF formats) as a remotely accessible collection.
+CBWebReader is web-based CBR and CBZ file reader implemented in Django with a Vue frontend. The application allows a user to host their collection of digital comics (CBR, CBZ and PDF formats) as a remotely accessible collection.
 
 ![CBWebReader Screenshot](assets/cbwebreader.jpg)
 
@@ -13,8 +13,8 @@ The following technologies will aid development by ensuring a consistent develop
 
 The primary frameworks and tool's are used within the application:
 
-- [Django 3.2](https://www.djangoproject.com/)
-- [python 3.7+](https://www.python.org/)
+- [Django 4.0](https://www.djangoproject.com/)
+- [python 3.9+](https://www.python.org/)
 
 ## Getting started
 
