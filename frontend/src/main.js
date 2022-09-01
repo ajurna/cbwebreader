@@ -5,6 +5,7 @@ import ToastPlugin from 'vue-toast-notification';
 import CoreuiVue from '@coreui/vue';
 import '@coreui/coreui/dist/css/coreui.min.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/js/bootstrap.min'
 import 'vue-toast-notification/dist/theme-default.css';
 
 /* import the fontawesome core */
