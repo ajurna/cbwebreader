@@ -53,7 +53,7 @@ class Directory(models.Model):
     class Meta:
         ordering = ['name']
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Directory: {self.name}; {self.parent}"
 
     @property

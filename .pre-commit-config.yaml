@@ -15,3 +15,7 @@ repos:
     -   id: poetry-lock
     -   id: poetry-export
         args: ["--without-hashes", "-f", "requirements.txt", "-o", "requirements.txt"]
+-   repo: https://github.com/pycqa/flake8
+    rev: "5.0.4"
+    hooks:
+    -   id: flake8

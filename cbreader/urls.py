@@ -28,15 +28,15 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from comic import rest, feeds
 
 schema_view = get_schema_view(
-   openapi.Info(
-      title="CBWebReader API",
-      default_version='v1',
-      description="API to access your comic collection",
-      contact=openapi.Contact(name="Ajurna", url="https://github.com/ajurna/cbwebreader"),
-      license=openapi.License(name="MIT License"),
-   ),
-   public=True,
-   permission_classes=[permissions.AllowAny]
+    openapi.Info(
+        title="CBWebReader API",
+        default_version='v1',
+        description="API to access your comic collection",
+        contact=openapi.Contact(name="Ajurna", url="https://github.com/ajurna/cbwebreader"),
+        license=openapi.License(name="MIT License"),
+    ),
+    public=True,
+    permission_classes=[permissions.AllowAny]
 )
 
 router = ExtendedDefaultRouter()
@@ -69,4 +69,3 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     # urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
-
