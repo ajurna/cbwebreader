@@ -70,6 +70,6 @@ export default {
   text-decoration: none;
 }
 nav {
-  background: lightcyan;
+  background: lightgrey;
 }
 </style>

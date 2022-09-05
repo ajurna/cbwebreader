@@ -1,26 +1,24 @@
 <template>
-  <CContainer fluid>
-    <CRow>
-      <CInputGroup>
-        <CFormInput placeholder="Search" aria-label="Filter comics by name" v-model="this.filters.search_string"/>
-        <CButton type="button" :color="(!filters.filter_read && !filters.filter_unread? 'primary' : 'secondary')" variant="outline" @click="filters.filter_read=false; filters.filter_unread=false">All</CButton>
-        <CButton type="button" :color="(filters.filter_read && !filters.filter_unread? 'primary' : 'secondary')" variant="outline" @click="filters.filter_read=true; filters.filter_unread=false">Read</CButton>
-        <CButton type="button" :color="(!filters.filter_read && filters.filter_unread? 'primary' : 'secondary')" variant="outline" @click="filters.filter_read=false; filters.filter_unread=true">Un-read</CButton>
-        <CDropdown variant="input-group">
-          <CDropdownToggle color="secondary" variant="outline">Action</CDropdownToggle>
-          <CDropdownMenu>
-            <CDropdownItem @click="markAll('mark_unread')"><font-awesome-icon icon='book' />Mark Un-read</CDropdownItem>
-            <CDropdownItem @click="markAll('mark_read')"><font-awesome-icon icon='book-open' />Mark read</CDropdownItem>
-          </CDropdownMenu>
-        </CDropdown>
-      </CInputGroup>
-    </CRow>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="input-group">
+        <input class="form-control" aria-label="Filter comics by name" placeholder="Search" v-model="this.filters.search_string">
+        <button type="button" class="btn" :class="(!filters.filter_read && !filters.filter_unread? 'btn-outline-primary' : 'btn-outline-secondary')" @click="filters.filter_read=false; filters.filter_unread=false">All</button>
+        <button type="button" class="btn" :class="(filters.filter_read && !filters.filter_unread? 'btn-outline-primary' : 'btn-outline-secondary')" @click="filters.filter_read=true; filters.filter_unread=false">Read</button>
+        <button type="button" class="btn" :class="(!filters.filter_read && filters.filter_unread? 'btn-outline-primary' : 'btn-outline-secondary')" @click="filters.filter_read=false; filters.filter_unread=true">Un-read</button>
+        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Action</button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" @click="markAll('mark_unread')"><font-awesome-icon icon='book' />Mark Un-read</a></li>
+          <li><a class="dropdown-item" @click="markAll('mark_read')"><font-awesome-icon icon='book-open' />Mark read</a></li>
+        </ul>
+      </div>
+    </div>
     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 row-cols-xl-auto mt-1" >
       <template v-if="loading">
         <div class="col-12 col-xl-12 col-lg-12 col-md-12 col-sm-12 col-xs-12">
-          <CProgress class="mt-3" >
-            <CProgressBar color="success" variant="striped" animated  :value="100"/>
-          </CProgress>
+          <div class="progress mt-3">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-label="Loading data" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+          </div>
         </div>
       </template>
       <template v-else>
@@ -29,7 +27,7 @@
         </template>
       </template>
     </div>
-  </CContainer>
+  </div>
 </template>
 
 <script>
