@@ -1,16 +1,13 @@
 <template>
-  <CButtonGroup>
-    <CButton :color="color" v-if="!confirm" @click="confirm = !confirm">{{ label }}</CButton>
-    <CButton color="success" class="text-nowrap" v-if="confirm" variant="outline" @click="performAction">
-      <font-awesome-icon icon='check' class=""/>
-      Yes
-    </CButton>
-    <CButton color="danger" class="text-nowrap" v-if="confirm" variant="outline"
-             @click="confirm = !confirm">
-      <font-awesome-icon icon='times' class=""/>
-      No
-    </CButton>
-  </CButtonGroup>
+  <div class="btn-group" role="group" aria-label="Basic example">
+    <button type="button" class="btn" :class="'btn-'+color" v-if="!confirm" @click="confirm = !confirm">{{ label }}</button>
+    <button type="button" class="btn btn-outline-success text-nowrap" v-if="confirm" @click="performAction">
+      <font-awesome-icon icon='check' class=""/>Yes
+    </button>
+    <button type="button" class="btn btn-outline-danger text-nowrap" v-if="confirm" @click="confirm = !confirm">
+      <font-awesome-icon icon='times' class=""/>No
+    </button>
+  </div>
 </template>
 <script>
 export default {
