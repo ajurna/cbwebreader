@@ -1,32 +1,30 @@
 <template>
-    <CBreadcrumb>
+  <nav aria-label="breadcrumb" class="px-5">
+    <ol class="breadcrumb " >
       <template v-for="(item, index) in crumbs" :key="item.id">
         <template v-if="index !== crumbs.length - 1">
-          <CBreadcrumbItem v-if="item.selector">
+          <li class="breadcrumb-item" v-if="item.selector">
             <router-link :to="{'name': 'browse', params: { selector: item.selector }}">{{ item.name }}</router-link>
-          </CBreadcrumbItem>
-          <CBreadcrumbItem v-else-if="item.route">
+          </li>
+          <li class="breadcrumb-item" v-else-if="item.route">
             <router-link :to="item.route">{{ item.name }}</router-link>
-          </CBreadcrumbItem>
-          <CBreadcrumbItem v-else>
+          </li>
+          <li class="breadcrumb-item" v-else>
             <router-link :to="{'name': 'browse'}">{{ item.name }}</router-link>
-          </CBreadcrumbItem>
+          </li>
         </template>
-        <CBreadcrumbItem v-else active>{{ item.name }}</CBreadcrumbItem>
+        <li class="breadcrumb-item active" aria-current="page" v-else>{{ item.name }}</li>
       </template>
-    </CBreadcrumb>
+    </ol>
+  </nav>
 
 </template>
 
 <script>
-import { CBreadcrumbItem, CBreadcrumb } from '@coreui/vue'
 import api from "@/api";
 export default {
   name: "TheBreadcrumbs",
-  components: {
-    CBreadcrumb,
-    CBreadcrumbItem,
-  },
+  components: { },
   data () {
     return {
       crumbs: []
@@ -68,5 +66,10 @@ export default {
 </script>
 
 <style scoped>
-
+.breadcrumb-item a {
+  text-decoration: none;
+}
+nav {
+  background: lightcyan;
+}
 </style>

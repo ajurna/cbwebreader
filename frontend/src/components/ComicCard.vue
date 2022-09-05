@@ -1,61 +1,71 @@
 <template>
-  <CCol>
-    <CCard class="">
-      <CCardImage orientation="top" :src="thumbnail"/>
-      <CCardBody class="pb-0 pt-0 pl-1 pr-1 card-img-overlay d-flex" @click="$router.push((data.type === 'Directory' ? {'name': 'browse', params: { selector: data.selector }} : {'name': 'read', params: { selector: data.selector }}))">
+  <div class="col">
+    <div class="card">
+      <div class="card card-body p-0" @click="$router.push((data.type === 'Directory' ? {'name': 'browse', params: { selector: data.selector }} : {'name': 'read', params: { selector: data.selector }}))">
+        <img :src="thumbnail" class="card-img-top" :alt="data.title">
         <span class="badge rounded-pill bg-primary unread-badge" v-if="this.unread > 0 && data.type === 'Directory'">{{ this.unread }}</span>
         <span class="badge rounded-pill bg-warning classification-badge" v-if="card_type === 'Directory'" >{{ this.$store.state.classifications.find(i => i.value === classification).label }}</span>
-        <CCardTitle class="align-self-end text-break" style="">
+        <h5 class="card-title text-break mb-0">
           <router-link :to="(data.type === 'Directory' ? {'name': 'browse', params: { selector: data.selector }} : {'name': 'read', params: { selector: data.selector }})">{{ data.title }}</router-link>
-        </CCardTitle>
-      </CCardBody>
-      <CCardFooter class="pl-0 pr-0 pt-0">
-        <CProgress class="mb-1 position-relative" >
-          <CProgressBar :value="progressPercentCalc" />
+        </h5>
+      </div>
+      <div class="card-footer px-0 pb-0">
+        <div class="progress position-relative">
+          <div class="progress-bar" role="progressbar" aria-label="Basic example" :style="'width: '+ progressPercentCalc +'%;'" :aria-valuenow="progressPercentCalc" aria-valuemin="0" aria-valuemax="100"></div>
           <small class="justify-content-center d-flex position-absolute w-100 h-100" style="line-height: normal">{{ progressCalc }} / {{data.total}}</small>
-        </CProgress>
-        <CButtonGroup class="w-100">
-          <CButton color="primary" @click="updateComic('mark_unread')" ><font-awesome-icon icon='book' /></CButton>
-          <CButton color="primary" @click="updateComic('mark_read')" ><font-awesome-icon icon='book-open' /></CButton>
-          <CDropdown variant="btn-group">
-            <CDropdownToggle color="primary"><font-awesome-icon icon='edit' /></CDropdownToggle>
-            <CDropdownMenu>
-              <CDropdownItem @click="updateComic('mark_unread')"><font-awesome-icon icon='book' />Mark Un-read</CDropdownItem>
-              <CDropdownItem @click="updateComic('mark_read')"><font-awesome-icon icon='book-open' />Mark read</CDropdownItem>
-              <CDropdownItem v-if="data.type === 'ComicBook'" @click="$emit('markPreviousRead', data.selector)"><font-awesome-icon icon='book' /><font-awesome-icon icon='turn-up' />Mark previous comics read</CDropdownItem>
-              <CDropdownItem v-if="data.type === 'Directory'" @click="editDirectoryVisible = true"><font-awesome-icon icon='edit' />Edit comic</CDropdownItem>
-            </CDropdownMenu>
-          </CDropdown>
-        </CButtonGroup>
-      </CCardFooter>
-    </CCard>
-    <CModal :visible="editDirectoryVisible" @close="editDirectoryVisible = false">
-      <CModalHeader>
-        <CModalTitle>{{ data.title }}</CModalTitle>
-      </CModalHeader>
-      <CForm @submit="updateDirectory">
-        <CModalBody>
-          <CFormSelect
-            label="Classification"
-            aria-label="Set Classification"
-            v-model="new_classification"
-            :options="[...this.$store.state.classifications]">
-          </CFormSelect>
-          <CFormCheck
-            label="Recursive"
-            class="mt-2"
-            v-model="recursive"
-          />
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" @click="editDirectoryVisible = false ">
-            Close
-          </CButton>
-          <CButton color="primary" type="submit">Save changes</CButton>
-        </CModalFooter>
-      </CForm>
-    </CModal>
-  </CCol>
+        </div>
+        <div class="btn-group w-100 pt-1" role="group" aria-label="Basic example">
+          <button type="button" class="btn btn-primary" @click="updateComic('mark_unread')"><font-awesome-icon icon='book' /></button>
+          <button type="button" class="btn btn-primary" @click="updateComic('mark_read')" ><font-awesome-icon icon='book-open' /></button>
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+              <font-awesome-icon icon='edit' />
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" @click="updateComic('mark_unread')"><font-awesome-icon icon='book' /> Mark Un-read</a></li>
+              <li><a class="dropdown-item" @click="updateComic('mark_read')"><font-awesome-icon icon='book-open' /> Mark read</a></li>
+              <li><a class="dropdown-item" v-if="data.type === 'ComicBook'" @click="$emit('markPreviousRead', data.selector)"><font-awesome-icon icon='book' /><font-awesome-icon icon='turn-up' />Mark previous comics read</a></li>
+              <li><a class="dropdown-item" v-if="data.type === 'Directory'" data-bs-toggle="modal" :data-bs-target="'#'+data.selector"><font-awesome-icon icon='edit' />Edit comic</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" :id="data.selector" tabindex="-1" :aria-labelledby="data.selector+'-label'" aria-hidden="true" >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" :id="data.selector+'-label'">{{ data.title }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form @submit="updateDirectory">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-check-label mb-1" :for="data.selector+'-classification'" >
+                Classification
+              </label>
+              <select class="form-select" :id="data.selector+'-classification'" v-model="new_classification">
+                <option v-for="class_options in [...this.$store.state.classifications]" :key="class_options.value" :value="class_options.value">{{class_options.label}}</option>
+              </select>
+
+            </div>
+            <div class="mb-3">
+              <input class="form-check-input" type="checkbox" value="" :id="data.selector+'-recursive'" v-model="recursive">
+              <label class="form-check-label px-1" :for="data.selector+'-recursive'" >
+                Recursive
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -160,15 +170,12 @@ export default {
 .card-title a {
   color: white;
   text-shadow: .2rem .2rem .3rem black ;
-}
-
-h5.card-title {
-  margin-bottom: 75px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  text-decoration: none;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
-}
-
-h5.card-title::before {
-  filter: blur(12px);
+  width: 100%;
 }
 
 .card .unread-badge {
