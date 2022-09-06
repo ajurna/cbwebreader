@@ -21,7 +21,6 @@
 <script>
 import Reveal from "reveal.js";
 import api from "@/api";
-import 'reveal.js-menu/menu.css'
 import * as Hammer from 'hammerjs'
 import ComicPaginate from "@/components/ComicPaginate";
 

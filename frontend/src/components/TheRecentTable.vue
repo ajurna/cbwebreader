@@ -1,65 +1,68 @@
 <template>
-  <CContainer>
-    <CRow>
-      <CCol>
+  <div class="container">
+    <div class="row">
+      <div class="col d-flex align-items-center">
         <form class="form-inline ">
-          <label class="my-1 mr-2" for="selectChoices">Show</label>
+          <label class="my-1 px-1" for="selectChoices">Show</label>
           <select class="custom-select my-1 mr-sm-2 " id="selectChoices" v-model="this.page_size" @change="this.setPage(this.page)">
             <option value="10">10</option>
             <option value="25">25</option>
             <option value="50">50</option>
             <option value="100">100</option>
           </select>
-          <label class="my-1 mr-2" for="selectChoices">entries</label>
+          <label class="my-1 px-1" for="selectChoices">entries</label>
         </form>
-      </CCol>
-      <CCol class="d-flex justify-content-end">
+      </div>
+      <div class="col d-flex justify-content-end">
         <form class="form-inline">
-          <label for="searchText" class="my-1 mr-2">Search</label>
-          <input type="text" id="searchText" class="form-control my-1 mr-sm-2" v-model="search_text" @keyup="this.debounceInput()">
+          <div class="form-floating">
+            <input type="text" class="form-control" id="floatingInput" placeholder="name@example.com" v-model="search_text" @keyup="this.debounceInput()">
+            <label for="floatingInput">Search</label>
+          </div>
         </form>
-      </CCol>
-    </CRow>
-    <CRow>
+      </div>
+    </div>
+    <div class="row">
       <caption>
         <h2>Recent Comics - <a :href="'/feed/' + this.feed_id + '/'">Feed</a></h2>
         Mark selected issues as:
-        <select name="func" id="func_selector" @change="this.performFunction()" v-model="func_selected">
+        <select class="form-select-sm" name="func" id="func_selector" @change="this.performFunction()" v-model="func_selected">
           <option value="choose">Choose...</option>
           <option value="mark_read">Read</option>
           <option value="mark_unread">Un-Read</option>
         </select>
       </caption>
-    </CRow>
-    <CRow>
-      <CTable striped bordered>
-        <CTableHead>
-          <CTableRow>
-            <CTableHeaderCell scope="col"><input class="form-check-input m-0 position-relative mt-1" type="checkbox" value="" ref="select-all"></CTableHeaderCell>
-            <CTableHeaderCell scope="col"></CTableHeaderCell>
-            <CTableHeaderCell scope="col">Comic</CTableHeaderCell>
-            <CTableHeaderCell scope="col">Date Added</CTableHeaderCell>
-            <CTableHeaderCell scope="col">status</CTableHeaderCell>
-          </CTableRow>
-        </CTableHead>
-        <CTableBody>
+    </div>
+    <div class="row">
+      <table class="table table-striped table-bordered">
+        <caption>Recent Comics</caption>
+        <thead>
+          <tr>
+            <th scope="col"><input class="form-check-input m-0 position-relative mt-1" type="checkbox" value="" ref="select-all"></th>
+            <th scope="col"></th>
+            <th scope="col">Comic</th>
+            <th scope="col">Date Added</th>
+            <th scope="col">status</th>
+          </tr>
+        </thead>
+        <tbody>
           <template v-for="item in comics" :key="item.id">
-            <CTableRow>
-              <CTableHeaderCell scope="row"><input ref="comic_selector" class="form-check-input m-0 position-relative mt-1" type="checkbox" :value="item.selector"></CTableHeaderCell>
-              <CTableDataCell class=""><font-awesome-icon icon='book' class="" /></CTableDataCell>
-              <CTableDataCell><router-link :to="{name: 'read', params: { selector: item.selector }}" class="" >{{ item.file_name }}</router-link></CTableDataCell>
-              <CTableDataCell>{{ timeago(item.date_added) }}</CTableDataCell>
-              <CTableDataCell>{{ get_status(item) }}</CTableDataCell>
-            </CTableRow>
+            <tr>
+              <th scope="row"><input ref="comic_selector" class="form-check-input m-0 position-relative mt-1" type="checkbox" :value="item.selector"></th>
+              <td class=""><font-awesome-icon icon='book' class="" /></td>
+              <td><router-link :to="{name: 'read', params: { selector: item.selector }}" class="" >{{ item.file_name }}</router-link></td>
+              <td>{{ timeago(item.date_added) }}</td>
+              <td>{{ get_status(item) }}</td>
+            </tr>
           </template>
-        </CTableBody>
-      </CTable>
-    </CRow>
-    <CRow>
-      <CCol>
+        </tbody>
+      </table>
+    </div>
+    <div class="row">
+      <div class="col">
         Showing page {{ this.page }} of {{ this.page_count }} pages.
-      </CCol>
-      <CCol class="d-flex justify-content-end">
+      </div>
+      <div class="col d-flex justify-content-end">
         <paginate
           v-model="this.page"
           :page-count="this.page_count"
@@ -69,9 +72,9 @@
           :container-class="'pagination '"
         >
         </paginate>
-      </CCol>
-    </CRow>
-  </CContainer>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>

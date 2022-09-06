@@ -20,7 +20,7 @@
             <router-link :to="{name: 'user'}" class="nav-link" v-if="this.$store.getters.is_superuser">Users</router-link>
           </li>
           <li class="nav-item">
-            <CNavLink @click="logout">Log Out</CNavLink>
+            <a class="nav-link" @click="logout">Log Out</a>
           </li>
         </ul>
       </div>

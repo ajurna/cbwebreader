@@ -1,35 +1,26 @@
 <template>
-  <CContainer>
-    <CForm @submit="saveForm">
-      <CFormInput
-        type="text"
-        label="Username"
-        readonly
-        v-model="username"
-      />
-      <CFormInput
-        type="email"
-        label="Email address"
-        :placeholder="user.email"
-        text="Must be 8-20 characters long."
-        v-model="email"
-        feedback-invalid="Email address invalid."
-      />
-      <CFormSelect
-        aria-label="Default select example"
-        v-model="classification"
-        :options="[...this.$store.state.classifications]">
-      </CFormSelect>
-      <CRow class="mt-2">
-        <CCol>
-          <CButton color="primary" type="submit" class="mr-5">Save</CButton>
-          <confirm-button class="mr-5" label="Reset Password" :action="resetPassword" />
-          <confirm-button label="Delete User" :action="deleteUser" />
-        </CCol>
-      </CRow>
+  <div class="container">
+    <form @submit="saveForm">
+      <label class="form-label">Username</label>
+      <input class="form-control" readonly="" type="text" v-model="username" />
 
-    </CForm>
-  </CContainer>
+      <label class="form-label">Email address</label>
+      <input placeholder="" class="form-control" type="email" v-model="email"/>
+
+      <label class="form-label">Classification</label>
+      <select aria-label="Default select example" class="form-select" v-model="classification">
+        <option v-for="class_opt in [...this.$store.state.classifications]" :key="class_opt.value" :value="class_opt.value">{{class_opt.label}}</option>
+      </select>
+
+      <div class="row mt-2">
+        <div class="col">
+          <button type="submit" class="btn btn-primary me-5">Save</button>
+          <confirm-button class="me-5" label="Reset Password" :action="resetPassword" />
+          <confirm-button label="Delete User" :action="deleteUser" />
+        </div>
+      </div>
+    </form>
+  </div>
 </template>
 
 <script>
@@ -111,4 +102,3 @@ export default {
   }
 }
 </script>
-

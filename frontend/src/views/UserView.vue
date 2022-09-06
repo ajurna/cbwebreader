@@ -1,11 +1,11 @@
 <template>
   <the-breadcrumbs :manual_crumbs="this.crumbs" />
-  <CContainer>
+  <div class="container">
     <alert-messages :messages="messages" />
     <user-list :users="users" v-if="!userid"/>
     <user-edit v-if="user_data" :user="user_data" @add-message="addMessage"/>
     <add-user v-if="!userid" @user-added="updateUsers" @add-message="addMessage"/>
-  </CContainer>
+  </div>
 </template>
 
 <script>
