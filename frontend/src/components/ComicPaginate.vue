@@ -15,7 +15,7 @@ export default {
   name: "ComicPaginate",
   props: {
     page_count: Number,
-    modelValue: Number
+    modelValue: Number,
   },
   emits: ['update:modelValue', 'setPage', 'prevComic', 'nextComic'],
   methods: {
