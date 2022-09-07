@@ -2,7 +2,7 @@
   <h1>Create your admin account.</h1>
   <form @submit="saveForm">
     <label class="form-label">Username</label>
-    <input class="form-control" type="text" v-model="username">
+    <input class="form-control" type="text" v-model="username" />
 
     <label class="form-label">Email address</label>
     <input class="form-control" type="email" v-model="email">
