@@ -2,7 +2,7 @@ const path = require('path')
 const { VueLoaderPlugin } = require('vue-loader')
 const BundleTracker = require('webpack-bundle-tracker');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 const webpack = require('webpack')
 
@@ -12,7 +12,7 @@ module.exports = (env = {}) => {
   return {
 
     mode: 'production',
-    devtool: false,
+    devtool: 'hidden-source-map',
     entry: path.resolve(__dirname, './src/main.js'),
     output: {
       path: path.resolve(__dirname, './dist/bundles/'),
@@ -56,6 +56,8 @@ module.exports = (env = {}) => {
       }),
       new webpack.DefinePlugin({ __VUE_OPTIONS_API__: true, __VUE_PROD_DEVTOOLS__: false }),
       new MiniCssExtractPlugin(),
+
+      // new BundleAnalyzerPlugin(),
     ],
     optimization: {
       splitChunks: {

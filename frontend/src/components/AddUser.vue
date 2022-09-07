@@ -33,6 +33,7 @@
 
 <script>
 import api from "@/api";
+import 'bootstrap/js/dist/modal'
 export default {
   name: "AddUser",
   data() {

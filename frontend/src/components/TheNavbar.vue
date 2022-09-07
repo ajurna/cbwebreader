@@ -30,6 +30,7 @@
 <script>
 import store from "@/store";
 import router from "@/router";
+import 'bootstrap/js/dist/collapse'
 export default {
   name: "TheNavbar",
   components: { },

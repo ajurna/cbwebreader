@@ -71,6 +71,7 @@
 <script>
 import {useToast} from "vue-toast-notification";
 import api from "@/api";
+import 'bootstrap/js/dist/modal'
 
 export default {
   name: "ComicCard",
