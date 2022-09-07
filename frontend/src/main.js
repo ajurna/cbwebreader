@@ -1,11 +1,12 @@
 import * as Vue from 'vue'
 import App from './App.vue'
 import ToastPlugin from 'vue-toast-notification';
-
-import CoreuiVue from '@coreui/vue';
-import '@coreui/coreui/dist/css/coreui.min.css'
-import 'bootstrap/dist/css/bootstrap.min.css'
 import 'vue-toast-notification/dist/theme-default.css';
+
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/js/dist/dropdown'
+
+
 
 /* import the fontawesome core */
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -14,14 +15,13 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 /* import specific icons */
-import {faBook, faBookOpen, faEdit, faTurnUp} from '@fortawesome/free-solid-svg-icons'
-library.add(faBook, faBookOpen, faEdit, faTurnUp)
+import {faBook, faBookOpen, faEdit, faTurnUp, faTimes, faCheck} from '@fortawesome/free-solid-svg-icons'
+library.add(faBook, faBookOpen, faEdit, faTurnUp, faTimes, faCheck)
 
 import router from './router'
 import store from './store'
 
 Vue.createApp(App)
-    .use(CoreuiVue)
     .use(ToastPlugin)
     .use(store)
     .use(router)

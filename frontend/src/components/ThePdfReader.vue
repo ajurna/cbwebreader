@@ -1,41 +1,35 @@
 <template>
-  <CContainer ref="pdfContainer">
-    <CRow class="w-100 pb-5 mb-5" v-if="loaded" >
-        <pdf :src="pdfdata"  :page="page" ref="pdfWindow" :resize="true">
-          <template v-slot:loading>
-            loading content here...
-          </template>
-        </pdf>
-    </CRow>
-  </CContainer>
-  <CRow class="navButtons pb-2">
-    <CListGroup :layout="'horizontal'">
-      <CListGroupItem class="p-1 pt-2 page-link pl-2 pr-2" @click="prevComic">Prev&nbsp;Comic</CListGroupItem>
-      <paginate
-        v-model="page"
-        :page-count="numPages"
-        :click-handler="this.setPage"
-        :prev-text="'Prev'"
-        :next-text="'Next'"
-        :container-class="'pagination'"
-      >
-      </paginate>
-      <CListGroupItem  class="p-1 pt-2 page-link pl-2 pr-2" @click="nextComic">Next&nbsp;Comic</CListGroupItem>
-    </CListGroup>
-  </CRow>
+  <div class="container" ref="pdfContainer">
+    <div class="row w-100 pb-5 mb-5" v-if="loaded">
+      <pdf :src="pdfdata"  :page="page" ref="pdfWindow" :resize="true">
+        <template v-slot:loading>
+          loading content here...
+        </template>
+      </pdf>
+    </div>
+  </div>
+  <div class="row navButtons pb-2">
+    <comic-paginate
+      v-model="page"
+      :page_count="numPages"
+      @setPage="setPage"
+      @prevComic="prevComic"
+      @nextComic="nextComic"
+    />
+  </div>
 </template>
 
 <script>
 import pdfvuer from 'pdfvuer'
 import api from "@/api";
-import Paginate from "vuejs-paginate-next";
 import * as Hammer from 'hammerjs'
-
+import ComicPaginate from "@/components/ComicPaginate";
 
 export default {
   name: "ThePdfReader",
   components: {
-    pdf: pdfvuer, Paginate
+    ComicPaginate,
+    pdf: pdfvuer
   },
   data () {
     return {
@@ -83,7 +77,7 @@ export default {
             this.setReadPage(this.page)
             this.next_comic = response.data.next_comic
             this.prev_comic = response.data.prev_comic
-            this.hammertime = new Hammer(this.$refs.pdfContainer.$el, {})
+            this.hammertime = new Hammer(this.$refs.pdfContainer, {})
             this.hammertime.on('swipeleft', (_e, self=this) => {
               self.nextPage()
             })
@@ -130,7 +124,7 @@ export default {
       this.setReadPage(this.page)
     },
     setReadPage(num){
-      this.$refs.pdfContainer.$el.scrollIntoView()
+      this.$refs.pdfContainer.scrollIntoView()
       let payload = {
           page: num-1
       }

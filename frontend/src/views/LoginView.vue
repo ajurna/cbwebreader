@@ -1,36 +1,25 @@
 <template>
-  <CContainer>
-    <CRow v-if="!initialSetupRequired">
-      <CCol lg="4"/>
-      <CCol lg="4" id="login-col">
-        <CForm @submit="login">
-          <CFormInput
-              type="username"
-              id="username"
-              label="Username"
-              placeholder="username"
-              text="Please enter your username"
-              aria-describedby="loginFormControlInputHelpInline"
-              v-model="username"
-            />
-            <CFormInput
-              type="password"
-              id="password"
-              label="password"
-              placeholder="password"
-              text="Please enter your password"
-              aria-describedby="loginFormControlInputHelpInline"
-              v-model="password"
-              @keyup.enter="login"
-            />
-            <CButton color="primary" class="mb-3">Login</CButton>
-        </CForm>
-      </CCol>
-    </CRow>
-    <CRow>
+  <div class="container">
+    <div class="row" v-if="!initialSetupRequired">
+      <div class="col col-lg-4" />
+      <div class="col col-lg-4" id="login-col">
+        <form @submit="login">
+          <label class="form-label" for="username">Username</label>
+          <input id="username" placeholder="username" aria-describedby="loginFormControlInputHelpInline" class="form-control" type="text" v-model="username" />
+          <div class="form-text" id="loginFormControlInputHelpInline">Please enter your username</div>
+
+          <label class="form-label" for="password">password</label>
+          <input id="password" placeholder="password" aria-describedby="loginFormControlInputHelpInline" class="form-control" type="password" v-model="password"/>
+          <div class="form-text" id="loginFormControlInputHelpInline">Please enter your password</div>
+
+          <button class="btn btn-primary mb-3" type="submit">Login</button>
+        </form>
+      </div>
+    </div>
+    <div class="row">
       <initial-setup v-if="initialSetupRequired" />
-    </CRow>
-  </CContainer>
+    </div>
+  </div>
 </template>
 
 <script>

@@ -1,66 +1,35 @@
 <template>
-  <CContainer>
-    <CForm @submit="updateAccount">
-      <CFormInput
-        type="text"
-        label="Username"
-        readonly
-        v-model="username"
-      />
-      <CFormInput
-        type="email"
-        label="Email address"
-        :placeholder="email"
-        text="Must be 8-20 characters long."
-        v-model="email"
-        feedback-invalid="Email address invalid."
-        :valid="validateEmail(email)"
-      />
-      <CFormInput
-        type="password"
-        label="Current Password"
-        placeholder="Enter Current Password"
-        text="Must enter current password to change settings."
-        v-model="current_password"
-        feedback-invalid="Wrong Password."
-        :valid="current_password.length > 0"
-      />
-      <CFormInput
-        type="password"
-        label="New Password"
-        placeholder="Enter New Password"
-        text="Must be at least 9 characters long."
-        v-model="new_password"
-        feedback-invalid="Password is not complex enough."
-        :valid="checkNewPassword(new_password)"
-      />
-      <CFormInput
-        type="password"
-        label="New Password Confirm"
-        placeholder="Enter New Password"
-        text="Must be at least 9 characters long."
-        v-model="new_password_confirm"
-        feedback-invalid="New passwords should match."
-        :valid="new_password === new_password_confirm && new_password.length > 8"
-      />
-      <CButton color="primary" type="submit">Save</CButton>
-    </CForm>
-  </CContainer>
+  <div class="container">
+    <form @submit="updateAccount">
+      <label class="form-label">Username</label>
+      <input class="form-control" readonly type="text" v-model="username" />
+
+      <label class="form-label">Email address</label>
+      <input placeholder="" class="form-control" type="email" v-model="email" />
+
+      <label class="form-label">Current Password</label>
+      <input placeholder="Enter Current Password" class="form-control" type="password" v-model="current_password"/>
+      <div class="form-text">Must enter current password to change settings.</div>
+
+      <label class="form-label">New Password</label><input placeholder="Enter New Password" class="form-control" type="password" v-model="new_password"/>
+      <div class="form-text">Must be at least 9 characters long.</div>
+
+      <label class="form-label">New Password Confirm</label><input placeholder="Enter New Password" class="form-control" type="password" v-model="new_password_confirm"/>
+      <div class="form-text">Must be at least 9 characters long.</div>
+
+      <button class="btn btn-primary" type="submit">Save</button>
+    </form>
+
+  </div>
 </template>
 
 <script>
-import {CForm, CFormInput, CContainer, CButton} from "@coreui/vue";
 import api from "@/api";
 import {useToast} from "vue-toast-notification";
 const toast = useToast();
 export default {
   name: "TheAccountForm",
-  components: {
-    CForm,
-    CFormInput,
-    CContainer,
-    CButton
-  },
+  components: {},
   data () {
     return {
       username: '',
@@ -87,7 +56,10 @@ export default {
     updateAccount () {
       if (!this.current_password) {
         toast.error('Please enter your current password.', {position:'top'});
+      } else if (this.email === this.$store.state.user.email && this.new_password.length === 0){
+        toast.error('No changes detected', {position:'top'});
       } else {
+        console.log(this.email === this.$store.state.user.email)
         if (this.email !== this.$store.state.user.email) {
           let payload = {
             username: this.username,
@@ -101,7 +73,7 @@ export default {
             toast.error(error.response.data.errors)
           })
         }
-        if (this.new_password === this.new_password_confirm) {
+        if (this.new_password === this.new_password_confirm && this.new_password.length > 0) {
           let payload = {
             username: this.username,
             old_password: this.current_password,
@@ -119,12 +91,6 @@ export default {
 
       }
     },
-    validateEmail(mail){
-      return (/\S+@\S+\.\S+/.test(mail))
-    },
-    checkNewPassword(pass){
-      return (pass.length >= 9)
-    }
   }
 }
 </script>

@@ -415,7 +415,7 @@ class ActionViewSet(viewsets.GenericViewSet):
         return Response(serializer.errors,
                         status=status.HTTP_400_BAD_REQUEST)
 
-    def get_comics(self, selectors: Iterable[str, UUID]) -> List[str]:
+    def get_comics(self, selectors: Iterable[Union[str, UUID]]) -> List[str]:
         data = set()
         data = data.union(
             set(models.ComicBook.objects.filter(selector__in=selectors).values_list('selector', flat=True)))

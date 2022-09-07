@@ -1,30 +1,20 @@
 <template>
   <h1>Create your admin account.</h1>
-  <CForm @submit="saveForm">
-    <CFormInput
-      type="text"
-      label="Username"
-      v-model="username"
-    />
-    <CFormInput
-      type="email"
-      label="Email address"
-      text="Must be 8-20 characters long."
-      v-model="email"
-      feedback-invalid="Email address invalid."
-    />
-    <CFormInput
-      type="password"
-      label="Password"
-      v-model="password"
-    />
-    <CFormInput
-      type="password"
-      label="Confirm Password"
-      v-model="confirm_password"
-    />
-    <CButton color="primary" type="submit" class="mr-5 mt-2">Save</CButton>
-  </CForm>
+  <form @submit="saveForm">
+    <label class="form-label">Username</label>
+    <input class="form-control" type="text" v-model="username" />
+
+    <label class="form-label">Email address</label>
+    <input class="form-control" type="email" v-model="email">
+
+    <label class="form-label">Password</label>
+    <input class="form-control" type="password" v-model="password">
+
+    <label class="form-label">Confirm Password</label>
+    <input class="form-control" type="password" v-model="confirm_password">
+
+    <button class="btn btn-primary mr-5 mt-2" type="submit">Save</button>
+  </form>
 </template>
 
 <script>

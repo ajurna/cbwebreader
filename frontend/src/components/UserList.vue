@@ -1,28 +1,29 @@
 <template>
-  <CTable striped bordered>
-    <CTableHead>
-      <CTableRow>
-        <CTableHeaderCell scope="col">#</CTableHeaderCell>
-        <CTableHeaderCell scope="col">Username</CTableHeaderCell>
-        <CTableHeaderCell scope="col">Email</CTableHeaderCell>
-        <CTableHeaderCell scope="col">Superuser</CTableHeaderCell>
-        <CTableHeaderCell scope="col">Classification</CTableHeaderCell>
-      </CTableRow>
-    </CTableHead>
-    <CTableBody>
+  <table class="table table-striped table-bordered">
+    <caption>User list</caption>
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Username</th>
+        <th scope="col">Email</th>
+        <th scope="col">Superuser</th>
+        <th scope="col">Classification</th>
+      </tr>
+    </thead>
+    <tbody>
       <template v-for="item in users" :key="item.id">
-        <CTableRow>
-          <CTableHeaderCell scope="row">{{ item.id }}</CTableHeaderCell>
-          <CTableDataCell class="">
+        <tr>
+          <th scope="row">{{ item.id }}</th>
+          <td class="">
             <router-link :to="{'name': 'user', params: { userid: item.id }}">{{ item.username }}</router-link>
-          </CTableDataCell>
-          <CTableDataCell>{{ item.email }}</CTableDataCell>
-          <CTableDataCell>{{ item.is_superuser }}</CTableDataCell>
-          <CTableDataCell>{{ this.$store.state.classifications.find(i => i.value === item.classification.toString()).label }}</CTableDataCell>
-        </CTableRow>
+          </td>
+          <td>{{ item.email }}</td>
+          <td>{{ item.is_superuser }}</td>
+          <td>{{ this.$store.state.classifications.find(i => i.value === item.classification.toString()).label }}</td>
+        </tr>
       </template>
-    </CTableBody>
-  </CTable>
+    </tbody>
+  </table>
 </template>
 
 <script>

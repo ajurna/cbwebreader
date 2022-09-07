@@ -6,34 +6,27 @@
       </section>
     </div>
   </div>
-  <CRow class="navButtons pb-2">
-    <CListGroup :layout="'horizontal'">
-      <CListGroupItem class="p-1 pt-2 page-link pl-2 pr-2" @click="prevComic">Prev&nbsp;Comic</CListGroupItem>
-      <paginate
-        v-model="paginate_page"
-        :page-count="pages.length"
-        :click-handler="this.setPage"
-        :prev-text="'Prev'"
-        :next-text="'Next'"
-        :container-class="'pagination'"
-      >
-      </paginate>
-      <CListGroupItem  class="p-1 pt-2 page-link pl-2 pr-2" @click="nextComic">Next&nbsp;Comic</CListGroupItem>
-    </CListGroup>
-  </CRow>
+  <div class="row navButtons pb-2">
+    <comic-paginate
+      v-model="paginate_page"
+      :page_count="pages.length"
+      @setPage="this.setPage"
+      @prevComic="prevComic"
+      @nextComic="nextComic"
+    />
+  </div>
 
 </template>
 
 <script>
 import Reveal from "reveal.js";
 import api from "@/api";
-import 'reveal.js-menu/menu.css'
-import Paginate from "vuejs-paginate-next";
 import * as Hammer from 'hammerjs'
+import ComicPaginate from "@/components/ComicPaginate";
 
 export default {
   name: "TheComicReader",
-  components: {Paginate},
+  components: {ComicPaginate},
   data () {
     return {
       current_page: 0,
@@ -184,8 +177,5 @@ export default {
 }
 section {
   padding-bottom: 60px;
-}
-.list-group-item {
-  /*padding: 0;*/
 }
 </style>
