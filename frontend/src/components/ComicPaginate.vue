@@ -60,7 +60,7 @@ export default {
         out.splice(0, 1, ...[1, '...'])
       }
       if (out[out.length - 1] !==this.page_count){
-        out.splice(out.length - 1,1, ...['...', this.page_count])
+        out.splice(out.length - 1, 1, ...["...", this.page_count])
       }
       return out
     }
