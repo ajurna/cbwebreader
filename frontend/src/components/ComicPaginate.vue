@@ -42,7 +42,7 @@ export default {
   computed: {
     visible_pages(){
       let out = []
-      if (this.page_count <= 5){
+      if (this.page_count <= 5) {
         for (let i = 1; i <= this.page_count; i++){
           out.push(i)
         }
