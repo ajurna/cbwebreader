@@ -19,7 +19,7 @@ export default {
   },
   emits: ['update:modelValue', 'setPage', 'prevComic', 'nextComic'],
   methods: {
-    setPage(evt){
+    setPage(evt) {
       if (evt !== '...'){
         this.$emit('setPage', evt)
       }
