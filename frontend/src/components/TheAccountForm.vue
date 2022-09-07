@@ -29,7 +29,7 @@ import {useToast} from "vue-toast-notification";
 const toast = useToast();
 export default {
   name: "TheAccountForm",
-  components: { },
+  components: {},
   data () {
     return {
       username: '',
