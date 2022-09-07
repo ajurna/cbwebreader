@@ -32,7 +32,7 @@ export default {
       }
     },
     prevPage(){
-      if (this.modelValue === 1){
+      if (this.modelValue === 1) {
         this.$emit('prevComic')
       } else {
         this.setPage(this.modelValue - 1)
