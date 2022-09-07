@@ -21,7 +21,7 @@ export default {
   methods: {
     setPage(evt) {
       if (evt !== '...'){
-        this.$emit('setPage', evt)
+        this.$emit("setPage", evt)
       }
     },
     nextPage(){
