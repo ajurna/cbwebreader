@@ -56,7 +56,7 @@ export default {
         out.push(i)
       }
 
-      if (out[0] !== 1){
+      if (out[0] !== 1) {
         out.splice(0, 1, ...[1, '...'])
       }
       if (out[out.length - 1] !==this.page_count){
