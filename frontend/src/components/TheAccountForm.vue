@@ -2,7 +2,7 @@
   <div class="container">
     <form @submit="updateAccount">
       <label class="form-label">Username</label>
-      <input class="form-control" readonly type="text" v-model="username"/>
+      <input class="form-control" readonly type="text" v-model="username" />
 
       <label class="form-label">Email address</label>
       <input placeholder="" class="form-control" type="email" v-model="email" />
