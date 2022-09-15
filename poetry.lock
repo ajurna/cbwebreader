@@ -97,7 +97,7 @@ lxml = ["lxml"]
 
 [[package]]
 name = "certifi"
-version = "2022.6.15"
+version = "2022.9.14"
 description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
 optional = false
@@ -236,14 +236,14 @@ Django = ">3.2"
 
 [[package]]
 name = "Django"
-version = "4.0.7"
+version = "4.1.1"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 category = "main"
 optional = false
 python-versions = ">=3.8"
 
 [package.dependencies]
-asgiref = ">=3.4.1,<4"
+asgiref = ">=3.5.2,<4"
 sqlparse = ">=0.2.2"
 tzdata = {version = "*", markers = "sys_platform == \"win32\""}
 
@@ -264,7 +264,7 @@ django = "*"
 
 [[package]]
 name = "django-boost"
-version = "2.0"
+version = "2.1"
 description = "Django Extension library"
 category = "main"
 optional = false
@@ -314,7 +314,7 @@ tests = ["jinja2 (>=2.9.6)", "mock (==1.0.1)", "pep8 (==1.4.6)", "pytest (<4.0)"
 
 [[package]]
 name = "django-extensions"
-version = "3.2.0"
+version = "3.2.1"
 description = "Extensions for Django"
 category = "main"
 optional = false
@@ -383,7 +383,7 @@ sqlparse = "*"
 
 [[package]]
 name = "django-sri"
-version = "0.4.0"
+version = "0.5.0"
 description = "Subresource Integrity for Django"
 category = "main"
 optional = false
@@ -548,7 +548,7 @@ license = ["ukkonen"]
 
 [[package]]
 name = "idna"
-version = "3.3"
+version = "3.4"
 description = "Internationalized Domain Names in Applications (IDNA)"
 category = "main"
 optional = false
@@ -971,11 +971,11 @@ pylint = ">=1.7"
 
 [[package]]
 name = "PyMuPDF"
-version = "1.18.19"
+version = "1.20.2"
 description = "Python bindings for the PDF toolkit and renderer MuPDF"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 
 [[package]]
 name = "pyOpenSSL"
@@ -1016,11 +1016,11 @@ six = ">=1.5"
 
 [[package]]
 name = "python-dotenv"
-version = "0.20.0"
+version = "0.21.0"
 description = "Read key-value pairs from a .env file and set them as environment variables"
 category = "main"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.7"
 
 [package.extras]
 cli = ["click (>=5.0)"]
@@ -1169,7 +1169,7 @@ python-versions = ">=3.6,<4.0"
 
 [[package]]
 name = "traitlets"
-version = "5.3.0"
+version = "5.4.0"
 description = ""
 category = "dev"
 optional = false
@@ -1236,7 +1236,7 @@ ua-parser = ">=0.10.0"
 
 [[package]]
 name = "virtualenv"
-version = "20.16.4"
+version = "20.16.5"
 description = "Virtual Python Environment builder"
 category = "dev"
 optional = false
@@ -1261,11 +1261,14 @@ python-versions = "*"
 
 [[package]]
 name = "Werkzeug"
-version = "2.0.3"
+version = "2.2.2"
 description = "The comprehensive WSGI web application library."
 category = "dev"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
+
+[package.dependencies]
+MarkupSafe = ">=2.1.1"
 
 [package.extras]
 watchdog = ["watchdog"]
@@ -1292,7 +1295,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "85edbd1fe3ad53c66f95b372ad7e1891058831431f08de21f11197047ce8c51b"
+content-hash = "8adcd11c8f30ed42dc6d187b3a3f5b0f020180c362d13670b39467523732819d"
 
 [metadata.files]
 appnope = [
@@ -1328,8 +1331,8 @@ beautifulsoup4 = [
     {file = "beautifulsoup4-4.11.1.tar.gz", hash = "sha256:ad9aa55b65ef2808eb405f46cf74df7fcb7044d5cbc26487f96eb2ef2e436693"},
 ]
 certifi = [
-    {file = "certifi-2022.6.15-py3-none-any.whl", hash = "sha256:fe86415d55e84719d75f8b69414f6438ac3547d2078ab91b67e779ef69378412"},
-    {file = "certifi-2022.6.15.tar.gz", hash = "sha256:84c85a9078b11105f04f3036a9482ae10e4621616db313fe045dd24743a0820d"},
+    {file = "certifi-2022.9.14-py3-none-any.whl", hash = "sha256:e232343de1ab72c2aa521b625c80f699e356830fd0e2c620b465b304b17b0516"},
+    {file = "certifi-2022.9.14.tar.gz", hash = "sha256:36973885b9542e6bd01dea287b2b4b3b21236307c56324fcc3f1160f2d655ed5"},
 ]
 cffi = [
     {file = "cffi-1.15.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:a66d3508133af6e8548451b25058d5812812ec3798c886bf38ed24a98216fab2"},
@@ -1514,16 +1517,16 @@ dj-database-url = [
     {file = "dj_database_url-1.0.0-py3-none-any.whl", hash = "sha256:cd354a3b7a9136d78d64c17b2aec369e2ae5616fbca6bfbe435ef15bb372ce39"},
 ]
 Django = [
-    {file = "Django-4.0.7-py3-none-any.whl", hash = "sha256:41bd65a9e5f8a89cdbfa7a7bba45cd7431ae89e750af82dea8a35fd1a7ecbe66"},
-    {file = "Django-4.0.7.tar.gz", hash = "sha256:9c6d5ad36be798e562ddcaa6b17b1c3ff2d3c4f529a47432b69fb9a30f847461"},
+    {file = "Django-4.1.1-py3-none-any.whl", hash = "sha256:acb21fac9275f9972d81c7caf5761a89ec3ea25fe74545dd26b8a48cb3a0203e"},
+    {file = "Django-4.1.1.tar.gz", hash = "sha256:a153ffd5143bf26a877bfae2f4ec736ebd8924a46600ca089ad96b54a1d4e28e"},
 ]
 django-appconf = [
     {file = "django-appconf-1.0.5.tar.gz", hash = "sha256:be3db0be6c81fa84742000b89a81c016d70ae66a7ccb620cdef592b1f1a6aaa4"},
     {file = "django_appconf-1.0.5-py3-none-any.whl", hash = "sha256:ae9f864ee1958c815a965ed63b3fba4874eec13de10236ba063a788f9a17389d"},
 ]
 django-boost = [
-    {file = "django_boost-2.0-py3-none-any.whl", hash = "sha256:266c22a5a7bdae480cfdc337b11073e1e906521a4f9c5b3dbb7e15bfeb916065"},
-    {file = "django_boost-2.0.tar.gz", hash = "sha256:6d6c2d7c34d54cfdbb6232d755967eabaaf8db5395bc003637e87a7f0e329016"},
+    {file = "django_boost-2.1-py3-none-any.whl", hash = "sha256:c59450d082bb6f7c130d0fcbf5cb9346c183d5d78856966838b17e02901e31b9"},
+    {file = "django_boost-2.1.tar.gz", hash = "sha256:a7d8defc2ca0eeebd08636abe58a21094f43fcc7c0ff020f9f8deec82d53a39f"},
 ]
 django-bootstrap4 = [
     {file = "django-bootstrap4-22.2.tar.gz", hash = "sha256:57bcbce53530ffd57a1c8bda74c8f3b56c859e085fb1f52a0e3e3a4f982f0960"},
@@ -1538,8 +1541,8 @@ django-csp = [
     {file = "django_csp-3.7.tar.gz", hash = "sha256:01eda02ad3f10261c74131cdc0b5a6a62b7c7ad4fd017fbefb7a14776e0a9727"},
 ]
 django-extensions = [
-    {file = "django-extensions-3.2.0.tar.gz", hash = "sha256:7dc7cd1da50d83b76447a58f5d7e5c8e6cd83f21e9b7e5f97e6b644f4d4e21a6"},
-    {file = "django_extensions-3.2.0-py3-none-any.whl", hash = "sha256:4c234a7236e9e41c17d9036f6dae7a3a9b212527105b8a0d24b2459b267825f0"},
+    {file = "django-extensions-3.2.1.tar.gz", hash = "sha256:2a4f4d757be2563cd1ff7cfdf2e57468f5f931cc88b23cf82ca75717aae504a4"},
+    {file = "django_extensions-3.2.1-py3-none-any.whl", hash = "sha256:421464be390289513f86cb5e18eb43e5dc1de8b4c27ba9faa3b91261b0d67e09"},
 ]
 django-filter = [
     {file = "django-filter-22.1.tar.gz", hash = "sha256:ed473b76e84f7e83b2511bb2050c3efb36d135207d0128dfe3ae4b36e3594ba5"},
@@ -1558,8 +1561,8 @@ django-silk = [
     {file = "django_silk-5.0.1-py3-none-any.whl", hash = "sha256:9dad85e783fcaaa1c97bebfa7ea01899428ded55b517d363f25ba87e43b5ce50"},
 ]
 django-sri = [
-    {file = "django-sri-0.4.0.tar.gz", hash = "sha256:8a21b9808c351fe28d731ac1af9043b2525ba93d883aab888424cd8b121bbef1"},
-    {file = "django_sri-0.4.0-py3-none-any.whl", hash = "sha256:44e0fb6a33d767008098293014d89b380ee6ec65ffe034a89dcff8f199c5abb0"},
+    {file = "django-sri-0.5.0.tar.gz", hash = "sha256:9d9042a01f9314d308f8b40ea084768f55a182e2a82e2ea53412ca5f4433a28e"},
+    {file = "django_sri-0.5.0-py3-none-any.whl", hash = "sha256:c2621bed5660b5ac19ecf39b49e83df73625ba43d58fb5a35833f2100162819d"},
 ]
 django-webpack-loader = [
     {file = "django-webpack-loader-1.6.0.tar.gz", hash = "sha256:a29418ff41690035be10d2c94a0655dab099009c68b898839813d6a109b14d71"},
@@ -1610,8 +1613,8 @@ identify = [
     {file = "identify-2.5.5.tar.gz", hash = "sha256:322a5699daecf7c6fd60e68852f36f2ecbb6a36ff6e6e973e0d2bb6fca203ee6"},
 ]
 idna = [
-    {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
-    {file = "idna-3.3.tar.gz", hash = "sha256:9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d"},
+    {file = "idna-3.4-py3-none-any.whl", hash = "sha256:90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2"},
+    {file = "idna-3.4.tar.gz", hash = "sha256:814f528e8dead7d329833b91c5faa87d60bf71824cd12a7530b5526063d02cb4"},
 ]
 inflection = [
     {file = "inflection-0.5.1-py2.py3-none-any.whl", hash = "sha256:f38b2b640938a4f35ade69ac3d053042959b62a0f1076a5bbaa1b9526605a8a2"},
@@ -1917,30 +1920,27 @@ pylint-plugin-utils = [
     {file = "pylint_plugin_utils-0.7-py3-none-any.whl", hash = "sha256:b3d43e85ab74c4f48bb46ae4ce771e39c3a20f8b3d56982ab17aa73b4f98d535"},
 ]
 PyMuPDF = [
-    {file = "PyMuPDF-1.18.19-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:ee8cc8aadaa818c9a5e2fb2a944c99a98822a7a3bc618d9c5d32f126874c0635"},
-    {file = "PyMuPDF-1.18.19-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:03ebf6fce6889df4708061a499b912909ead5e7bf1066f05b94458dcf164e3c3"},
-    {file = "PyMuPDF-1.18.19-cp310-cp310-win32.whl", hash = "sha256:f4bc63b0696c2f276703fadf3232d7ccaa01ab7548d1541fbc3762c573d3e1b5"},
-    {file = "PyMuPDF-1.18.19-cp310-cp310-win_amd64.whl", hash = "sha256:c2fc348061c14c79e546a207088ba8bf676dc8f1d302cb94cefe53d53c2a7808"},
-    {file = "PyMuPDF-1.18.19-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:a795f40654a98459007148fa0660de5a9e1e1e0d12dc5d56bbdea481a1ec8fbc"},
-    {file = "PyMuPDF-1.18.19-cp36-cp36m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:c802bdc3fdf690470a490cbcbf026895bb497f8049d33df47e1c64da939d46b3"},
-    {file = "PyMuPDF-1.18.19-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5044f9447686874f442a676776615b48b6a04d63a68dd99da21ad7a0efd5d13a"},
-    {file = "PyMuPDF-1.18.19-cp36-cp36m-win_amd64.whl", hash = "sha256:7a7fc4b4069934d7663dbd2bcf698f123b9bb0c4b4e25383a549692bee56f466"},
-    {file = "PyMuPDF-1.18.19-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:dc2df761b59ff06d16db7a5ce6d19bcab365efd4391eac96dab30ddda3a09f87"},
-    {file = "PyMuPDF-1.18.19-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:af2c6934eb8dc803c958d9742c7b64aa7d6287f764844f296dfdfe9e576e4df4"},
-    {file = "PyMuPDF-1.18.19-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d772141c9e007b887da54da5677e13975305bd85ae833eec35b923bed35ea9c8"},
-    {file = "PyMuPDF-1.18.19-cp37-cp37m-win32.whl", hash = "sha256:ea96c0129d6be8a289b80e7f0a5f6842e09c3dcb568a170297afb256cc387146"},
-    {file = "PyMuPDF-1.18.19-cp37-cp37m-win_amd64.whl", hash = "sha256:e7f1897600f7a56073b1370a1709f68b00c8700c4ef945bcffde1a09f58c2746"},
-    {file = "PyMuPDF-1.18.19-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:0c43b849c1daef36dc83667726518af3178c831c053e3e946e1989b5fb477bca"},
-    {file = "PyMuPDF-1.18.19-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:47a1588ce2296517019e8ba64279fe4cc03592d96fb1fc726ed9d0f5f01b5ef8"},
-    {file = "PyMuPDF-1.18.19-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fc8e1f0c5fb54cb91ad3b630ef623834cb2e4b110c33eabccad9b8609053b20d"},
-    {file = "PyMuPDF-1.18.19-cp38-cp38-win32.whl", hash = "sha256:230d130f22a91da0a897c6b7e9b3523d24dc512ee32568a40d0df0e2cf2562c0"},
-    {file = "PyMuPDF-1.18.19-cp38-cp38-win_amd64.whl", hash = "sha256:7c0f145445b3ef8eb45794bf0f86fcd278696da5a6b879666b690e4856f5e481"},
-    {file = "PyMuPDF-1.18.19-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:c12e1870841a8746f023a64ef6d8a44fa02324d17252c3e182f639a9d5530261"},
-    {file = "PyMuPDF-1.18.19-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:69308316b031aace9e490e9010d6c5334129eed47b47804da72d5d07eb5b2f9a"},
-    {file = "PyMuPDF-1.18.19-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:616533cff3605c22a327488b4470f9929da675b006d7a1498f8d7ed8bf91f386"},
-    {file = "PyMuPDF-1.18.19-cp39-cp39-win32.whl", hash = "sha256:f407dbeecdefdfd46b9df7b083da71558143859216dc9891c40ea9cd2cf49a04"},
-    {file = "PyMuPDF-1.18.19-cp39-cp39-win_amd64.whl", hash = "sha256:439b972026fbe8636aed0fe9d2cabb321542fa92bc48cd4c96dbdd2508fc41ee"},
-    {file = "PyMuPDF-1.18.19.tar.gz", hash = "sha256:ecc684e9c45bd4072f538cc42998cfda4d00f066ba009226e8a212b112d9992c"},
+    {file = "PyMuPDF-1.20.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:18077adb58b7004bb396f952d27c89c6bf5dc521b4056ba4f95772c7e900a57a"},
+    {file = "PyMuPDF-1.20.2-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2a82438b44723e7dcb47d156cf0299fcf3d09e970ee469081c3f9d79b8c40ce3"},
+    {file = "PyMuPDF-1.20.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:73dbf73ac1c5cbf99dec903c98bc18eb30c8fe1d703ec5531296a5308700f001"},
+    {file = "PyMuPDF-1.20.2-cp310-cp310-win32.whl", hash = "sha256:1df02cca0fbb64c3dce4d6094f9ad91991d768ebe0c0efdee85294c7959db7c3"},
+    {file = "PyMuPDF-1.20.2-cp310-cp310-win_amd64.whl", hash = "sha256:8074f005d247bbb6b43c0c1eba2a316d97cbf8345b456d37ee97c9cd2a7398cc"},
+    {file = "PyMuPDF-1.20.2-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:4045847e830598269be448bda21dc8ea332fce974c4cf3b1b6ca0d6231f2de0d"},
+    {file = "PyMuPDF-1.20.2-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5824103cf2ea3b492cb5b3c66ab16d61db65363ebdfb7ed28a2af93cb48dee4f"},
+    {file = "PyMuPDF-1.20.2-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c50b8408dbbb921cfce7145ac0ae0e150955f9b2deed8cdddf03e830ca1e6a2"},
+    {file = "PyMuPDF-1.20.2-cp37-cp37m-win32.whl", hash = "sha256:1bd2004a64f110dac255a86ec45245f17e84d81cf6f8f67608e45455cd1b5697"},
+    {file = "PyMuPDF-1.20.2-cp37-cp37m-win_amd64.whl", hash = "sha256:acadb4e61776cc2d6dd0196675db324411fccd64e8d68399dc8e6ca2cb943f49"},
+    {file = "PyMuPDF-1.20.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:61b07f6c389c690f28c79830a14c294bbc1679bd31edc4b6a42511c415434cbd"},
+    {file = "PyMuPDF-1.20.2-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7d29a7db4b15dcb7632bb6afa197f12f95244ab15f7c73ccb219e3f7df4e79fa"},
+    {file = "PyMuPDF-1.20.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9f2897fb4160b5fe2f80739ca9e101677e5694b5dcfda8026b0eb0b7e2db5615"},
+    {file = "PyMuPDF-1.20.2-cp38-cp38-win32.whl", hash = "sha256:2af5b16d2f7f78a8800906e30d650dbdbf38209e988e0796b57d1a938a59209a"},
+    {file = "PyMuPDF-1.20.2-cp38-cp38-win_amd64.whl", hash = "sha256:071732c5139150f1f7ba95d25c0b69919dee8494adc88a914872da5272b974d7"},
+    {file = "PyMuPDF-1.20.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:d5afa38414c3cf10daaa627f3fc7e8653efbbc2e5f58335a37e743a5c52698d0"},
+    {file = "PyMuPDF-1.20.2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bddf7d617fba1b345d9aee8d533888e340ffa3f784910453608bc5541089023c"},
+    {file = "PyMuPDF-1.20.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5c0ee0df665849f8686981fcc8f836afac2302bb6a7aaf330e73fd5694017d9d"},
+    {file = "PyMuPDF-1.20.2-cp39-cp39-win32.whl", hash = "sha256:e7214cf1870238d39ca008eda7c612b1db7228d7e913cb1a028e7a28175bef41"},
+    {file = "PyMuPDF-1.20.2-cp39-cp39-win_amd64.whl", hash = "sha256:e9cb960e234498a4e91e4b56e2e71f4c56fd0045c7a71315df8e03a33212dbeb"},
+    {file = "PyMuPDF-1.20.2.tar.gz", hash = "sha256:02eedf01f57c6bafb5e8667cea0088a2d2522643c47100f1908bec3a68a84888"},
 ]
 pyOpenSSL = [
     {file = "pyOpenSSL-22.0.0-py2.py3-none-any.whl", hash = "sha256:ea252b38c87425b64116f808355e8da644ef9b07e429398bfece610f893ee2e0"},
@@ -1955,8 +1955,8 @@ python-dateutil = [
     {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
 ]
 python-dotenv = [
-    {file = "python-dotenv-0.20.0.tar.gz", hash = "sha256:b7e3b04a59693c42c36f9ab1cc2acc46fa5df8c78e178fc33a8d4cd05c8d498f"},
-    {file = "python_dotenv-0.20.0-py3-none-any.whl", hash = "sha256:d92a187be61fe482e4fd675b6d52200e7be63a12b724abbf931a40ce4fa92938"},
+    {file = "python-dotenv-0.21.0.tar.gz", hash = "sha256:b77d08274639e3d34145dfa6c7008e66df0f04b7be7a75fd0d5292c191d79045"},
+    {file = "python_dotenv-0.21.0-py3-none-any.whl", hash = "sha256:1684eb44636dd462b66c3ee016599815514527ad99965de77f43e0944634a7e5"},
 ]
 pytz = [
     {file = "pytz-2022.2.1-py2.py3-none-any.whl", hash = "sha256:220f481bdafa09c3955dfbdddb7b57780e9a94f5127e35456a48589b9e0c0197"},
@@ -2074,8 +2074,8 @@ tomlkit = [
     {file = "tomlkit-0.11.4.tar.gz", hash = "sha256:3235a9010fae54323e727c3ac06fb720752fe6635b3426e379daec60fbd44a83"},
 ]
 traitlets = [
-    {file = "traitlets-5.3.0-py3-none-any.whl", hash = "sha256:65fa18961659635933100db8ca120ef6220555286949774b9cfc106f941d1c7a"},
-    {file = "traitlets-5.3.0.tar.gz", hash = "sha256:0bb9f1f9f017aa8ec187d8b1b2a7a6626a2a1d877116baba52a129bfa124f8e2"},
+    {file = "traitlets-5.4.0-py3-none-any.whl", hash = "sha256:93663cc8236093d48150e2af5e2ed30fc7904a11a6195e21bab0408af4e6d6c8"},
+    {file = "traitlets-5.4.0.tar.gz", hash = "sha256:3f2c4e435e271592fe4390f1746ea56836e3a080f84e7833f0f801d9613fec39"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.3.0-py3-none-any.whl", hash = "sha256:25642c956049920a5aa49edcdd6ab1e06d7e5d467fc00e0506c44ac86fbfca02"},
@@ -2102,16 +2102,16 @@ user-agents = [
     {file = "user_agents-2.2.0-py3-none-any.whl", hash = "sha256:a98c4dc72ecbc64812c4534108806fb0a0b3a11ec3fd1eafe807cee5b0a942e7"},
 ]
 virtualenv = [
-    {file = "virtualenv-20.16.4-py3-none-any.whl", hash = "sha256:035ed57acce4ac35c82c9d8802202b0e71adac011a511ff650cbcf9635006a22"},
-    {file = "virtualenv-20.16.4.tar.gz", hash = "sha256:014f766e4134d0008dcaa1f95bafa0fb0f575795d07cae50b1bee514185d6782"},
+    {file = "virtualenv-20.16.5-py3-none-any.whl", hash = "sha256:d07dfc5df5e4e0dbc92862350ad87a36ed505b978f6c39609dc489eadd5b0d27"},
+    {file = "virtualenv-20.16.5.tar.gz", hash = "sha256:227ea1b9994fdc5ea31977ba3383ef296d7472ea85be9d6732e42a91c04e80da"},
 ]
 wcwidth = [
     {file = "wcwidth-0.2.5-py2.py3-none-any.whl", hash = "sha256:beb4802a9cebb9144e99086eff703a642a13d6a0052920003a230f3294bbe784"},
     {file = "wcwidth-0.2.5.tar.gz", hash = "sha256:c4d647b99872929fdb7bdcaa4fbe7f01413ed3d98077df798530e5b04f116c83"},
 ]
 Werkzeug = [
-    {file = "Werkzeug-2.0.3-py3-none-any.whl", hash = "sha256:1421ebfc7648a39a5c58c601b154165d05cf47a3cd0ccb70857cbdacf6c8f2b8"},
-    {file = "Werkzeug-2.0.3.tar.gz", hash = "sha256:b863f8ff057c522164b6067c9e28b041161b4be5ba4d0daceeaa50a163822d3c"},
+    {file = "Werkzeug-2.2.2-py3-none-any.whl", hash = "sha256:f979ab81f58d7318e064e99c4506445d60135ac5cd2e177a2de0089bfd4c9bd5"},
+    {file = "Werkzeug-2.2.2.tar.gz", hash = "sha256:7ea2d48322cc7c0f8b3a215ed73eabd7b5d75d0b50e31ab006286ccff9e00b8f"},
 ]
 win32-setctime = [
     {file = "win32_setctime-1.1.0-py3-none-any.whl", hash = "sha256:231db239e959c2fe7eb1d7dc129f11172354f98361c4fa2d6d2d7e278baa8aad"},

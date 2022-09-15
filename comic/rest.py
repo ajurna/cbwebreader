@@ -180,12 +180,6 @@ class GenerateThumbnailViewSet(viewsets.ViewSet):
             )
 
 
-class PageSerializer(serializers.Serializer):
-    index = serializers.IntegerField()
-    page_file_name = serializers.CharField()
-    content_type = serializers.CharField()
-
-
 class DirectionSerializer(serializers.Serializer):
     route = serializers.ChoiceField(choices=['read', 'browse'])
     selector = serializers.UUIDField(required=False)
@@ -197,7 +191,7 @@ class ReadSerializer(serializers.Serializer):
     last_read_page = serializers.IntegerField()
     prev_comic = DirectionSerializer()
     next_comic = DirectionSerializer()
-    pages = PageSerializer(many=True)
+    pages = serializers.IntegerField()
 
 
 class TypeSerializer(serializers.Serializer):
@@ -217,10 +211,13 @@ class ReadViewSet(viewsets.GenericViewSet):
     def retrieve(self, request: Request, selector: UUID) -> Response:
         comic = get_object_or_404(models.ComicBook, selector=selector)
         _, _ = models.UserMisc.objects.get_or_create(user=request.user)
-        pages = models.ComicPage.objects.filter(Comic=comic)
         comic_status, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
         comic_list = list(models.ComicBook.objects.filter(directory=comic.directory).order_by('file_name'))
         comic_index = comic_list.index(comic)
+        current_page_count = comic.get_page_count()
+        if comic.page_count != current_page_count:
+            comic.page_count = current_page_count
+            comic.save()
         try:
             prev_comic = {'route': 'browse', 'selector': comic.directory.selector} if comic_index == 0 else \
                 {'route': 'read', 'selector': comic_list[comic_index - 1].selector}
@@ -238,7 +235,7 @@ class ReadViewSet(viewsets.GenericViewSet):
             "last_read_page": comic_status.last_read_page,
             "prev_comic": prev_comic,
             "next_comic": next_comic,
-            "pages": pages,
+            "pages": comic.page_count,
         }
         serializer = self.serializer_class(data)
         return Response(serializer.data)
@@ -296,14 +293,14 @@ class PassthroughRenderer(renderers.BaseRenderer):  # pylint: disable=too-few-pu
 
 
 class ImageViewSet(viewsets.ViewSet):
-    queryset = models.ComicPage.objects.all()
+    queryset = models.ComicBook.objects.all()
     lookup_field = 'page'
     renderer_classes = [PassthroughRenderer]
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: "A Binary Image response"})
     def retrieve(self, _request: Request, parent_lookup_selector: UUID, page: int) -> FileResponse:
         book = models.ComicBook.objects.get(selector=parent_lookup_selector)
-        img, content = book.get_image(int(page))
+        img, content = book.get_image(int(page) - 1)
         self.renderer_classes[0].media_type = content
         return FileResponse(img, content_type=content)
 
@@ -315,14 +312,13 @@ class StandardResultsSetPagination(PageNumberPagination):
 
 
 class RecentComicsSerializer(serializers.ModelSerializer):
-    total_pages = serializers.IntegerField()
     unread = serializers.BooleanField()
     finished = serializers.BooleanField()
     last_read_page = serializers.IntegerField()
 
     class Meta:
         model = models.ComicBook
-        fields = ['file_name', 'date_added', 'selector', 'total_pages', 'unread', 'finished', 'last_read_page']
+        fields = ['file_name', 'date_added', 'selector', 'page_count', 'unread', 'finished', 'last_read_page']
 
 
 class RecentComicsView(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -339,7 +335,6 @@ class RecentComicsView(mixins.ListModelMixin, viewsets.GenericViewSet):
             query = models.ComicBook.objects.all()
 
         query = query.annotate(
-            total_pages=Count('comicpage'),
             unread=Case(When(comicstatus__user=user, then='comicstatus__unread')),
             finished=Case(When(comicstatus__user=user, then='comicstatus__finished')),
             last_read_page=Case(When(comicstatus__user=user, then='comicstatus__last_read_page')) + 1,

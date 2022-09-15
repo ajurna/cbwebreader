@@ -3,7 +3,6 @@ import mimetypes
 import uuid
 import zipfile
 from functools import reduce
-from itertools import zip_longest
 from pathlib import Path
 from typing import Optional, List, Union, Tuple, Final
 
@@ -17,7 +16,6 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
 from django.db.models import UniqueConstraint
-from django.db.transaction import atomic
 from django_boost.models.fields import AutoOneToOneField
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
@@ -93,7 +91,7 @@ class Directory(models.Model):
             self.parent.get_path_items(path_items)
         return path_items
 
-    def get_path_objects(self, path_items=None) -> List["Directory"]:
+    def get_path_objects(self, path_items: Optional[List] = None) -> List["Directory"]:
         if path_items is None:
             path_items = []
         path_items.append(self)
@@ -114,6 +112,7 @@ class ComicBook(models.Model):
                                     options={'quality': 60},
                                     null=True)
     thumbnail_index = models.PositiveIntegerField(default=0)
+    page_count = models.IntegerField(default=0)
 
     class Meta:
         constraints = [
@@ -130,6 +129,10 @@ class ComicBook(models.Model):
     @property
     def type(self) -> str:
         return 'ComicBook'
+
+    @property
+    def total(self) -> int:
+        return self.page_count
 
     def get_pdf(self) -> Path:
         base_dir = settings.COMIC_BOOK_VOLUME
@@ -151,14 +154,8 @@ class ComicBook(models.Model):
         except zipfile.BadZipfile:
             return False, False
 
-        page_obj = ComicPage.objects.get(Comic=self, index=page)
-        try:
-            out = (archive.open(page_obj.page_file_name), page_obj.content_type)
-        except rarfile.NoRarEntry:
-            self.verify_pages()
-            page_obj = ComicPage.objects.get(Comic=self, index=page)
-            out = (archive.open(page_obj.page_file_name), page_obj.content_type)
-        return out
+        file_name, file_mime = self.get_archive_files(archive)[page]
+        return archive.open(file_name), file_mime
 
     def generate_thumbnail_pdf(self, page_index: int = 0) -> Tuple[io.BytesIO, Image_type, str]:
         img, pil_data = self._get_pdf_image(page_index if page_index else 0)
@@ -171,7 +168,7 @@ class ComicBook(models.Model):
             img, content_type = self.get_image(page_index)
             pil_data = Image.open(img)
         else:
-            for page_number in range(ComicPage.objects.filter(Comic=self).count()):
+            for page_number in range(self.page_count):
                 try:
                     img, content_type = self.get_image(page_number)
                     pil_data = Image.open(img)
@@ -211,10 +208,6 @@ class ComicBook(models.Model):
         img.seek(0)
         return img, pil_data
 
-    @property
-    def page_count(self) -> int:
-        return ComicPage.objects.filter(Comic=self).count()
-
     @staticmethod
     def process_comic_book(comic_file_path: Path, directory: "Directory" = False) -> Union["ComicBook", Path]:
         try:
@@ -234,14 +227,10 @@ class ComicBook(models.Model):
             return comic_file_path
 
         if archive_type == 'archive':
-            book.verify_pages()
+            book.page_count = len(book.get_archive_files(book.get_archive()))
         elif archive_type == 'pdf':
-            with atomic():
-                for page_index in range(archive.page_count):
-                    page = ComicPage(
-                        Comic=book, index=page_index, page_file_name=page_index + 1, content_type='application/pdf'
-                    )
-                    page.save()
+            book.page_count = archive.page_count
+
         return book
 
     @property
@@ -268,55 +257,19 @@ class ComicBook(models.Model):
             pass
         raise NotCompatibleArchive
 
+    def get_page_count(self) -> int:
+        archive, archive_type = self.get_archive()
+        if archive_type == 'archive':
+            return len(self.get_archive_files(archive))
+        elif archive_type == 'pdf':
+            return archive.page_count
+
     @staticmethod
-    def get_archive_files(archive) -> List[Tuple[str, str]]:
+    def get_archive_files(archive: Union[zipfile.ZipFile, rarfile.RarFile]) -> List[Tuple[str, str]]:
         return [
             (x, mimetypes.guess_type(x)[0]) for x in sorted(archive.namelist())
             if not x.endswith('/') and mimetypes.guess_type(x)[0]
         ]
-
-    def verify_pages(self, pages: Optional["ComicPage"] = None) -> None:
-        if not pages:
-            pages = ComicPage.objects.filter(Comic=self)
-
-        archive, archive_type = self.get_archive()
-        if archive_type == 'pdf':
-            return
-        archive_files = self.get_archive_files(archive)
-        index = 0
-        for a_file, db_file in zip_longest(archive_files, pages):
-            if not a_file:
-                db_file.delete()
-                continue
-            if not db_file:
-                ComicPage(
-                    Comic=self,
-                    page_file_name=a_file[0],
-                    index=index,
-                    content_type=a_file[1]
-                ).save()
-                index += 1
-                continue
-            changed = False
-            if a_file[0] != db_file.page_file_name:
-                db_file.page_file_name = a_file[0]
-                changed = True
-            if a_file[1] != db_file.content_type:
-                db_file.content_type = a_file[1]
-                changed = True
-            if changed:
-                db_file.save()
-            index += 1
-
-
-class ComicPage(models.Model):
-    Comic = models.ForeignKey(ComicBook, on_delete=models.CASCADE)
-    index = models.IntegerField()
-    page_file_name = models.CharField(max_length=200, unique=False)
-    content_type = models.CharField(max_length=30)
-
-    class Meta:
-        ordering = ['index']
 
 
 class ComicStatus(models.Model):
@@ -326,6 +279,7 @@ class ComicStatus(models.Model):
     last_read_page = models.IntegerField(default=0)
     unread = models.BooleanField(default=True)
     finished = models.BooleanField(default=False)
+    updated = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [
@@ -340,9 +294,6 @@ class ComicStatus(models.Model):
             f"<ComicStatus:{self.user.username}:{self.comic.file_name}:{self.last_read_page}:"
             f"{self.unread}:{self.finished}"
         )
-
-
-# TODO: add support to reference items last being read
 
 
 class UserMisc(models.Model):

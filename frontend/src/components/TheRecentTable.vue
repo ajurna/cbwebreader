@@ -131,7 +131,7 @@ export default {
       } else if (item.finished) {
         return "Finished"
       } else {
-        return item.last_read_page + 1 + ' / ' + item.total_pages
+        return item.last_read_page + ' / ' + item.page_count
       }
     },
     setPage(page) {

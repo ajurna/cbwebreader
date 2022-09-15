@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.contrib import admin
 
-from .models import Directory, ComicBook, ComicPage, ComicStatus, UserMisc
+from .models import Directory, ComicBook, ComicStatus, UserMisc
 
 
 @admin.register(Directory)
@@ -24,12 +24,6 @@ class ComicBookAdmin(admin.ModelAdmin):
     list_filter = ('date_added',)
     raw_id_fields = ('directory',)
     search_fields = ['file_name']
-
-
-@admin.register(ComicPage)
-class ComicPageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'Comic', 'index', 'page_file_name', 'content_type')
-    raw_id_fields = ('Comic',)
 
 
 @admin.register(ComicStatus)
