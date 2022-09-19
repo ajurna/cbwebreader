@@ -1,15 +1,15 @@
 <template>
   <div class="reveal" id="comic_box" ref="comic_box" >
     <div id="slides_div" class="slides"  ref="slides">
-      <section class="" v-for="page in pages" :key="page.index" :data-menu-title="page.page_file_name" hidden>
-        <img :data-src="'/api/read/' + selector + '/image/' + page.index + '/'" class="w-100"  :alt="page.page_file_name">
+      <section class="" v-for="page in pages" :key="page" :data-menu-title="page" hidden>
+        <img :data-src="'/api/read/' + selector + '/image/' + page + '/'" class="w-100"  :alt="page">
       </section>
     </div>
   </div>
   <div class="row navButtons pb-2">
     <comic-paginate
       v-model="paginate_page"
-      :page_count="pages.length"
+      :page_count="pages"
       @setPage="this.setPage"
       @prevComic="prevComic"
       @nextComic="nextComic"
@@ -35,7 +35,7 @@ export default {
       title: '',
       prev_comic: {},
       next_comic: {},
-      pages: [],
+      pages: 1,
     }
   },
   props: {
@@ -130,7 +130,8 @@ export default {
         plugins: [  ]
       }).then(() => {
         this.deck.slide(this.current_page)
-        this.deck.on( 'slidechanged', () => {
+        api.put(set_read_url, {page: this.current_page})
+        this.deck.on( 'slidechanged', (event) => {
           this.$refs.comic_box.scrollIntoView({behavior: 'smooth'})
           api.put(set_read_url, {page: event.indexh})
         });

@@ -24,13 +24,7 @@
     </div>
     <div class="row">
       <caption>
-        <h2>Recent Comics - <a :href="'/feed/' + this.feed_id + '/'">Feed</a></h2>
-        Mark selected issues as:
-        <select class="form-select-sm" name="func" id="func_selector" @change="this.performFunction()" v-model="func_selected">
-          <option value="choose">Choose...</option>
-          <option value="mark_read">Read</option>
-          <option value="mark_unread">Un-Read</option>
-        </select>
+        <h2>Reading History</h2>
       </caption>
     </div>
     <div class="row">
@@ -38,20 +32,18 @@
         <caption>Recent Comics</caption>
         <thead>
           <tr>
-            <th scope="col"><input class="form-check-input m-0 position-relative mt-1" type="checkbox" value="" ref="select-all"></th>
             <th scope="col"></th>
             <th scope="col">Comic</th>
-            <th scope="col">Date Added</th>
+            <th scope="col">Date Read</th>
             <th scope="col">status</th>
           </tr>
         </thead>
         <tbody>
           <template v-for="item in comics" :key="item.id">
             <tr>
-              <th scope="row"><input ref="comic_selector" class="form-check-input m-0 position-relative mt-1" type="checkbox" :value="item.selector"></th>
-              <td class=""><font-awesome-icon icon='book' class="" /></td>
+              <th scope="row"><font-awesome-icon icon='book' class="" /></th>
               <td><router-link :to="{name: 'read', params: { selector: item.selector }}" class="" >{{ item.file_name }}</router-link></td>
-              <td>{{ timeago(item.date_added) }}</td>
+              <td>{{ timeago(item.last_read_time) }}</td>
               <td>{{ get_status(item) }}</td>
             </tr>
           </template>
@@ -78,12 +70,12 @@
 </template>
 
 <script>
-import api from "@/api";
-import * as timeago from 'timeago.js';
 import Paginate from "vuejs-paginate-next";
+import api from "@/api";
+import * as timeago from "timeago.js";
 
 export default {
-  name: "TheRecentTable",
+  name: "HistoryTable",
   components: {
     Paginate
   },
@@ -91,18 +83,16 @@ export default {
     return {
       page: 1,
       page_size: 10,
-      page_count: 1,
+      page_count: 2,
       search_text: '',
       comics: [],
       timeout: null,
       func_selected: 'choose',
       feed_id: ''
   }},
-  computed: {
-  },
   methods: {
     updateComicList () {
-      let comic_list_url = '/api/recent/'
+      let comic_list_url = '/api/history/'
       let params = { params: { page: this.page, page_size: this.page_size } }
 
       if (this.search_text) {
@@ -144,44 +134,13 @@ export default {
         this.setPage(this.page)
       }, 500)
     },
-    performFunction() {
-      let selected_ids = []
-      this.$refs.comic_selector.forEach((selector) => {
-        if (selector.checked){
-          selected_ids.push(selector.value)
-        }
-      })
-      if (this.func_selected === 'mark_read') {
-        let comic_mark_read = '/api/action/mark_read/'
-        const payload = { selectors: selected_ids }
-        api.put(comic_mark_read, payload).then(() => {
-          this.updateComicList()
-          this.func_selected = "choose"
-        })
-      } else if (this.func_selected === 'mark_unread') {
-        let comic_mark_unread = '/api/action/mark_unread/'
-        const payload = { selectors: selected_ids }
-        api.put(comic_mark_unread, payload).then(() => {
-          this.updateComicList()
-          this.func_selected = "choose"
-        })
-      } else {
-        this.func_selected = 'choose'
-      }
-    }
   },
   mounted() {
     this.updateComicList()
-    let comic_mark_unread = '/api/account/feed_id/'
-    api.get(comic_mark_unread).then((response) => {
-      this.feed_id = response.data.feed_id
-    })
   },
 }
 </script>
 
 <style scoped>
-.pagination {
-  cursor: pointer;
-}
+
 </style>

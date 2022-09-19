@@ -46,6 +46,7 @@ router.register(r'generate_thumbnail', rest.GenerateThumbnailViewSet, basename='
 router.register(r'read', rest.ReadViewSet, basename='read')\
     .register(r'image', rest.ImageViewSet, basename='image', parents_query_lookups=['selector'])
 router.register(r'recent', rest.RecentComicsView, basename="recent")
+router.register(r'history', rest.HistoryViewSet, basename='history')
 router.register(r'action', rest.ActionViewSet, basename='action')
 router.register(r'account', rest.AccountViewSet, basename='account')
 router.register(r'directory', rest.DirectoryViewSet, basename='directory')
