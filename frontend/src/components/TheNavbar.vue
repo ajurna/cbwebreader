@@ -14,6 +14,9 @@
             <router-link :to="{name: 'recent'}" class="nav-link" >Recent</router-link>
           </li>
           <li class="nav-item">
+            <router-link :to="{name: 'history'}" class="nav-link" >History</router-link>
+          </li>
+          <li class="nav-item">
             <router-link :to="{name: 'account'}" class="nav-link" >Account</router-link>
           </li>
           <li class="nav-item">

@@ -4,7 +4,7 @@ import uuid
 import zipfile
 from functools import reduce
 from pathlib import Path
-from typing import Optional, List, Union, Tuple, Final
+from typing import Optional, List, Union, Tuple, Final, IO
 
 # noinspection PyPackageRequirements
 import fitz
@@ -140,7 +140,7 @@ class ComicBook(models.Model):
             return Path(base_dir, self.directory.get_path(), self.file_name)
         return Path(base_dir, self.file_name)
 
-    def get_image(self, page: int) -> Union[Tuple[io.BytesIO, Image_type], Tuple[bool, bool]]:
+    def get_image(self, page: int) -> Union[Tuple[IO[bytes], str], Tuple[bool, bool]]:
         base_dir = settings.COMIC_BOOK_VOLUME
         if self.directory:
             archive_path = Path(base_dir, self.directory.path, self.file_name)
@@ -227,7 +227,7 @@ class ComicBook(models.Model):
             return comic_file_path
 
         if archive_type == 'archive':
-            book.page_count = len(book.get_archive_files(book.get_archive()))
+            book.page_count = len(book.get_archive_files(archive))
         elif archive_type == 'pdf':
             book.page_count = archive.page_count
 
@@ -268,7 +268,7 @@ class ComicBook(models.Model):
     def get_archive_files(archive: Union[zipfile.ZipFile, rarfile.RarFile]) -> List[Tuple[str, str]]:
         return [
             (x, mimetypes.guess_type(x)[0]) for x in sorted(archive.namelist())
-            if not x.endswith('/') and mimetypes.guess_type(x)[0]
+            if not x.endswith('/') and mimetypes.guess_type(x)[0] and not x.endswith('xml')
         ]
 
 

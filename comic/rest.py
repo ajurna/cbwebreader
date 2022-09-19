@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.db.models import Count, Case, When, F, PositiveSmallIntegerField, FileField, QuerySet
+from django.db.models import Case, When, F, PositiveSmallIntegerField, FileField, QuerySet
 from django.http import FileResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, serializers, mixins, permissions, status, renderers
@@ -266,7 +266,7 @@ class ReadViewSet(viewsets.GenericViewSet):
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
-            comic_status, _ = models.ComicStatus.objects.annotate(page_count=Count('comic__comicpage')) \
+            comic_status, _ = models.ComicStatus.objects.annotate(page_count=F('comic__page_count')) \
                 .get_or_create(comic_id=selector, user=request.user)
             comic_status.last_read_page = serializer.data['page']
             comic_status.unread = False
@@ -321,6 +321,10 @@ class RecentComicsSerializer(serializers.ModelSerializer):
         fields = ['file_name', 'date_added', 'selector', 'page_count', 'unread', 'finished', 'last_read_page']
 
 
+class SearchTextQuerySerializer(serializers.Serializer):
+    search_text = serializers.CharField(required=False)
+
+
 class RecentComicsView(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = models.ComicBook.objects.all()
     serializer_class = RecentComicsSerializer
@@ -348,6 +352,53 @@ class RecentComicsView(mixins.ListModelMixin, viewsets.GenericViewSet):
         query = query.order_by('-date_added')
         return query
 
+    @swagger_auto_schema(query_serializer=SearchTextQuerySerializer())
+    def list(self, request: Request, *args, **kwargs) -> Response:
+        return super().list(request, *args, **kwargs)
+
+
+class HistorySerializer(serializers.ModelSerializer):
+    last_read_time = serializers.DateTimeField()
+    finished = serializers.BooleanField()
+    last_read_page = serializers.IntegerField()
+
+    class Meta:
+        model = models.ComicBook
+        fields = ['file_name', 'selector', 'page_count', 'last_read_time', 'finished', 'last_read_page']
+
+
+class HistoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    queryset = models.ComicBook.objects.all()
+    serializer_class = HistorySerializer
+    pagination_class = StandardResultsSetPagination
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self) -> QuerySet[models.ComicBook]:
+        user = self.request.user
+        if "search_text" in self.request.query_params:
+            query = models.ComicBook.objects.filter(file_name__icontains=self.request.query_params["search_text"])
+        else:
+            query = models.ComicBook.objects.all()
+
+        query = query.annotate(
+            last_read_page=Case(When(comicstatus__user=user, then='comicstatus__last_read_page')) + 1,
+            finished=Case(When(comicstatus__user=user, then='comicstatus__finished')),
+            unread=Case(When(comicstatus__user=user, then='comicstatus__unread')),
+            last_read_time=Case(When(comicstatus__user=user, then='comicstatus__updated')),
+            classification=Case(
+                When(directory__isnull=True, then=models.Directory.Classification.C_18),
+                default=F('directory__classification'),
+                output_field=PositiveSmallIntegerField(choices=models.Directory.Classification.choices)
+            )
+        )
+        query = query.filter(comicstatus__unread=False)
+        query = query.order_by('-comicstatus__updated')
+        return query
+
+    @swagger_auto_schema(query_serializer=SearchTextQuerySerializer())
+    def list(self, request: Request, *args, **kwargs) -> Response:
+        return super().list(request, *args, **kwargs)
+
 
 class ActionSerializer(serializers.Serializer):
     selectors = serializers.ListSerializer(child=serializers.UUIDField())
@@ -364,7 +415,7 @@ class ActionViewSet(viewsets.GenericViewSet):
         if serializer.is_valid():
             comics = self.get_comics(serializer.data['selectors'])
             comic_status = models.ComicStatus.objects.filter(comic__selector__in=comics, user=request.user)
-            comic_status = comic_status.annotate(total_pages=Count('comic__comicpage'))
+            comic_status = comic_status.annotate(total_pages=F('comic__page_count'))
             status_to_update = []
             for c_status in comic_status:
                 c_status.last_read_page = c_status.total_pages - 1
@@ -373,8 +424,7 @@ class ActionViewSet(viewsets.GenericViewSet):
                 status_to_update.append(c_status)
                 comics.remove(str(c_status.comic_id))
             for new_status in comics:
-                comic = models.ComicBook.objects.annotate(
-                    total_pages=Count('comicpage')).get(selector=new_status)
+                comic = models.ComicBook.objects.get(selector=new_status)
                 obj, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
                 obj.unread = False
                 obj.finished = True

@@ -25,7 +25,7 @@
               <li><a class="dropdown-item" @click="updateComic('mark_unread')"><font-awesome-icon icon='book' /> Mark Un-read</a></li>
               <li><a class="dropdown-item" @click="updateComic('mark_read')"><font-awesome-icon icon='book-open' /> Mark read</a></li>
               <li><a class="dropdown-item" v-if="data.type === 'ComicBook'" @click="$emit('markPreviousRead', data.selector)"><font-awesome-icon icon='book' /><font-awesome-icon icon='turn-up' />Mark previous comics read</a></li>
-              <li><a class="dropdown-item" v-if="data.type === 'Directory'" data-bs-toggle="modal" :data-bs-target="'#'+data.selector"><font-awesome-icon icon='edit' />Edit comic</a></li>
+              <li><a class="dropdown-item" v-if="data.type === 'Directory'" data-bs-toggle="modal" :data-bs-target="'#id'+data.selector"><font-awesome-icon icon='edit' />Edit comic</a></li>
             </ul>
           </div>
         </div>
@@ -33,7 +33,7 @@
     </div>
   </div>
 
-  <div class="modal fade" :id="data.selector" tabindex="-1" :aria-labelledby="data.selector+'-label'" aria-hidden="true" >
+  <div class="modal fade" :id="'id'+data.selector" tabindex="-1" :aria-labelledby="data.selector+'-label'" aria-hidden="true" >
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">

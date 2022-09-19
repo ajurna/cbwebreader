@@ -6,6 +6,7 @@ const AccountView = () => import('@/views/AccountView')
 const BrowseView = () => import('@/views/BrowseView')
 const UserView = () => import('@/views/UserView')
 const LoginView = () => import('@/views/LoginView')
+const HistoryView = () => import('@/views/HistoryView')
 
 const routes = [
   {
@@ -36,6 +37,11 @@ const routes = [
     path: '/recent',
     name: 'recent',
     component: RecentView
+  },
+  {
+    path: '/history',
+    name: 'history',
+    component: HistoryView
   },
   {
     path: '/account',
