@@ -63,6 +63,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
             if target_user.username == serializer.data['username']:
                 password = User.objects.make_random_password()
                 target_user.set_password(password)
+                target_user.save()
                 resp_serializer = self.get_serializer({
                     'username': target_user.username,
                     'password': password
@@ -114,6 +115,9 @@ class BrowseViewSet(viewsets.GenericViewSet):
     serializer_class = BrowseSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'selector'
+
+    def get_queryset(self):
+        return
 
     def list(self, request: Request) -> Response:
         serializer = self.get_serializer(generate_directory(request.user), many=True)

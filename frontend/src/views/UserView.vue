@@ -1,7 +1,7 @@
 <template>
   <the-breadcrumbs :manual_crumbs="this.crumbs" />
   <div class="container">
-    <alert-messages :messages="messages" />
+    <alert-messages :messages="messages" @removeMessage="removeMessage" />
     <user-list :users="users" v-if="!userid"/>
     <user-edit v-if="user_data" :user="user_data" @add-message="addMessage"/>
     <add-user v-if="!userid" @user-added="updateUsers" @add-message="addMessage"/>
@@ -16,6 +16,7 @@ import UserEdit from "@/components/UserEdit";
 import alertMessages from "@/components/AlertMessages";
 import AddUser from "@/components/AddUser";
 import router from "@/router";
+import store from "@/store";
 
 const default_crumbs = [
   {id: 0, selector: '', name: 'Home'},
@@ -36,6 +37,9 @@ export default {
       messages: []
   }},
   methods: {
+    removeMessage(item) {
+      this.messages.pop(this.messages.indexOf(item))
+    },
     updateUsers() {
       api.get('/api/users/').then(response => {
         this.users = response.data
@@ -63,16 +67,18 @@ export default {
       this.getUser()
     }
   },
-  beforeUpdate() {
-    this.updateUsers()
-    this.crumbs = [...default_crumbs]
-    if (this.userid){
-      this.getUser()
-    } else {
-      this.user_data = null
-      this.crumbs = default_crumbs
+  watch: {
+    $route(to, from) {
+      this.updateUsers()
+      this.crumbs = [...default_crumbs]
+      if (this.userid){
+        this.getUser()
+      } else {
+        this.user_data = null
+        this.crumbs = default_crumbs
+      }
     }
-  }
+  },
 }
 </script>
 
