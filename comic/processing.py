@@ -7,7 +7,8 @@ from typing import NamedTuple, List, Optional, Union
 import rarfile
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models import Count, Q, F, Case, When, PositiveSmallIntegerField, QuerySet
+from django.db.models import Count, Q, F, Case, When, PositiveSmallIntegerField, QuerySet, ExpressionWrapper, \
+    IntegerField
 
 from comic import models
 from comic.errors import NotCompatibleArchive
@@ -27,8 +28,8 @@ def generate_directory(user: User, directory: Optional[models.Directory] = None)
         total=Count('comicbook', distinct=True),
         progress=Count('comicbook__comicstatus', Q(comicbook__comicstatus__finished=True,
                                                    comicbook__comicstatus__user=user), distinct=True),
-        finished=Q(total=F('progress')),
-        unread=Q(total__gt=F('progress'))
+        finished=ExpressionWrapper(Q(total=F('progress')), output_field=IntegerField()),
+        unread=ExpressionWrapper(Q(total__gt=F('progress')), output_field=IntegerField()),
     )
     files.extend(dir_db_query)
 
