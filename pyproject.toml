@@ -3,14 +3,14 @@ line_length = 119
 
 [tool.poetry]
 name = "cbwebreader"
-version = "1.1.1"
+version = "1.1.2"
 description = "CBR/Z Web Reader"
 authors = ["ajurna <ajurna@gmail.com>"]
 license = "Creative Commons Attribution-ShareAlike 4.0 International License"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-Django = "4.1.1"
+Django = "4.1.2"
 gunicorn = "^20.0.4"
 dj-database-url = "^1.0.0"
 python-dotenv = "^0.21.0"
