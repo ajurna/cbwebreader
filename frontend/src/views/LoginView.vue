@@ -3,7 +3,7 @@
     <div class="row" v-if="!initialSetupRequired">
       <div class="col col-lg-4" />
       <div class="col col-lg-4" id="login-col">
-        <form @submit="login">
+        <form @submit="login" v-on:submit.prevent="onSubmit">
           <label class="form-label" for="username">Username</label>
           <input id="username" placeholder="username" aria-describedby="loginFormControlInputHelpInline" class="form-control" type="text" v-model="username" />
           <div class="form-text" id="loginFormControlInputHelpInline">Please enter your username</div>
