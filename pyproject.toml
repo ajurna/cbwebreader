@@ -42,7 +42,7 @@ flake8-annotations = "^2.9.1"
 mypy = "^0.971"
 Werkzeug = "^2.2"
 pyOpenSSL = "^22.0.0"
-ipython = "^8.4.0"
+ipython = "^8.10.0"
 coverage = "^6.2"
 pre-commit = "^2.20.0"
 
