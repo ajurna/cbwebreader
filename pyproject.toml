@@ -3,14 +3,14 @@ line_length = 119
 
 [tool.poetry]
 name = "cbwebreader"
-version = "1.1.4"
+version = "1.1.5"
 description = "CBR/Z Web Reader"
 authors = ["ajurna <ajurna@gmail.com>"]
 license = "Creative Commons Attribution-ShareAlike 4.0 International License"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-Django = "4.1.2"
+Django = "^4.1"
 gunicorn = "^20.0.4"
 dj-database-url = "^1.0.0"
 python-dotenv = "^0.21.0"
@@ -35,16 +35,16 @@ djangorestframework-simplejwt = "^5.2.0"
 django-webpack-loader = "^1.6.0"
 drf-yasg = "^1.20.0"
 drf-extensions = "^0.7.1"
-flake8 = "^5.0.4"
-flake8-annotations = "^2.9.1"
 
 [tool.poetry.dev-dependencies]
-mypy = "^0.971"
+mypy = "^1.0.0"
 Werkzeug = "^2.2"
 pyOpenSSL = "^22.0.0"
 ipython = "^8.4.0"
-coverage = "^6.2"
-pre-commit = "^2.20.0"
+coverage = "^7.1.0"
+pre-commit = "^3.0.4"
+flake8 = "^6.0.0"
+flake8-annotations = "^3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^2.15.0"
