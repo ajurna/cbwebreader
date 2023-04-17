@@ -23,7 +23,7 @@
     "vue-toast-notification": "3.0",
     "vuejs-paginate-next": "^1.0.2",
     "vuex": "^4.0.0",
-    "webpack": "^5.74.0"
+    "webpack": "^5.76.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
