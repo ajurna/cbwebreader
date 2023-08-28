@@ -8,9 +8,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        run: git pull
-
+      - uses: actions/checkout@v3
       - name: Build
         run: |
           docker build . --no-cache -t ajurna/cbwebreader
