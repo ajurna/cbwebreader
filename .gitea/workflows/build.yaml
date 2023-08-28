@@ -8,6 +8,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Install Docker
+        run: curl -fsSL https://get.docker.com | sh
       - uses: actions/checkout@v3
       -
         name: Set up QEMU
