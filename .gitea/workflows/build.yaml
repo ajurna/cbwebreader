@@ -20,9 +20,8 @@ jobs:
 #        with:
 #          username: ${{ secrets.DOCKERHUB_USERNAME }}
 #          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
+      - name: install pip
+        run: apt install -Y python3-pip
       - uses: abatilo/actions-poetry@v2
         with:
           poetry-version: "1.5.1"
