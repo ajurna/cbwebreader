@@ -27,6 +27,8 @@ jobs:
           poetry-version: "1.5.1"
       - uses: actions/setup-node@v3
       - uses: actions/checkout@v3
+        with:
+          repository: "https://github.com/ajurna/cbwebreader.git"
       - name: Set FOO
         run: echo "FOO=${{ poetry -V }}" >> $GITHUB_ENV
       - name: Test
