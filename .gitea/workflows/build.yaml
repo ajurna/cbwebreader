@@ -7,13 +7,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: /repo
     steps:
       - name: Checkout repo
         run: git pull
 
-      - name: Deploy
+      - name: Build
         run: |
           docker build . --no-cache -t ajurna/cbwebreader
