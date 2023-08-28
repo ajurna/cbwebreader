@@ -7,9 +7,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: /repo
     steps:
       - uses: actions/checkout@v3
       - name: Build
