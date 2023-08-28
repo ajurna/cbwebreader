@@ -21,7 +21,7 @@ jobs:
 #          username: ${{ secrets.DOCKERHUB_USERNAME }}
 #          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: install pip
-        run: apt update && apt install -y python3-pip node
+        run: apt update && apt install -y python3-pip
       - uses: abatilo/actions-poetry@v2
         with:
           poetry-version: "1.5.1"
