@@ -6,7 +6,7 @@ from typing import NamedTuple, List, Optional, Union
 
 import rarfile
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.db.models import Count, Q, F, Case, When, PositiveSmallIntegerField, QuerySet, ExpressionWrapper, \
     IntegerField
 
@@ -14,7 +14,8 @@ from comic import models
 from comic.errors import NotCompatibleArchive
 
 
-def generate_directory(user: User, directory: Optional[models.Directory] = None) -> List[QuerySet]:
+def generate_directory(user: AbstractBaseUser, directory: Optional[models.Directory] = None) \
+        -> List[Union[models.Directory, models.ComicBook]]:
     dir_path = Path(settings.COMIC_BOOK_VOLUME, directory.path) if directory else settings.COMIC_BOOK_VOLUME
     files = []
 
@@ -74,7 +75,8 @@ def clean_directories(directories: QuerySet, dir_path: Path, directory: Optional
         models.Directory.objects.get(name=stale_directory.name, parent=directory).delete()
 
 
-def clean_files(files: QuerySet, user: User, dir_path: Path, directory: Optional[models.Directory] = None) -> None:
+def clean_files(files: QuerySet, user: AbstractBaseUser, dir_path: Path, directory: Optional[models.Directory] = None) \
+        -> None:
     file_list = set(x for x in sorted(dir_path.glob('*')) if x.is_file())
     files_db_set = set(Path(dir_path, x.file_name) for x in files)
 

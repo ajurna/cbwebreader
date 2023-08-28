@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.contrib.syndication.views import Feed
-from django.db.models import Case, When, PositiveSmallIntegerField, F
+from django.db.models import Case, When, PositiveSmallIntegerField, F, QuerySet
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 
@@ -18,7 +18,7 @@ class RecentComicsAPI(Feed):
         self.user = user_misc.user
         return user_misc.user
 
-    def items(self) -> ComicBook:
+    def items(self) -> QuerySet[ComicBook]:
         comics = ComicBook.objects.order_by("-date_added")
         comics = comics.annotate(
             classification=Case(

@@ -6,6 +6,7 @@ Django settings for cbreader project.
 import os
 from datetime import timedelta
 from pathlib import Path
+from typing import Dict, List
 
 import dj_database_url
 from dotenv import load_dotenv
@@ -27,7 +28,7 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
 
 # Application definition
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -46,7 +47,7 @@ INSTALLED_APPS = (
     'django_filters',
     'rest_framework',
     # 'silk'
-)
+]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -58,8 +59,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # 'silk.middleware.SilkyMiddleware',
-    # 'csp.middleware.CSPMiddleware',
+    'csp.middleware.CSPMiddleware',
 ]
 
 ROOT_URLCONF = "cbreader.urls"
@@ -197,10 +197,10 @@ CSP_FONT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'",)
 CSP_CONNECT_SRC = ("'self'",)
 CSP_INCLUDE_NONCE_IN = ['script-src']
-CSP_SCRIPT_SRC_ATTR = ("'self'",)# "'unsafe-inline'")
+CSP_SCRIPT_SRC_ATTR = ("'self'",)  # "'unsafe-inline'")
 
 
-PERMISSIONS_POLICY = {
+PERMISSIONS_POLICY: Dict[str, List] = {
     "accelerometer": [],
     "ambient-light-sensor": [],
     "autoplay": [],

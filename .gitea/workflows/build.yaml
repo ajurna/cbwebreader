@@ -1,0 +1,19 @@
+name: Build and push image
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: /repo
+    steps:
+      - name: Checkout repo
+        run: git pull
+
+      - name: Deploy
+        run: |
+          docker build . --no-cache -t ajurna/cbwebreader
