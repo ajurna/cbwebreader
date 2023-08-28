@@ -8,17 +8,17 @@ jobs:
   deploy:
     runs-on: ubuntu-22.04
     steps:
-#      - name: Install Docker
-#        run: curl -fsSL https://get.docker.com | sh
-#      - name: Set up QEMU
-#        uses: docker/setup-qemu-action@v2
-#      - name: Set up Docker Buildx
-#        uses: docker/setup-buildx-action@v2
-#      - name: Login to Docker Hub
-#        uses: docker/login-action@v2
-#        with:
-#          username: ${{ secrets.DOCKERHUB_USERNAME }}
-#          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Install Docker
+        run: curl -fsSL https://get.docker.com | sh
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: install pip
         run: apt update && apt install -y python3-pip
       - uses: abatilo/actions-poetry@v2
@@ -32,9 +32,9 @@ jobs:
         run: echo $FOO
       - name: Test 2
         run: poetry -V
-#      - name: Build and push
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: .
-#          push: false
-#          tags: ajurna/cbwebreader:latest
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: false
+          tags: ajurna/cbwebreader:${{poetry version -s}}
