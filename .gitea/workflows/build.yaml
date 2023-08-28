@@ -26,13 +26,13 @@ jobs:
           poetry-version: "1.6.1"
       - uses: actions/setup-node@v3
       - uses: actions/checkout@v3
-      - name: Build and push
+      - name: Build and push version
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: ajurna/cbwebreader:${{poetry version -s}}
-      - name: Build and push
+      - name: Build and push latest
         uses: docker/build-push-action@v4
         with:
           context: .
