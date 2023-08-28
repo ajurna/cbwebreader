@@ -26,12 +26,12 @@ jobs:
           poetry-version: "1.5.1"
       - uses: actions/setup-node@v3
       - uses: actions/checkout@v3
-        with:
-          repository: "ajurna/cbwebreader"
       - name: Set FOO
         run: echo "FOO=${{ poetry -V }}" >> $GITHUB_ENV
       - name: Test
         run: echo $FOO
+      - name: Test 2
+        run: poetry -V
 #      - name: Build and push
 #        uses: docker/build-push-action@v4
 #        with:
