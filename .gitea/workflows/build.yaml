@@ -26,15 +26,22 @@ jobs:
           poetry-version: "1.6.1"
       - uses: actions/setup-node@v3
       - uses: actions/checkout@v3
-      - name: Build and push version
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: ajurna/cbwebreader:${{poetry version -s}}
-      - name: Build and push latest
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: ajurna/cbwebreader:latest
+      # Extract version from Poetry
+      - name: Get version
+        run: echo "POETRY_VERSION=$(poetry version --short)" >> $GITHUB_ENV
+      - name: Build and push Docker image
+        run: |
+          docker build -t ajurna/cbwebreader:${{ env.POETRY_VERSION }} .
+          docker push ajurna/cbwebreader:${{ env.POETRY_VERSION }}
+#      - name: Build and push version
+#        uses: docker/build-push-action@v4
+#        with:
+#          context: .
+#          push: true
+#          tags: ajurna/cbwebreader:latest
+#      - name: Build and push latest
+#        uses: docker/build-push-action@v4
+#        with:
+#          context: .
+#          push: true
+#          tags: ajurna/cbwebreader:${{poetry version -s}}
