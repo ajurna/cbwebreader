@@ -20,6 +20,8 @@ jobs:
 #          username: ${{ secrets.DOCKERHUB_USERNAME }}
 #          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - uses: actions/setup-python@v4
+
       - uses: abatilo/actions-poetry@v2
         with:
           poetry-version: "1.5.1"
