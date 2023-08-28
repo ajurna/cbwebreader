@@ -2,7 +2,7 @@ name: Build and push image
 
 on:
   push:
-    branches: [main]
+    branches: [master]
 
 jobs:
   deploy:
