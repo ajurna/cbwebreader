@@ -15,7 +15,6 @@ WORKDIR /src
 
 COPY . /src/
 
-
 RUN apt update \
     && apt install -y software-properties-common \
     && apt-add-repository non-free \
@@ -26,7 +25,7 @@ RUN apt update \
     && cd frontend \
     && npm install \
     && npm run build \
-    && apt remove -y npm software-properties-common \
+    && apt remove -y npm software-properties-common pkg-config \
     && rm -r node_modules \
     && apt -y auto-remove \
     && apt clean \
