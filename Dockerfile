@@ -20,7 +20,7 @@ RUN apt update \
     && apt install -y software-properties-common \
     && apt-add-repository non-free \
     && apt update \
-    && apt install -y npm cron unrar libmariadb-dev libpq-dev \
+    && apt install -y npm cron unrar libmariadb-dev libpq-dev pkg-config \
     && pip install --upgrade pip \
     && pip install -r requirements.txt \
     && cd frontend \
