@@ -34,15 +34,3 @@ jobs:
           docker build -t ajurna/cbwebreader:latest -t ajurna/cbwebreader:${{ env.POETRY_VERSION }} .
           docker push ajurna/cbwebreader:${{ env.POETRY_VERSION }}
           docker push ajurna/cbwebreader:latest
-#      - name: Build and push version
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: .
-#          push: true
-#          tags: ajurna/cbwebreader:latest
-#      - name: Build and push latest
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: .
-#          push: true
-#          tags: ajurna/cbwebreader:${{poetry version -s}}
