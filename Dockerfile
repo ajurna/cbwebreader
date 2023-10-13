@@ -1,4 +1,4 @@
-FROM python:3.10-slim-bullseye
+FROM python:3.12-slim-bookworm
 
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONHASHSEED=random \
@@ -16,16 +16,13 @@ WORKDIR /src
 COPY . /src/
 
 RUN apt update \
-    && apt install -y software-properties-common \
-    && apt-add-repository non-free \
-    && apt update \
-    && apt install -y npm cron unrar libmariadb-dev libpq-dev pkg-config \
+    && apt install -y npm cron unrar-free libmariadb-dev libpq-dev pkg-config swig \
     && pip install --upgrade pip \
     && pip install -r requirements.txt \
     && cd frontend \
     && npm install \
     && npm run build \
-    && apt remove -y npm software-properties-common pkg-config \
+    && apt remove -y npm software-properties-common pkg-config swig \
     && rm -r node_modules \
     && apt -y auto-remove \
     && apt clean \
