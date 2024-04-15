@@ -15,8 +15,11 @@ WORKDIR /src
 
 COPY . /src/
 
+RUN  echo "deb http://ftp.uk.debian.org/debian bookworm non-free non-free-firmware" > /etc/apt/sources.list.d/non-free.list
+
+
 RUN apt update \
-    && apt install -y npm cron unrar-free libmariadb-dev libpq-dev pkg-config swig \
+    && apt install -y npm cron unrar libmariadb-dev libpq-dev pkg-config swig \
     && pip install --upgrade pip \
     && pip install -r requirements.txt \
     && cd frontend \
