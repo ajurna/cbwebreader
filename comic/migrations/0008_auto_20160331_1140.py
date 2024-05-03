@@ -7,7 +7,6 @@ import uuid
 
 import django.db.models.deletion
 from django.db import migrations, models
-from django.utils.timezone import utc
 
 
 class Migration(migrations.Migration):
@@ -33,7 +32,7 @@ class Migration(migrations.Migration):
             model_name="comicbook",
             name="date_added",
             field=models.DateTimeField(
-                auto_now_add=True, default=datetime.datetime(2016, 3, 31, 10, 40, 30, 62170, tzinfo=utc)
+                auto_now_add=True, default=datetime.datetime(2016, 3, 31, 10, 40, 30, 62170, tzinfo=datetime.timezone.utc)
             ),
             preserve_default=False,
         ),
