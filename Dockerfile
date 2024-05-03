@@ -7,6 +7,7 @@ ENV PYTHONFAULTHANDLER=1 \
     PIP_DEFAULT_TIMEOUT=100 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1
+ENV PATH="${PATH}:/root/.local/bin"
 
 RUN mkdir /src
 RUN mkdir /static
@@ -17,11 +18,11 @@ COPY . /src/
 
 RUN  echo "deb http://ftp.uk.debian.org/debian bookworm non-free non-free-firmware" > /etc/apt/sources.list.d/non-free.list
 
-
 RUN apt update \
-    && apt install -y npm cron unrar libmariadb-dev libpq-dev pkg-config swig \
-    && pip install --upgrade pip \
-    && pip install -r requirements.txt \
+    && apt install -y npm cron unrar libmariadb-dev libpq-dev pkg-config swig curl \
+    && curl -sSL https://install.python-poetry.org | python3 - \
+    && poetry config virtualenvs.create false \
+    && poetry install --no-dev \
     && cd frontend \
     && npm install \
     && npm run build \
