@@ -1,5 +1,4 @@
-FROM python:3.13-slim-bullseye
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+FROM python:3.10-slim-bullseye
 
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONHASHSEED=random \
@@ -16,6 +15,8 @@ WORKDIR /src
 
 COPY . /src/
 
+RUN  echo "deb http://ftp.uk.debian.org/debian bookworm non-free non-free-firmware" > /etc/apt/sources.list.d/non-free.list
+
 
 RUN apt update \
     && apt install -y software-properties-common \
@@ -26,7 +27,7 @@ RUN apt update \
     && cd frontend \
     && npm install \
     && npm run build \
-    && apt remove -y npm software-properties-common \
+    && apt remove -y npm software-properties-common pkg-config swig \
     && rm -r node_modules \
     && apt -y auto-remove \
     && apt clean \

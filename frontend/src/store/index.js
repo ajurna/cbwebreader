@@ -73,14 +73,22 @@ export default createStore({
             if ('next' in router.currentRoute.value.query) {
               router.push(router.currentRoute.value.query.next)
             } else {
-              router.push('/')
+              router.push('browse')
             }
 
           })
         .catch((error)=>{
-            // console.log(error);
             const $toast = useToast();
-            $toast.error(error.response.data.detail, {position:'top'});
+            if (error.response.data.detail) {
+              $toast.error(error.response.data.detail, {position:'top'});
+            }
+            if (error.response.data.username) {
+              $toast.error("Username: " + error.response.data.username, {position:'top'});
+            }
+            if (error.response.data.password) {
+              $toast.error("Password: " + error.response.data.password, {position:'top'});
+            }
+
           })
     },
     refreshToken(){
