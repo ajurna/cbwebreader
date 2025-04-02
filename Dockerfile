@@ -1,4 +1,5 @@
-FROM python:3.10-slim-bullseye
+FROM python:3.13-slim-bullseye
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONHASHSEED=random \
@@ -13,17 +14,20 @@ RUN mkdir /static
 
 WORKDIR /src
 
-COPY . /src/
 
-RUN  echo "deb http://ftp.uk.debian.org/debian bookworm non-free non-free-firmware" > /etc/apt/sources.list.d/non-free.list
+COPY . /src/
+COPY pyproject.toml /src
+COPY uv.lock /src
+
+RUN  echo "deb http://ftp.uk.debian.org/debian bullseye non-free non-free-firmware" > /etc/apt/sources.list.d/non-free.list
 
 
 RUN apt update \
     && apt install -y software-properties-common \
     && apt-add-repository non-free \
     && apt update \
-    && apt install -y npm cron unrar libmariadb-dev libpq-dev \
-    && uv sync \
+    && apt install -y npm cron unrar libmariadb-dev libpq-dev pkg-config \
+    && uv sync --frozen \
     && cd frontend \
     && npm install \
     && npm run build \
