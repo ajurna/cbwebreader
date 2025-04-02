@@ -1,55 +1,46 @@
-[tool.black]
-line_length = 119
-
-[tool.poetry]
+[project]
 name = "cbwebreader"
 version = "1.1.1"
 description = "CBR/Z Web Reader"
-authors = ["ajurna <ajurna@gmail.com>"]
-license = "Creative Commons Attribution-ShareAlike 4.0 International License"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dj-database-url>=2.3.0",
+    "django>=5.1.7",
+    "django-boost>=2.1",
+    "django-bootstrap4>=25.1",
+    "django-cors-headers>=4.7.0",
+    "django-csp>=3.8",
+    "django-extensions>=3.2.3",
+    "django-filter>=25.1",
+    "django-imagekit>=5.0.0",
+    "django-permissions-policy>=4.25.0",
+    "django-silk>=5.3.2",
+    "django-sri>=0.8.0",
+    "django-webpack-loader>=3.1.1",
+    "djangorestframework>=3.16.0",
+    "djangorestframework-simplejwt>=5.5.0",
+    "drf-yasg>=1.21.10",
+    "flake8>=7.2.0",
+    "flake8-annotations>=3.1.1",
+    "gunicorn>=23.0.0",
+    "loguru>=0.7.3",
+    "mysqlclient>=2.2.7",
+    "pillow>=11.1.0",
+    "psycopg2>=2.9.10",
+    "pymupdf>=1.25.5",
+    "python-dotenv>=1.1.0",
+    "rarfile>=4.2",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-Django = "4.1.1"
-gunicorn = "^20.0.4"
-dj-database-url = "^1.0.0"
-python-dotenv = "^0.21.0"
-loguru = "^0.6.0"
-django-silk = "^5.0.0"
-mysqlclient = "^2.0.1"
-psycopg2 = "^2.8.6"
-rarfile = "^4.0"
-django-extensions = "^3.2.1"
-Pillow = "^9.1.1"
-django-imagekit = "^4.0.2"
-PyMuPDF = "~1.20.2"
-django-bootstrap4 = "^22.1"
-django-csp = "^3.7"
-django-boost = "^2.1"
-django-sri = "^0.5.0"
-django-permissions-policy = "^4.9.0"
-djangorestframework = "^3.13.1"
-django-filter = "^22.1"
-django-cors-headers = "^3.13.0"
-djangorestframework-simplejwt = "^5.2.0"
-django-webpack-loader = "^1.6.0"
-drf-yasg = "^1.20.0"
-drf-extensions = "^0.7.1"
-flake8 = "^5.0.4"
-flake8-annotations = "^2.9.1"
-
-[tool.poetry.dev-dependencies]
-mypy = "^0.971"
-Werkzeug = "^2.2"
-pyOpenSSL = "^22.0.0"
-ipython = "^8.4.0"
-coverage = "^6.2"
-pre-commit = "^2.20.0"
-
-[tool.poetry.group.dev.dependencies]
-pylint = "^2.15.0"
-pylint-django = "^2.5.3"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[dependency-groups]
+dev = [
+    "coverage>=7.8.0",
+    "ipython>=9.0.2",
+    "mypy>=1.15.0",
+    "pre-commit>=4.2.0",
+    "pylint>=3.3.6",
+    "pylint-django>=2.6.1",
+    "pyopenssl>=25.0.0",
+    "werkzeug>=3.1.3",
+]

@@ -1,4 +1,5 @@
-FROM python:3.10-slim-bullseye
+FROM python:3.13-slim-bullseye
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONHASHSEED=random \
@@ -21,8 +22,7 @@ RUN apt update \
     && apt-add-repository non-free \
     && apt update \
     && apt install -y npm cron unrar libmariadb-dev libpq-dev \
-    && pip install --upgrade pip \
-    && pip install -r requirements.txt \
+    && uv sync \
     && cd frontend \
     && npm install \
     && npm run build \

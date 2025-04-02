@@ -116,7 +116,7 @@ class BrowseViewSet(viewsets.GenericViewSet):
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'selector'
 
-    def get_queryset(self):
+    def get_queryset(self) -> None:
         return
 
     def list(self, request: Request) -> Response:
@@ -302,8 +302,8 @@ class ImageViewSet(viewsets.ViewSet):
     renderer_classes = [PassthroughRenderer]
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: "A Binary Image response"})
-    def retrieve(self, _request: Request, parent_lookup_selector: UUID, page: int) -> FileResponse:
-        book = models.ComicBook.objects.get(selector=parent_lookup_selector)
+    def retrieve(self, _request: Request, selector: UUID, page: int) -> FileResponse:
+        book = models.ComicBook.objects.get(selector=selector)
         img, content = book.get_image(int(page) - 1)
         self.renderer_classes[0].media_type = content
         return FileResponse(img, content_type=content)

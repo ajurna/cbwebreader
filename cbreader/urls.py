@@ -22,7 +22,8 @@ from django.views.generic import TemplateView
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
-from rest_framework_extensions.routers import ExtendedDefaultRouter
+from rest_framework.routers import DefaultRouter
+# from rest_framework_extensions.routers import ExtendedDefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from comic import rest, feeds
@@ -39,12 +40,12 @@ schema_view = get_schema_view(
     permission_classes=[permissions.AllowAny]
 )
 
-router = ExtendedDefaultRouter()
+router = DefaultRouter()
 router.register(r'users', rest.UserViewSet)
 router.register(r'browse', rest.BrowseViewSet, basename='browse')
 router.register(r'generate_thumbnail', rest.GenerateThumbnailViewSet, basename='generate_thumbnail')
-router.register(r'read', rest.ReadViewSet, basename='read')\
-    .register(r'image', rest.ImageViewSet, basename='image', parents_query_lookups=['selector'])
+router.register(r'read', rest.ReadViewSet, basename='read')
+router.register(r'read/(?P<selector>[^/.]+)/image', rest.ImageViewSet, basename='image')
 router.register(r'recent', rest.RecentComicsView, basename="recent")
 router.register(r'history', rest.HistoryViewSet, basename='history')
 router.register(r'action', rest.ActionViewSet, basename='action')

@@ -7,8 +7,7 @@ import uuid
 
 import django.db.models.deletion
 from django.db import migrations, models
-from django.utils.timezone import utc
-
+utc = datetime.timezone.utc
 
 class Migration(migrations.Migration):
 
