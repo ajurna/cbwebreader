@@ -1,4 +1,4 @@
-FROM python:3.13-slim-bullseye
+FROM python:3.13-slim-bookworm
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 ENV PYTHONFAULTHANDLER=1 \
@@ -19,7 +19,7 @@ COPY . /src/
 COPY pyproject.toml /src
 COPY uv.lock /src
 
-RUN  echo "deb http://ftp.uk.debian.org/debian bullseye non-free non-free-firmware" > /etc/apt/sources.list.d/non-free.list
+RUN  echo "deb http://ftp.uk.debian.org/debian bookworm non-free non-free-firmware" > /etc/apt/sources.list.d/non-free.list
 
 
 RUN apt update \
