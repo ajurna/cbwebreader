@@ -1,6 +1,6 @@
 [project]
 name = "cbwebreader"
-version = "1.1.2"
+version = "1.1.3"
 description = "CBR/Z Web Reader"
 readme = "README.md"
 requires-python = ">=3.13"
