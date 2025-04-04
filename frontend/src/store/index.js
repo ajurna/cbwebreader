@@ -1,6 +1,6 @@
 import { createStore } from 'vuex'
 import axios from 'axios'
-import jwtDecode from 'jwt-decode'
+import { jwtDecode } from "jwt-decode";
 import {useToast} from "vue-toast-notification";
 import router from "@/router";
 import api from "@/api";

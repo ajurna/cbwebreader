@@ -46,7 +46,8 @@ module.exports = (env = {}) => {
     plugins: [
       new VueLoaderPlugin(),
       new BundleTracker({
-        filename: './webpack-stats.json',
+        filename: 'webpack-stats.json',
+        path: path.resolve(__dirname, './'),
         publicPath: '/static/bundles/',
         integrity: true
       }),

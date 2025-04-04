@@ -1,7 +1,7 @@
 import axios from "axios";
 import router from "@/router";
 import store from "@/store";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 async function get_access_token() {
     let access = jwtDecode(store.state.jwt.access)
