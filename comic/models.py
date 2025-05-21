@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional, List, Union, Tuple, Final, IO
 
 # noinspection PyPackageRequirements
-import fitz
+import pymupdf
 import rarfile
 from PIL import Image, UnidentifiedImageError
 from PIL.Image import Image as Image_type
@@ -52,7 +52,8 @@ class Directory(models.Model):
         ordering = ['name']
 
     def __str__(self) -> str:
-        return f"Directory: {self.name}; {self.parent}"
+
+        return f"Directory: {self.name}: {self.parent}"
 
     @property
     def title(self) -> str:
@@ -141,21 +142,34 @@ class ComicBook(models.Model):
         return Path(base_dir, self.file_name)
 
     def get_image(self, page: int) -> Union[Tuple[IO[bytes], str], Tuple[bool, bool]]:
-        base_dir = settings.COMIC_BOOK_VOLUME
-        if self.directory:
-            archive_path = Path(base_dir, self.directory.path, self.file_name)
+        if self.file_name.lower().endswith('.pdf'):
+            # noinspection PyUnresolvedReferences
+            doc = pymupdf.open(self.get_pdf())
+            page: pymupdf.Page = doc[page]
+            pix = page.get_pixmap()
+            mode: Final = "RGBA" if pix.alpha else "RGB"
+            # noinspection PyTypeChecker
+            pil_data = Image.frombytes(mode, (pix.width, pix.height), pix.samples)
+            img = io.BytesIO()
+            pil_data.save(img, format="PNG")
+            img.seek(0)
+            return img, "Image/PNG"
         else:
-            archive_path = Path(base_dir, self.file_name)
-        try:
-            archive = rarfile.RarFile(archive_path)
-        except rarfile.NotRarFile:
-            # pylint: disable=consider-using-with
-            archive = zipfile.ZipFile(archive_path)
-        except zipfile.BadZipfile:
-            return False, False
+            base_dir = settings.COMIC_BOOK_VOLUME
+            if self.directory:
+                archive_path = Path(base_dir, self.directory.path, self.file_name)
+            else:
+                archive_path = Path(base_dir, self.file_name)
+            try:
+                archive = rarfile.RarFile(archive_path)
+            except rarfile.NotRarFile:
+                # pylint: disable=consider-using-with
+                archive = zipfile.ZipFile(archive_path)
+            except zipfile.BadZipfile:
+                return False, False
 
-        file_name, file_mime = self.get_archive_files(archive)[page]
-        return archive.open(file_name), file_mime
+            file_name, file_mime = self.get_archive_files(archive)[page]
+            return archive.open(file_name), file_mime
 
     def generate_thumbnail_pdf(self, page_index: int = 0) -> Tuple[io.BytesIO, Image_type, str]:
         img, pil_data = self._get_pdf_image(page_index if page_index else 0)
@@ -196,8 +210,7 @@ class ComicBook(models.Model):
         self.save()
 
     def _get_pdf_image(self, page_index: int) -> Tuple[io.BytesIO, Image_type]:
-        # noinspection PyUnresolvedReferences
-        doc = fitz.open(self.get_pdf())
+        doc = pymupdf.open(self.get_pdf())
         page = doc[page_index]
         pix = page.get_pixmap()
         mode: Final = "RGBA" if pix.alpha else "RGB"
@@ -239,7 +252,7 @@ class ComicBook(models.Model):
             return Path(settings.COMIC_BOOK_VOLUME, self.directory.get_path(), self.file_name)
         return Path(settings.COMIC_BOOK_VOLUME, self.file_name)
 
-    def get_archive(self) -> Tuple[Union[rarfile.RarFile, zipfile.ZipFile, fitz.Document], str]:
+    def get_archive(self) -> Tuple[Union[rarfile.RarFile, zipfile.ZipFile, pymupdf.Document], str]:
         archive_path = self.get_archive_path
         try:
             return rarfile.RarFile(archive_path), 'archive'
@@ -252,7 +265,7 @@ class ComicBook(models.Model):
 
         try:
             # noinspection PyUnresolvedReferences
-            return fitz.open(str(archive_path)), 'pdf'
+            return pymupdf.open(str(archive_path)), 'pdf'
         except RuntimeError:
             pass
         raise NotCompatibleArchive
@@ -291,8 +304,8 @@ class ComicStatus(models.Model):
 
     def __repr__(self) -> str:
         return (
-            f"<ComicStatus:{self.user.username}:{self.comic.file_name}:{self.last_read_page}:"
-            f"{self.unread}:{self.finished}"
+            f"<ComicStatus: {self.user.username}: {self.comic.file_name}: {self.last_read_page}: "
+            f"{self.unread}: {self.finished}"
         )
 
 

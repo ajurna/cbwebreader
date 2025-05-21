@@ -1,3 +1,4 @@
+from http.client import HTTPResponse
 from pathlib import Path
 from typing import Union, Optional, Dict, Iterable, List
 from uuid import UUID
@@ -247,7 +248,7 @@ class ReadViewSet(viewsets.GenericViewSet):
     @swagger_auto_schema(responses={status.HTTP_200_OK: 'PDF Binary Data',
                                     status.HTTP_400_BAD_REQUEST: 'User below classification allowed'})
     @action(methods=['get'], detail=True)
-    def pdf(self, request: Request, selector: UUID) -> Union[FileResponse, Response]:
+    def pdf(self, request: Request, selector: UUID) -> Union[FileResponse, Response, HTTPResponse]:
         book = models.ComicBook.objects.get(selector=selector)
         misc, _ = models.UserMisc.objects.get_or_create(user=request.user)
         try:

@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "corsheaders",
     'django_filters',
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     # 'silk'
 ]
 
@@ -197,8 +198,8 @@ CSP_STYLE_SRC = (
 )
 CSP_IMG_SRC = ("'self'", "data:")
 CSP_FONT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "'sha256-IYBrMxCTJ62EwagLTIRncEIpWwTmoXcXkqv3KZm/Wik='")
-CSP_CONNECT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-eval'", "'unsafe-inline'", "localhost:8080")
+CSP_CONNECT_SRC = ("'self'", "ws://localhost:8080/ws")
 CSP_INCLUDE_NONCE_IN = ['script-src']
 CSP_SCRIPT_SRC_ATTR = ("'self'",)  # "'unsafe-inline'")
 
