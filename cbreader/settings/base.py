@@ -238,8 +238,13 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = True
 SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
-    'LEEWAY': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'LEEWAY': timedelta(seconds=30),
+    'ALGORITHM': 'HS256',
+    'AUDIENCE': 'cbwebreader-users',
+    'ISSUER': 'cbwebreader',
 }
 
 FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')

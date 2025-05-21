@@ -6,7 +6,8 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <!-- Show these links only when user is authenticated -->
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0" v-if="isAuthenticated">
           <li class="nav-item">
             <router-link :to="{name: 'browse'}" class="nav-link" >Browse</router-link>
           </li>
@@ -26,6 +27,12 @@
             <a class="nav-link" @click="logout">Log Out</a>
           </li>
         </ul>
+        <!-- Show login link when user is not authenticated -->
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0" v-else>
+          <li class="nav-item">
+            <router-link :to="{name: 'login'}" class="nav-link">Log In</router-link>
+          </li>
+        </ul>
       </div>
     </div>
   </nav>
@@ -40,6 +47,11 @@ export default {
   data() {
     return {
       visible: false
+    }
+  },
+  computed: {
+    isAuthenticated() {
+      return !!this.$store.state.jwt;
     }
   },
   methods: {

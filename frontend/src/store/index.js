@@ -5,12 +5,11 @@ import {useToast} from "vue-toast-notification";
 import router from "@/router";
 import api from "@/api";
 
+// We'll no longer use localStorage for tokens
+// Instead, tokens will be stored in httpOnly cookies by the backend
+// and automatically included in requests
 function get_jwt_from_storage(){
-  try {
-    return JSON.parse(localStorage.getItem('t'))
-  } catch {
-    return null
-  }
+  return null; // Initial state will be null until login
 }
 function get_user_from_storage(){
   try {
@@ -44,12 +43,18 @@ export default createStore({
   },
   mutations: {
     updateToken(state, newToken){
-      localStorage.setItem('t', JSON.stringify(newToken));
+      // No longer storing tokens in localStorage
+      // Tokens are stored in httpOnly cookies by the backend
       state.jwt = newToken;
     },
     logOut(state){
-      localStorage.removeItem('t');
+      // Clear user data from localStorage
       localStorage.removeItem('u')
+      // Clear state
+
+      // Make a request to the backend to invalidate the token
+      axios.post('/api/token/blacklist/', { refresh: state.jwt?.refresh })
+        .catch(error => console.error('Error blacklisting token:', error));
       state.jwt = null;
       state.user = null
     },
@@ -92,31 +97,66 @@ export default createStore({
           })
     },
     refreshToken(){
+      // Don't attempt to refresh if we don't have a token
+      if (!this.state.jwt || !this.state.jwt.refresh) {
+        return Promise.reject(new Error('No refresh token available'));
+      }
+
       const payload = {
         refresh: this.state.jwt.refresh
       }
+
       return axios.post('/api/token/refresh/', payload)
-        .then((response)=>{
-            this.commit('updateToken', response.data)
-          })
-        .catch((error)=>{
-            console.log(error)
-            // router.push({name: 'login', query: {area: 'store'}})
-          })
+        .then((response) => {
+          this.commit('updateToken', response.data);
+          return response.data;
+        })
+        .catch((error) => {
+          console.error('Token refresh failed:', error);
+          // If refresh fails, log the user out and redirect to login
+          this.commit('logOut');
+          router.push({
+            name: 'login',
+            query: {
+              next: router.currentRoute.value.fullPath,
+              error: 'Your session has expired. Please log in again.'
+            }
+          });
+          return Promise.reject(error);
+        });
     },
     inspectToken(){
       const token = this.state.jwt;
-      if(token){
-        const decoded = jwtDecode(token);
-        const exp = decoded.exp
-        const orig_iat = decoded.iat
-        if(exp - (Date.now()/1000) < 1800 && (Date.now()/1000) - orig_iat < 628200){
-          this.dispatch('refreshToken')
-        } else if (exp -(Date.now()/1000) < 1800){
-          // DO NOTHING, DO NOT REFRESH
-        } else {
-          // PROMPT USER TO RE-LOGIN, THIS ELSE CLAUSE COVERS THE CONDITION WHERE A TOKEN IS EXPIRED AS WELL
+      if (!token) return;
+
+      try {
+        // For access token
+        const decoded = jwtDecode(token.access);
+        const exp = decoded.exp;
+        const now = Date.now() / 1000;
+
+        // Refresh when token is within 5 minutes of expiring
+        const refreshThreshold = 300; // 5 minutes in seconds
+
+        if (exp - now < refreshThreshold) {
+          // Token is about to expire, refresh it
+          this.dispatch('refreshToken');
+        } else if (exp < now) {
+          // Token is already expired, force logout
+          this.commit('logOut');
+          router.push({
+            name: 'login',
+            query: {
+              next: router.currentRoute.value.fullPath,
+              error: 'Your session has expired. Please log in again.'
+            }
+          });
         }
+      } catch (error) {
+        console.error('Error inspecting token:', error);
+        // If we can't decode the token, log the user out
+        this.commit('logOut');
+        router.push({name: 'login'});
       }
     }
   },
