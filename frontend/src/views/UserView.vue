@@ -16,7 +16,6 @@ import UserEdit from "@/components/UserEdit";
 import alertMessages from "@/components/AlertMessages";
 import AddUser from "@/components/AddUser";
 import router from "@/router";
-import store from "@/store";
 
 const default_crumbs = [
   {id: 0, selector: '', name: 'Home'},

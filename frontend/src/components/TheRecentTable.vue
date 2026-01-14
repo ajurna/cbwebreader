@@ -23,7 +23,6 @@
       </div>
     </div>
     <div class="row">
-      <caption>
         <h2>Recent Comics - <a :href="'/feed/' + this.feed_id + '/'">Feed</a></h2>
         Mark selected issues as:
         <select class="form-select-sm" name="func" id="func_selector" @change="this.performFunction()" v-model="func_selected">
@@ -31,7 +30,6 @@
           <option value="mark_read">Read</option>
           <option value="mark_unread">Un-Read</option>
         </select>
-      </caption>
     </div>
     <div class="row">
       <table class="table table-striped table-bordered">

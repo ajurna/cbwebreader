@@ -23,9 +23,7 @@
       </div>
     </div>
     <div class="row">
-      <caption>
-        <h2>Reading History</h2>
-      </caption>
+      <h2>Reading History</h2>
     </div>
     <div class="row">
       <table class="table table-striped table-bordered">

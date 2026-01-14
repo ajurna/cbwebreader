@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "corsheaders",
     'django_filters',
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     # 'silk'
 ]
 
@@ -197,8 +198,8 @@ CSP_STYLE_SRC = (
 )
 CSP_IMG_SRC = ("'self'", "data:")
 CSP_FONT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "'sha256-IYBrMxCTJ62EwagLTIRncEIpWwTmoXcXkqv3KZm/Wik='")
-CSP_CONNECT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-eval'", "'unsafe-inline'", "localhost:8080")
+CSP_CONNECT_SRC = ("'self'", "ws://localhost:8080/ws")
 CSP_INCLUDE_NONCE_IN = ['script-src']
 CSP_SCRIPT_SRC_ATTR = ("'self'",)  # "'unsafe-inline'")
 
@@ -237,8 +238,13 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = True
 SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
-    'LEEWAY': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'LEEWAY': timedelta(seconds=30),
+    'ALGORITHM': 'HS256',
+    'AUDIENCE': 'cbwebreader-users',
+    'ISSUER': 'cbwebreader',
 }
 
 FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')

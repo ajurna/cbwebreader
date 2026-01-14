@@ -2,7 +2,6 @@ const path = require('path')
 const { VueLoaderPlugin } = require('vue-loader')
 const BundleTracker = require('webpack-bundle-tracker');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 const webpack = require('webpack')
 
@@ -47,7 +46,8 @@ module.exports = (env = {}) => {
     plugins: [
       new VueLoaderPlugin(),
       new BundleTracker({
-        filename: './webpack-stats.json',
+        filename: 'webpack-stats.json',
+        path: path.resolve(__dirname, './'),
         publicPath: '/static/bundles/',
         integrity: true
       }),

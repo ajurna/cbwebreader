@@ -14,5 +14,6 @@
 !package-lock.json
 !package.json
 !frontend
+!uv.lock
 /frontend/node_modules
 /frontend/dist

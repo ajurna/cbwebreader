@@ -3,6 +3,11 @@
     <div class="row" v-if="!initialSetupRequired">
       <div class="col col-lg-4" />
       <div class="col col-lg-4" id="login-col">
+        <!-- Display error message if present -->
+        <div class="alert alert-danger" v-if="errorMessage">
+          {{ errorMessage }}
+        </div>
+
         <form @submit="login" v-on:submit.prevent="onSubmit">
           <label class="form-label" for="username">Username</label>
           <input id="username" placeholder="username" aria-describedby="loginFormControlInputHelpInline" class="form-control" type="text" v-model="username" />
@@ -34,7 +39,8 @@ export default {
       username: '',
       password: '',
       password_alert: false,
-      initialSetupRequired: false
+      initialSetupRequired: false,
+      errorMessage: ''
     }
   },
   methods: {
@@ -43,11 +49,23 @@ export default {
     }
   },
   mounted() {
+    // Check for error message in route query params
+    if (this.$route.query.error) {
+      this.errorMessage = this.$route.query.error;
+    }
+
+    // Check if initial setup is required
     axios.get('/api/initial_setup/required/').then(response => {
       if (response.data.required){
         this.initialSetupRequired = true
       }
     })
+  },
+  // Clear error message when route changes
+  watch: {
+    '$route'(to) {
+      this.errorMessage = to.query.error || '';
+    }
   }
 }
 </script>
