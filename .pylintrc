@@ -1,6 +1,6 @@
 [MAIN]
 max-line-length=120
-ignore-paths=.*/migrations
+ignore-paths=comic/migrations
 load-plugins = pylint_django
 disable = missing-class-docstring,missing-function-docstring,abstract-method,missing-module-docstring,imported-auth-user,missing-docstring
 good-names=pk

@@ -7,10 +7,10 @@
 !static
 !manage.py
 !pyproject.toml
+!uv.lock
 !setup.cfg
 !entrypoint.sh
 !entrypoint-cron.sh
-!requirements.txt
 !package-lock.json
 !package.json
 !frontend

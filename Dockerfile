@@ -1,5 +1,5 @@
-FROM python:3.12-slim-bookworm
-
+FROM python:3.14-slim-trixie
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONHASHSEED=random \
     PYTHONUNBUFFERED=1 \
@@ -14,23 +14,22 @@ RUN mkdir /static
 
 WORKDIR /src
 
-COPY . /src/
 
-RUN  echo "deb http://ftp.uk.debian.org/debian bookworm non-free non-free-firmware" > /etc/apt/sources.list.d/non-free.list
+
+RUN  echo "deb http://ftp.uk.debian.org/debian trixie non-free non-free-firmware" > /etc/apt/sources.list.d/non-free.list
 
 RUN apt update \
-    && apt install -y npm cron unrar libmariadb-dev libpq-dev pkg-config swig curl \
-    && curl -sSL https://install.python-poetry.org | python3 - \
-    && poetry config virtualenvs.create false \
-    && poetry install --no-dev \
-    && cd frontend \
+    && apt install -y npm cron unrar libmariadb-dev libpq-dev pkg-config swig curl
+
+COPY . /src/
+
+RUN uv sync --frozen --no-dev
+
+RUN cd frontend \
     && npm install \
     && npm run build \
-    && apt remove -y npm software-properties-common pkg-config swig \
-    && rm -r node_modules \
-    && apt -y auto-remove \
-    && apt clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -r node_modules
+
 
 RUN cat /src/cbreader/crontab >> /etc/cron.daily/cbreader
 
