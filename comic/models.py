@@ -64,7 +64,7 @@ class Directory(models.Model):
         return 'Directory'
 
     def generate_thumbnail(self) -> None:
-        book: ComicBook = ComicBook.objects.filter(directory=self).order_by('file_name').first()
+        book: ComicBook|None = ComicBook.objects.filter(directory=self).order_by('file_name').first()
         if not book:
             return
         if not book.thumbnail:
