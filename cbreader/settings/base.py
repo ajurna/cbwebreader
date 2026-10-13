@@ -231,11 +231,24 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'comic.auth.CookieJWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     )
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
+# Cookie based JWT authentication (see comic/auth.py). Tokens are stored in HttpOnly
+# cookies so that browser initiated requests, such as the page images in the reader,
+# can be authenticated - an <img> tag cannot send an Authorization header.
+JWT_ACCESS_COOKIE_NAME = os.getenv('JWT_ACCESS_COOKIE_NAME', 'access_token')
+JWT_REFRESH_COOKIE_NAME = os.getenv('JWT_REFRESH_COOKIE_NAME', 'refresh_token')
+JWT_COOKIE_PATH = os.getenv('JWT_COOKIE_PATH', '/')
+# Only mark the cookies Secure when the site is actually served over HTTPS, otherwise
+# browsers drop them on plain http.
+JWT_COOKIE_SECURE = os.getenv('JWT_COOKIE_SECURE', 'False') == 'True'
+# Lax blocks cross-site POSTs, which is the CSRF protection for cookie authentication.
+JWT_COOKIE_SAMESITE = os.getenv('JWT_COOKIE_SAMESITE', 'Lax')
+
 SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,

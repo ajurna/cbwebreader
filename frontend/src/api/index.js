@@ -1,47 +1,15 @@
 import axios from "axios";
 import router from "@/router";
 import store from "@/store";
-import { jwtDecode } from "jwt-decode";
 
-/**
- * Gets a valid access token or refreshes if needed
- * Uses a consistent 5-minute threshold for token expiration
- */
-async function get_access_token() {
-    // If we don't have tokens in the store, return null
-    if (!store.state.jwt || !store.state.jwt.access) {
-        return null;
-    }
+// Authentication is cookie based: the browser sends the HttpOnly access token
+// automatically, so there is no Authorization header to set here.
+const axios_jwt = axios.create({ withCredentials: true });
 
-    try {
-        const access = jwtDecode(store.state.jwt.access);
-        const now = Date.now() / 1000;
-        const refreshThreshold = 300; // 5 minutes in seconds
-
-        // If token is about to expire, refresh it
-        if (access.exp - now < refreshThreshold) {
-            try {
-                // Wait for the token to refresh
-                await store.dispatch('refreshToken');
-                return store.state.jwt.access;
-            } catch (error) {
-                console.error('Failed to refresh token:', error);
-                return null;
-            }
-        }
-
-        return store.state.jwt.access;
-    } catch (error) {
-        console.error('Error decoding token:', error);
-        return null;
-    }
-}
-
-const axios_jwt = axios.create();
-
-// Add CSRF token to all requests if using cookies for authentication
+// Add the CSRF header if a csrftoken cookie exists. Cookie authentication is
+// protected against cross-site form posts by SameSite=Lax, so this is only used
+// when the backend does set the cookie.
 axios_jwt.interceptors.request.use(function(config) {
-    // Get CSRF token from cookie if it exists
     const csrfToken = document.cookie
         .split('; ')
         .find(row => row.startsWith('csrftoken='))
@@ -54,26 +22,32 @@ axios_jwt.interceptors.request.use(function(config) {
     return config;
 });
 
-// Add JWT token to all requests
-axios_jwt.interceptors.request.use(async function (config) {
-    const access_token = await get_access_token();
+// A 401 means the access cookie is no longer valid. Try to refresh it once; if
+// that fails the session is gone, so log out and send the user to the login page.
+axios_jwt.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const config = error.config;
 
-    if (access_token) {
-        config.headers.Authorization = "Bearer " + access_token;
-    } else if (!router.currentRoute.value.fullPath.includes('login')) {
-        // Only redirect if we're not already on the login page
-        router.push({
-            name: 'login',
-            query: {
-                next: router.currentRoute.value.fullPath,
-                error: 'Please log in to continue'
+        if (error.response?.status === 401 && config && !config._retried && !config.url.includes('/token/')) {
+            config._retried = true;
+            try {
+                await store.dispatch('refreshToken');
+                return await axios_jwt.request(config);
+            } catch {
+                store.commit('logOut');
+                router.push({
+                    name: 'login',
+                    query: {
+                        next: config.url,
+                        error: 'Your session has expired. Please log in again.'
+                    }
+                });
             }
-        });
-    }
+        }
 
-    return config;
-}, function (error) {
-    return Promise.reject(error);
-});
+        return Promise.reject(error);
+    }
+);
 
 export default axios_jwt

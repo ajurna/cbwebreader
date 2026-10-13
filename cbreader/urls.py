@@ -25,9 +25,7 @@ from rest_framework import permissions
 from rest_framework.routers import DefaultRouter
 
 # from rest_framework_extensions.routers import ExtendedDefaultRouter
-from rest_framework_simplejwt.views import TokenBlacklistView, TokenObtainPairView, TokenRefreshView
-
-from comic import feeds, rest
+from comic import auth_views, feeds, rest
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -61,9 +59,9 @@ urlpatterns = [
     re_path(r'^swagger\.(?P<format>json|yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
+    path('api/token/', auth_views.CookieTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', auth_views.CookieTokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/blacklist/', auth_views.CookieTokenBlacklistView.as_view(), name='token_blacklist'),
     path('api/', include(router.urls)),
     path("",
          TemplateView.as_view(template_name="application.html"),

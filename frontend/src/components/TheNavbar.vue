@@ -51,12 +51,12 @@ export default {
   },
   computed: {
     isAuthenticated() {
-      return !!this.$store.state.jwt;
+      return this.$store.getters.isAuthenticated;
     }
   },
   methods: {
     logout () {
-      store.commit('logOut')
+      store.dispatch('logout')
       router.push({name: 'login'})
     }
   }

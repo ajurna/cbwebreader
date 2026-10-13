@@ -11,7 +11,7 @@ const HistoryView = () => import('@/views/HistoryView')
 
 // Navigation guard to check if user is authenticated
 function requireAuth(to, from, next) {
-  if (!store.state.jwt) {
+  if (!store.getters.isAuthenticated) {
     next({
       name: 'login',
       query: { next: to.fullPath, error: 'Please log in to access this page' }
@@ -23,7 +23,7 @@ function requireAuth(to, from, next) {
 
 // Navigation guard to check if user is admin
 function requireAdmin(to, from, next) {
-  if (!store.state.jwt || !store.getters.is_superuser) {
+  if (!store.getters.isAuthenticated || !store.getters.is_superuser) {
     next({
       name: 'login',
       query: { next: to.fullPath, error: 'Admin access required' }

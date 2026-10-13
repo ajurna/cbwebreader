@@ -21,9 +21,14 @@ library.add(faBook, faBookOpen, faEdit, faTurnUp, faTimes, faCheck)
 import router from './router'
 import store from './store'
 
-Vue.createApp(App)
+const app = Vue.createApp(App)
     .use(ToastPlugin)
     .use(store)
     .use(router)
     .component('font-awesome-icon', FontAwesomeIcon)
-    .mount('#app')
+
+// Validate the cookie before the first navigation, so the router guards see the
+// real session instead of whatever is left in localStorage.
+store.dispatch('restoreSession').finally(() => {
+    app.mount('#app')
+})

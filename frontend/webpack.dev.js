@@ -3,6 +3,11 @@ const { VueLoaderPlugin } = require('vue-loader')
 const BundleTracker = require('webpack-bundle-tracker');
 const webpack = require('webpack')
 
+// The dev server port. Keep this and the publicPath in sync - django-webpack-loader
+// builds the script URL from the publicPath written into webpack-stats.json.
+const DEV_PORT = process.env.DEV_PORT || 8001
+const DEV_PUBLIC_PATH = `http://localhost:${DEV_PORT}/`
+
 module.exports = () => {
   return {
 
@@ -11,6 +16,7 @@ module.exports = () => {
     entry: path.resolve(__dirname, './src/main.js'),
     output: {
       path: path.resolve(__dirname, './dist/bundles/'),
+      publicPath: DEV_PUBLIC_PATH,
     },
     module: {
       rules: [
@@ -47,7 +53,7 @@ module.exports = () => {
       new BundleTracker({
         filename: 'webpack-stats.json',
         path: path.resolve(__dirname, './'),
-        publicPath: 'http://localhost:8080/'
+        publicPath: DEV_PUBLIC_PATH
       }),
       new webpack.DefinePlugin({
         'process.env.BASE_URL': JSON.stringify(process.env.BASE_URL),
@@ -55,6 +61,7 @@ module.exports = () => {
       new webpack.DefinePlugin({ __VUE_OPTIONS_API__: true, __VUE_PROD_DEVTOOLS__: true }),
     ],
     devServer: {
+      port: DEV_PORT,
       headers: {
         "Access-Control-Allow-Origin":"*"
       },
