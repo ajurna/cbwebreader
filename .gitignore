@@ -96,3 +96,10 @@ node_modules
 localhost-key.pem
 localhost.pem
 webpack-stats.json
+
+# Test artifacts
+.pytest_cache/
+test_comics/
+test_media/
+htmlcov/
+.coverage

@@ -45,6 +45,8 @@ dev = [
     "pylint>=4.0.5",
     "pylint-django>=2.7.0",
     "pyopenssl>=26.2.0",
+    "pytest>=8.4",
+    "pytest-django>=4.8",
     "ruff>=0.17.0",
     "werkzeug>=3.1.8",
 ]
@@ -66,3 +68,11 @@ ignore = ["ANN001", "ANN002", "ANN003"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "cbreader.settings.test"
+python_files = ["test_*.py"]
+filterwarnings = [
+    # drf_yasg still uses jsonschema.RefResolver, which is deprecated upstream.
+    "ignore::DeprecationWarning:swagger_spec_validator",
+]

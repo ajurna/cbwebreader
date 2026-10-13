@@ -58,7 +58,7 @@ router.register(r'initial_setup', rest.InitialSetup, basename='initial_setup')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("feed/<user_selector>/", feeds.RecentComicsAPI()),
-    re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    re_path(r'^swagger\.(?P<format>json|yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

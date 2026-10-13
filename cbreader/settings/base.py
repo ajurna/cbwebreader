@@ -247,6 +247,10 @@ SIMPLE_JWT = {
     'ISSUER': 'cbwebreader',
 }
 
+# Renderer formats no longer include a leading dot, so the URL pattern in
+# cbreader/urls.py matches the dot separately. See cbreader/urls.py.
+SWAGGER_USE_COMPAT_RENDERERS = False
+
 FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')
 
 TEMPLATES = [
