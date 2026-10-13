@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db.models import Case, When, F, PositiveSmallIntegerField, FileField, QuerySet
+from django.utils.crypto import get_random_string
 from django.http import FileResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, serializers, mixins, permissions, status, renderers
@@ -62,7 +63,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             if target_user.username == serializer.data['username']:
-                password = User.objects.make_random_password()
+                password = get_random_string(12)
                 target_user.set_password(password)
                 target_user.save()
                 resp_serializer = self.get_serializer({

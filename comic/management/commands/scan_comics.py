@@ -30,8 +30,11 @@ class Command(BaseCommand):
     def scan_directory(self, user: Optional[AbstractBaseUser] = None, directory: Optional[Directory] = None) -> None:
         if not user:
             user_model = get_user_model()
-            user: AbstractBaseUser = user_model.objects.first()
+            user = user_model.objects.first()
+        if not user:
+            logger.error("No user found, cannot scan comics.")
+            return
         for item in generate_directory(user, directory):
-            if item is Directory:
+            if isinstance(item, Directory):
                 logger.info(item)
                 self.scan_directory(user, item)
