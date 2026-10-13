@@ -31,6 +31,6 @@ RUN cd frontend \
     && rm -r node_modules
 
 
-RUN cat /src/cbreader/crontab >> /etc/cron.daily/cbreader
+RUN cat /src/cbreader/crontab >> /etc/crontab
 
 EXPOSE 8000

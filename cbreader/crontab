@@ -1,1 +1,1 @@
-*/15    *       *       *       *       python /src/manage.py scan_comics --settings=cbreader.settings.base
+*/15 * * * * root /src/.venv/bin/python /src/manage.py scan_comics --settings=cbreader.settings.base

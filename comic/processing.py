@@ -85,13 +85,14 @@ def clean_files(files: QuerySet, user: AbstractBaseUser, dir_path: Path, directo
     for new_comic in file_list - files_db_set:
         if new_comic.suffix.lower() in settings.SUPPORTED_FILES:
             new_book = models.ComicBook(file_name=new_comic.name, directory=directory)
-            archive, archive_type = new_book.get_archive()
             try:
+                archive, archive_type = new_book.get_archive()
                 if archive_type == 'archive':
                     new_book.page_count = len(get_archive_files(archive))
                 elif archive_type == 'pdf':
                     new_book.page_count = archive.page_count
             except NotCompatibleArchive:
+                # Unreadable/corrupt archive - index the file with no page count
                 pass
             books_to_add.append(new_book)
     models.ComicBook.objects.bulk_create(books_to_add)
