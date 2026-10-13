@@ -15,25 +15,20 @@ export default {
   },
   data () {
     return {
-      comic_data: {},
       comic_loaded: false,
     }
   },
   methods: {
-    updateType() {
-      let comic_data_url = '/api/read/' + this.selector + '/type/'
-      api.get(comic_data_url)
-          .then(response => {
+    checkComicExists() {
+      api.get('/api/read/' + this.selector + '/type/')
+          .then(() => {
               this.comic_loaded = true
           })
           .catch((error) => {console.log(error)})
       }
   },
   mounted () {
-    this.updateType()
-  },
-  beforeUpdate() {
-    this.updateType()
+    this.checkComicExists()
   }
 }
 </script>

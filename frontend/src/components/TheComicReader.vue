@@ -131,10 +131,11 @@ export default {
       }).then(() => {
         this.deck.slide(this.current_page)
         api.put(set_read_url, {page: this.current_page})
-        this.deck.on( 'slidechanged', (event) => {
+        this.slideChanged = (event) => {
           this.$refs.comic_box.scrollIntoView({behavior: 'smooth'})
           api.put(set_read_url, {page: event.indexh})
-        });
+        }
+        this.deck.on('slidechanged', this.slideChanged);
       })
 
       this.hammertime = new Hammer(this.$refs.comic_box, {})
@@ -153,6 +154,17 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('keyup', this.keyPressDebounce)
+    clearTimeout(this.key_timeout)
+    if (this.deck) {
+      if (this.slideChanged) {
+        this.deck.off('slidechanged', this.slideChanged)
+      }
+      try {
+        this.deck.destroy()
+      } catch (e) {
+        console.log(e)
+      }
+    }
     try {
       this.hammertime.off('swipeleft')
       this.hammertime.off('swiperight')

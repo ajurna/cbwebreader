@@ -1,9 +1,10 @@
-from itertools import chain
+from collections.abc import Iterable
 from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.db.models import (
+    BooleanField,
     Case,
     Count,
     ExpressionWrapper,
@@ -12,44 +13,47 @@ from django.db.models import (
     PositiveSmallIntegerField,
     Q,
     QuerySet,
+    Value,
     When,
 )
+from django.db.models.functions import Coalesce
 
 from comic import models
 from comic.archives import get_archive_files
 from comic.errors import NotCompatibleArchive
 
 
-def generate_directory(user: AbstractBaseUser, directory: models.Directory | None = None) \
-        -> list[models.Directory | models.ComicBook]:
+def reconcile(directory: models.Directory | None = None) -> None:
+    """Bring the database in line with the filesystem for one directory.
+
+    This is the only place the scan writes, so it runs from the scan task and the
+    management command - never from a browse request.
+    """
     dir_path = Path(settings.COMIC_BOOK_VOLUME, directory.path) if directory else settings.COMIC_BOOK_VOLUME
-    files = []
 
-    dir_db_query = models.Directory.objects.filter(parent=directory)
-    clean_directories(dir_db_query, dir_path, directory)
+    clean_directories(models.Directory.objects.filter(parent=directory), dir_path, directory)
+    clean_files(models.ComicBook.objects.filter(directory=directory), dir_path, directory)
+    clean_thumbnails(models.Directory.objects.filter(parent=directory))
+    clean_thumbnails(models.ComicBook.objects.filter(directory=directory))
 
-    file_db_query = models.ComicBook.objects.filter(directory=directory)
-    clean_files(file_db_query, user, dir_path, directory)
 
-    dir_db_query = dir_db_query.annotate(
+def list_directory(user: AbstractBaseUser, directory: models.Directory | None = None) \
+        -> list[models.Directory | models.ComicBook]:
+    """Return the contents of one directory for one user, reading only."""
+    dir_db_query = models.Directory.objects.filter(parent=directory).annotate(
         total=Count('comicbook', distinct=True),
         progress=Count('comicbook__comicstatus', Q(comicbook__comicstatus__finished=True,
                                                    comicbook__comicstatus__user=user), distinct=True),
         finished=ExpressionWrapper(Q(total=F('progress')), output_field=IntegerField()),
         unread=ExpressionWrapper(Q(total__gt=F('progress')), output_field=IntegerField()),
     )
-    files.extend(dir_db_query)
 
-    # Create Missing Status
-    new_status = [models.ComicStatus(comic=file, user=user) for file in
-                  file_db_query.exclude(comicstatus__in=models.ComicStatus.objects.filter(
-                      comic__in=file_db_query, user=user))]
-    models.ComicStatus.objects.bulk_create(new_status)
-
-    file_db_query = file_db_query.annotate(
-        progress=F('comicstatus__last_read_page') + 1,
-        finished=F('comicstatus__finished'),
-        unread=F('comicstatus__unread'),
+    # A book with no status for this user is simply unread, so the annotations have to
+    # stand in for the missing row instead of assuming one exists.
+    file_db_query = models.ComicBook.objects.filter(directory=directory).annotate(
+        progress=Coalesce(F('comicstatus__last_read_page') + 1, Value(0, output_field=IntegerField())),
+        finished=Coalesce(F('comicstatus__finished'), Value(False, output_field=BooleanField())),
+        unread=Coalesce(F('comicstatus__unread'), Value(True, output_field=BooleanField())),
         user=F('comicstatus__user'),
         classification=Case(
             When(directory__isnull=True, then=models.Directory.Classification.C_G),
@@ -58,12 +62,7 @@ def generate_directory(user: AbstractBaseUser, directory: models.Directory | Non
         )
     ).filter(Q(user__isnull=True) | Q(user=user.id))
 
-    files.extend(file_db_query)
-
-    for file in chain(file_db_query, dir_db_query):
-        if file.thumbnail and not Path(file.thumbnail.path).exists():
-            file.thumbnail.delete()
-            file.save()
+    files = list(dir_db_query) + list(file_db_query)
     files.sort(key=lambda x: x.title)
     files.sort(key=lambda x: x.type, reverse=True)
     return files
@@ -74,15 +73,16 @@ def clean_directories(directories: QuerySet, dir_path: Path, directory: models.D
     dir_list = {x for x in sorted(dir_path.glob('*')) if x.is_dir()}
     # Create new directories db instances
     for new_directory in dir_list - dir_db_set:
-        models.Directory(name=new_directory.name, parent=directory).save()
+        # get_or_create, not save(): another request may have inserted the same directory
+        # between the query above and this line, which would leave duplicate rows.
+        models.Directory.objects.get_or_create(name=new_directory.name, parent=directory)
 
     # Remove stale db instances
     for stale_directory in dir_db_set - dir_list:
-        models.Directory.objects.get(name=stale_directory.name, parent=directory).delete()
+        models.Directory.objects.filter(name=stale_directory.name, parent=directory).delete()
 
 
-def clean_files(files: QuerySet, user: AbstractBaseUser, dir_path: Path, directory: models.Directory | None = None) \
-        -> None:
+def clean_files(files: QuerySet, dir_path: Path, directory: models.Directory | None = None) -> None:
     file_list = {x for x in sorted(dir_path.glob('*')) if x.is_file()}
     files_db_set = {Path(dir_path, x.file_name) for x in files}
 
@@ -101,14 +101,18 @@ def clean_files(files: QuerySet, user: AbstractBaseUser, dir_path: Path, directo
                 # Unreadable/corrupt archive - index the file with no page count
                 pass
             books_to_add.append(new_book)
-    models.ComicBook.objects.bulk_create(books_to_add)
 
-    status_to_add = []
-    for book in books_to_add:
-        status_to_add.append(models.ComicStatus(user=user, comic=book))
-
-    models.ComicStatus.objects.bulk_create(status_to_add)
+    # ignore_conflicts: a concurrent scan may have indexed the same file, and
+    # (directory, file_name) is unique.
+    models.ComicBook.objects.bulk_create(books_to_add, ignore_conflicts=True)
 
     # Remove stale comic instances
     for stale_comic in files_db_set - file_list:
-        models.ComicBook.objects.get(file_name=stale_comic.name, directory=directory).delete()
+        models.ComicBook.objects.filter(file_name=stale_comic.name, directory=directory).delete()
+
+
+def clean_thumbnails(items: Iterable[models.Directory | models.ComicBook]) -> None:
+    for item in items:
+        if item.thumbnail and not Path(item.thumbnail.path).exists():
+            item.thumbnail.delete()
+            item.save()

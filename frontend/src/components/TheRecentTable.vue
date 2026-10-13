@@ -175,6 +175,9 @@ export default {
       this.feed_id = response.data.feed_id
     })
   },
+  beforeUnmount() {
+    clearTimeout(this.timeout)
+  },
 }
 </script>
 

@@ -50,6 +50,9 @@ class Directory(models.Model):
 
     class Meta:
         ordering = ['name']
+        constraints = [
+            models.UniqueConstraint(fields=['parent', 'name'], name='one_directory_name_per_parent'),
+        ]
 
     def __str__(self) -> str:
 

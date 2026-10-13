@@ -1,8 +1,11 @@
 """Tests for the API behaviour of the comic viewsets."""
 
+import json
+
 import pytest
 
 from comic import models
+from comic.tests.factories import make_cbz
 
 UNKNOWN = '00000000-0000-0000-0000-000000000000'
 
@@ -23,6 +26,12 @@ def test_unknown_selector_returns_404_in_breadcrumbs(client, reader_user) -> Non
 def test_unknown_book_returns_404_for_an_image(client, reader_user) -> None:
     client.force_login(reader_user)
     assert client.get(f'/api/read/{UNKNOWN}/image/1/').status_code == 404
+
+
+@pytest.mark.django_db
+def test_unknown_book_returns_404_for_the_type_action(client, reader_user) -> None:
+    client.force_login(reader_user)
+    assert client.get(f'/api/read/{UNKNOWN}/type/').status_code == 404
 
 
 @pytest.mark.django_db
@@ -148,3 +157,47 @@ def test_directory_partial_update_rejects_an_unknown_classification(client, admi
         content_type='application/json',
     )
     assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_browse_listing_does_not_write_to_the_database(client, reader_user, comic_volume) -> None:
+    """Listing is read only, so a browse request cannot race with the scan."""
+    client.force_login(reader_user)
+    target = comic_volume / 'Series'
+    target.mkdir()
+    make_cbz(target / 'issue.cbz', pages=2)
+
+    assert client.get('/api/browse/').status_code == 200
+    assert models.ComicBook.objects.count() == 0
+    assert models.ComicStatus.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_scan_endpoint_indexes_files_that_are_only_on_disk(client, reader_user, comic_volume) -> None:
+    client.force_login(reader_user)
+    target = comic_volume / 'Series'
+    target.mkdir()
+    make_cbz(target / 'issue.cbz', pages=2)
+
+    assert [entry['title'] for entry in client.get('/api/browse/').json()] == []
+
+    response = client.post('/api/browse/scan/', data='{}', content_type='application/json')
+    assert response.status_code == 200
+    assert [entry['title'] for entry in response.json()] == ['Series']
+
+    directory = models.Directory.objects.get(name='Series')
+    response = client.post('/api/browse/scan/',
+                           data=json.dumps({'selector': str(directory.selector)}),
+                           content_type='application/json')
+    assert response.status_code == 200
+    entries = response.json()
+    assert [entry['title'] for entry in entries] == ['issue.cbz']
+    assert entries[0]['type'] == 'ComicBook'
+    assert entries[0]['total'] == 2
+    assert entries[0]['progress'] == 0
+    assert entries[0]['unread'] is True
+
+
+@pytest.mark.django_db
+def test_scan_endpoint_requires_authentication(client) -> None:
+    assert client.post('/api/browse/scan/', data='{}', content_type='application/json').status_code == 401

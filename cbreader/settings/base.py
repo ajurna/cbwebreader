@@ -37,12 +37,10 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'drf_yasg',
     'webpack_loader',
-    'bootstrap4',
     "comic",
     'django_extensions',
     'imagekit',
     'django_boost',
-    'sri',
     "corsheaders",
     'django_filters',
     'rest_framework',
@@ -263,6 +261,15 @@ SIMPLE_JWT = {
 # Renderer formats no longer include a leading dot, so the URL pattern in
 # cbreader/urls.py matches the dot separately. See cbreader/urls.py.
 SWAGGER_USE_COMPAT_RENDERERS = False
+
+# Folder scans run through comic.tasks.scan_directory. The immediate backend runs the task
+# in the caller, which is enough today; swapping to a queue backend later changes only
+# this block, not the call sites.
+TASKS = {
+    'default': {
+        'BACKEND': os.getenv('TASK_BACKEND', 'django.tasks.backends.immediate.ImmediateBackend'),
+    },
+}
 
 FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')
 

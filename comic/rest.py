@@ -19,8 +19,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from comic import models
-from comic.processing import generate_directory
+from comic import models, processing, tasks
 from comic.util import generate_breadcrumbs_from_path
 
 
@@ -124,6 +123,10 @@ class BreadcrumbSerializer(serializers.Serializer):
     name = serializers.CharField()
 
 
+class ScanSerializer(serializers.Serializer):
+    selector = serializers.UUIDField(required=False, allow_null=True)
+
+
 class BrowseViewSet(viewsets.GenericViewSet):
     serializer_class = BrowseSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -133,14 +136,27 @@ class BrowseViewSet(viewsets.GenericViewSet):
         return
 
     def list(self, request: Request) -> Response:
-        serializer = self.get_serializer(generate_directory(request.user), many=True)
+        serializer = self.get_serializer(processing.list_directory(request.user), many=True)
         return Response(serializer.data)
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: BrowseSerializer(many=True)})
     def retrieve(self, request: Request, selector: UUID) -> Response:
         directory = get_object_or_404(models.Directory, selector=selector)
-        serializer = self.get_serializer(generate_directory(request.user, directory), many=True)
+        serializer = self.get_serializer(processing.list_directory(request.user, directory), many=True)
         return Response(serializer.data)
+
+    @swagger_auto_schema(request_body=ScanSerializer, responses={status.HTTP_200_OK: BrowseSerializer(many=True)})
+    @action(methods=['post'], detail=False, serializer_class=ScanSerializer)
+    def scan(self, request: Request) -> Response:
+        """Read one directory from disk, then return it. Null selector means the root."""
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        selector = serializer.validated_data.get('selector')
+        tasks.scan_directory.enqueue(str(selector) if selector else None)
+        directory = models.Directory.objects.filter(selector=selector).first() if selector else None
+        data = processing.list_directory(request.user, directory)
+        return Response(BrowseSerializer(data, many=True).data)
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: BreadcrumbSerializer(many=True)})
     @action(methods=['get'], detail=True, serializer_class=BreadcrumbSerializer)
@@ -264,7 +280,7 @@ class ReadViewSet(viewsets.GenericViewSet):
     @swagger_auto_schema(responses={status.HTTP_200_OK: TypeSerializer()})
     @action(methods=['get'], detail=True)
     def type(self, _request: Request, selector: UUID) -> Response:
-        book = models.ComicBook.objects.get(selector=selector)
+        book = get_object_or_404(models.ComicBook, selector=selector)
         return Response({'type': book.file_name.split('.')[-1].lower()})
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: ReadPageSerializer()}, request_body=ReadPageSerializer)

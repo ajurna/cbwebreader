@@ -136,6 +136,9 @@ export default {
   mounted() {
     this.updateComicList()
   },
+  beforeUnmount() {
+    clearTimeout(this.timeout)
+  },
 }
 </script>
 

@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+from django.db import IntegrityError
 
 from comic import models
 from comic.tests.factories import make_cbz, make_pdf
@@ -69,3 +70,13 @@ def test_classification_comparison() -> None:
         allowed_to_read=models.Directory.Classification.C_PG,
     )
     assert directory.classification > misc.allowed_to_read
+
+
+@pytest.mark.django_db
+def test_duplicate_directory_names_are_rejected() -> None:
+    """The scan depends on this constraint: without it two concurrent requests can create
+    the same directory twice and the browse listing shows it twice."""
+    parent = models.Directory.objects.create(name='Series')
+    models.Directory.objects.create(name='Volume 1', parent=parent)
+    with pytest.raises(IntegrityError):
+        models.Directory.objects.create(name='Volume 1', parent=parent)

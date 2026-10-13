@@ -23,9 +23,11 @@ def test_scan_indexes_nested_directories(comic_volume: Path, reader_user) -> Non
 
 
 @pytest.mark.django_db
-def test_scan_without_a_user_stops_before_reading_the_volume(comic_volume: Path) -> None:
+def test_scan_runs_without_any_user(comic_volume: Path) -> None:
+    """The command no longer needs a user, because statuses are created when a book is read."""
     make_cbz(comic_volume / 'issue.cbz', pages=1)
 
     call_command('scan_comics')
 
-    assert models.ComicBook.objects.count() == 0
+    assert models.ComicBook.objects.count() == 1
+    assert models.ComicStatus.objects.count() == 0

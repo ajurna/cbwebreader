@@ -1,11 +1,11 @@
+from pathlib import Path
 
-from django.contrib.auth import get_user_model
-from django.contrib.auth.base_user import AbstractBaseUser
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandParser
 from loguru import logger
 
 from comic.models import Directory
-from comic.processing import generate_directory
+from comic.processing import reconcile
 
 
 class Command(BaseCommand):
@@ -26,14 +26,12 @@ class Command(BaseCommand):
         self.OUTPUT = options.get('out', False)
         self.scan_directory()
 
-    def scan_directory(self, user: AbstractBaseUser | None = None, directory: Directory | None = None) -> None:
-        if not user:
-            user_model = get_user_model()
-            user = user_model.objects.first()
-        if not user:
-            logger.error("No user found, cannot scan comics.")
-            return
-        for item in generate_directory(user, directory):
-            if isinstance(item, Directory):
-                logger.info(item)
-                self.scan_directory(user, item)
+    def scan_directory(self, directory: Directory | None = None) -> None:
+        reconcile(directory)
+        path = Path(settings.COMIC_BOOK_VOLUME, directory.path) if directory else settings.COMIC_BOOK_VOLUME
+        if self.OUTPUT:
+            self.stdout.write(str(path))
+        else:
+            logger.info(path)
+        for child in Directory.objects.filter(parent=directory):
+            self.scan_directory(child)

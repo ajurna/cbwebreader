@@ -11,6 +11,9 @@
           <li><a class="dropdown-item" @click="markAll('mark_unread')"><font-awesome-icon icon='book' />Mark Un-read</a></li>
           <li><a class="dropdown-item" @click="markAll('mark_read')"><font-awesome-icon icon='book-open' />Mark read</a></li>
         </ul>
+        <button type="button" class="btn btn-outline-secondary" :disabled="scanning" title="Read this folder from disk again" @click="scanFolder">
+          <font-awesome-icon icon='refresh' />{{ scanning ? 'Scanning…' : 'Scan' }}
+        </button>
       </div>
     </div>
     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 row-cols-xl-auto mt-1" >
@@ -49,7 +52,8 @@ export default {
         filter_read: false,
         filter_unread: false
       },
-      loading: true
+      loading: true,
+      scanning: false
   }},
   props: {
     selector: String
@@ -67,6 +71,18 @@ export default {
         this.loading = false
       })
       .catch((error) => {console.log(error)})
+    },
+    scanFolder () {
+      this.scanning = true
+      api.post('/api/browse/scan/', { selector: this.selector || null })
+        .then(response => {
+          this.comics = response.data
+          this.scanning = false
+        })
+        .catch((error) => {
+          console.log(error)
+          this.scanning = false
+        })
     },
     markPreviousRead (selector) {
       let selectors = []
