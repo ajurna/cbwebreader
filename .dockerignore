@@ -7,7 +7,6 @@
 !manage.py
 !pyproject.toml
 !uv.lock
-!setup.cfg
 !entrypoint.sh
 !entrypoint-cron.sh
 !package-lock.json

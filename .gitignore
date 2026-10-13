@@ -103,3 +103,13 @@ test_comics/
 test_media/
 htmlcov/
 .coverage
+
+# Virtual environment created by uv
+.venv/
+
+# Tool caches
+.mypy_cache/
+.ruff_cache/
+
+# Local-only test fixtures (kept on disk, not in git)
+data
