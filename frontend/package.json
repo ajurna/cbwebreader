@@ -5,55 +5,37 @@
   "scripts": {
     "serve": "webpack-dev-server --config webpack.dev.js",
     "build": "webpack --config webpack.prod.js",
-    "lint": "vue-cli-service lint"
+    "lint": "eslint ."
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.1.2",
-    "@fortawesome/free-solid-svg-icons": "^6.1.2",
-    "@fortawesome/vue-fontawesome": "^3.0.1",
-    "axios": "^1.8.4",
-    "bootstrap": "^5.2.0",
+    "@fortawesome/fontawesome-svg-core": "^7.3.1",
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
+    "@fortawesome/vue-fontawesome": "^3.3.3",
+    "axios": "^1.20.0",
+    "bootstrap": "^5.3.8",
     "hammerjs": "^2.0.8",
     "jwt-decode": "^4.0.0",
-    "reveal.js": "^5.2.1",
+    "reveal.js": "^6.0.2",
     "timeago.js": "^4.0.2",
-    "vue": "^3.5.13",
-    "vue-router": "^4.0.3",
-    "vue-toast-notification": "^3.0",
+    "vue": "^3.5.44",
+    "vue-router": "^5.4.0",
+    "vue-toast-notification": "^3.1.3",
     "vuejs-paginate-next": "^1.0.2",
-    "vuex": "^4.0.0",
-    "webpack": "^5.98.0"
+    "vuex": "^4.1.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.26.10",
-    "@vue/cli-plugin-babel": "^5.0.8",
-    "@vue/cli-plugin-router": "^5.0.0",
-    "@vue/cli-plugin-vuex": "^5.0.0",
-    "@vue/cli-service": "^5.0.8",
-    "eslint": "^9.24.0",
-    "eslint-plugin-vue": "^10.0.0",
-    "jshint": "^2.13.5",
-    "mini-css-extract-plugin": "^2.9.2",
+    "css-loader": "^7.1.5",
+    "eslint": "^10.12.0",
+    "eslint-plugin-vue": "^10.11.1",
+    "mini-css-extract-plugin": "^2.10.2",
     "style-loader": "^4.0.0",
-    "terser-webpack-plugin": "^5.3.14",
+    "terser-webpack-plugin": "^5.6.1",
     "vue-loader": "^17.4.2",
-    "webpack-bundle-analyzer": "^4.10.2",
-    "webpack-bundle-tracker": "^3.1.1",
-    "webpack-cli": "^6.0.1"
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true
-    },
-    "extends": [
-      "plugin:vue/vue3-essential",
-      "eslint:recommended"
-    ],
-    "parserOptions": {
-      "parser": "@babel/eslint-parser"
-    },
-    "rules": {}
+    "webpack": "^5.111.1",
+    "webpack-bundle-tracker": "^3.2.4",
+    "webpack-cli": "^7.2.3",
+    "webpack-dev-server": "^6.0.0",
+    "@eslint/js": "^10.0.1"
   },
   "browserslist": [
     "defaults"

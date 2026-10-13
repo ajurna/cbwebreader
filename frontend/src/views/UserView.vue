@@ -67,7 +67,7 @@ export default {
     }
   },
   watch: {
-    $route(to, from) {
+    $route() {
       this.updateUsers()
       this.crumbs = [...default_crumbs]
       if (this.userid){

@@ -10,26 +10,22 @@ const LoginView = () => import('@/views/LoginView')
 const HistoryView = () => import('@/views/HistoryView')
 
 // Navigation guard to check if user is authenticated
-function requireAuth(to, from, next) {
+function requireAuth(to) {
   if (!store.getters.isAuthenticated) {
-    next({
+    return {
       name: 'login',
       query: { next: to.fullPath, error: 'Please log in to access this page' }
-    });
-  } else {
-    next();
+    };
   }
 }
 
 // Navigation guard to check if user is admin
-function requireAdmin(to, from, next) {
+function requireAdmin(to) {
   if (!store.getters.isAuthenticated || !store.getters.is_superuser) {
-    next({
+    return {
       name: 'login',
       query: { next: to.fullPath, error: 'Admin access required' }
-    });
-  } else {
-    next();
+    };
   }
 }
 
