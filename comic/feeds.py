@@ -1,10 +1,10 @@
 from django.contrib.auth.models import User
 from django.contrib.syndication.views import Feed
-from django.db.models import Case, When, PositiveSmallIntegerField, F, QuerySet
+from django.db.models import Case, F, PositiveSmallIntegerField, QuerySet, When
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 
-from comic.models import ComicBook, UserMisc, Directory
+from comic.models import ComicBook, Directory, UserMisc
 
 
 class RecentComicsAPI(Feed):

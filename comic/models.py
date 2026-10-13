@@ -1,16 +1,13 @@
 import io
-import mimetypes
 import uuid
 import zipfile
 from functools import reduce
 from pathlib import Path
-from typing import Optional, List, Union, Tuple, Final, IO
+from typing import IO, Final
 
 # noinspection PyPackageRequirements
 import pymupdf
 import rarfile
-from PIL import Image, UnidentifiedImageError
-from PIL.Image import Image as Image_type
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -19,7 +16,10 @@ from django.db.models import UniqueConstraint
 from django_boost.models.fields import AutoOneToOneField
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
+from PIL import Image, UnidentifiedImageError
+from PIL.Image import Image as Image_type
 
+from comic.archives import get_archive_files
 from comic.errors import NotCompatibleArchive
 
 if settings.UNRAR_TOOL:
@@ -84,7 +84,7 @@ class Directory(models.Model):
             return reduce(lambda x, y: Path(x, y), path_items)
         return Path(path_items[0])
 
-    def get_path_items(self, path_items: Optional[List] = None) -> List[Path]:
+    def get_path_items(self, path_items: list | None = None) -> list[Path]:
         if path_items is None:
             path_items = []
         path_items.append(self.name)
@@ -92,7 +92,7 @@ class Directory(models.Model):
             self.parent.get_path_items(path_items)
         return path_items
 
-    def get_path_objects(self, path_items: Optional[List] = None) -> List["Directory"]:
+    def get_path_objects(self, path_items: list | None = None) -> list[Directory]:
         if path_items is None:
             path_items = []
         path_items.append(self)
@@ -141,7 +141,7 @@ class ComicBook(models.Model):
             return Path(base_dir, self.directory.get_path(), self.file_name)
         return Path(base_dir, self.file_name)
 
-    def get_image(self, page: int) -> Union[Tuple[IO[bytes], str], Tuple[bool, bool]]:
+    def get_image(self, page: int) -> tuple[IO[bytes], str] | tuple[bool, bool]:
         if self.file_name.lower().endswith('.pdf'):
             # noinspection PyUnresolvedReferences
             doc = pymupdf.open(self.get_pdf())
@@ -168,15 +168,16 @@ class ComicBook(models.Model):
             except zipfile.BadZipfile:
                 return False, False
 
-            file_name, file_mime = self.get_archive_files(archive)[page]
+            file_name, file_mime = get_archive_files(archive)[page]
             return archive.open(file_name), file_mime
 
-    def generate_thumbnail_pdf(self, page_index: int = 0) -> Tuple[io.BytesIO, Image_type, str]:
+    def generate_thumbnail_pdf(self, page_index: int = 0) -> tuple[io.BytesIO, Image_type, str]:
         img, pil_data = self._get_pdf_image(page_index if page_index else 0)
         return img, pil_data, 'Image/JPEG'
 
-    def generate_thumbnail_archive(self, page_index: int = 0) -> Union[Tuple[io.BytesIO, Image_type, str],
-                                                                       Tuple[bool, bool, bool]]:
+    def generate_thumbnail_archive(
+            self, page_index: int = 0
+    ) -> tuple[io.BytesIO, Image_type, str] | tuple[bool, bool, bool]:
         img, content_type, pil_data = False, False, False
         if page_index:
             img, content_type = self.get_image(page_index)
@@ -209,7 +210,7 @@ class ComicBook(models.Model):
         )
         self.save()
 
-    def _get_pdf_image(self, page_index: int) -> Tuple[io.BytesIO, Image_type]:
+    def _get_pdf_image(self, page_index: int) -> tuple[io.BytesIO, Image_type]:
         doc = pymupdf.open(self.get_pdf())
         page = doc[page_index]
         pix = page.get_pixmap()
@@ -222,7 +223,7 @@ class ComicBook(models.Model):
         return img, pil_data
 
     @staticmethod
-    def process_comic_book(comic_file_path: Path, directory: "Directory" = False) -> Union["ComicBook", Path]:
+    def process_comic_book(comic_file_path: Path, directory: Directory = False) -> ComicBook | Path:
         try:
             book = ComicBook.objects.get(file_name=comic_file_path.name, version=0)
             book.directory = directory
@@ -240,7 +241,7 @@ class ComicBook(models.Model):
             return comic_file_path
 
         if archive_type == 'archive':
-            book.page_count = len(book.get_archive_files(archive))
+            book.page_count = len(get_archive_files(archive))
         elif archive_type == 'pdf':
             book.page_count = archive.page_count
 
@@ -252,7 +253,7 @@ class ComicBook(models.Model):
             return Path(settings.COMIC_BOOK_VOLUME, self.directory.get_path(), self.file_name)
         return Path(settings.COMIC_BOOK_VOLUME, self.file_name)
 
-    def get_archive(self) -> Tuple[Union[rarfile.RarFile, zipfile.ZipFile, pymupdf.Document], str]:
+    def get_archive(self) -> tuple[rarfile.RarFile | zipfile.ZipFile | pymupdf.Document, str]:
         archive_path = self.get_archive_path
         try:
             return rarfile.RarFile(archive_path), 'archive'
@@ -273,16 +274,9 @@ class ComicBook(models.Model):
     def get_page_count(self) -> int:
         archive, archive_type = self.get_archive()
         if archive_type == 'archive':
-            return len(self.get_archive_files(archive))
+            return len(get_archive_files(archive))
         elif archive_type == 'pdf':
             return archive.page_count
-
-    @staticmethod
-    def get_archive_files(archive: Union[zipfile.ZipFile, rarfile.RarFile]) -> List[Tuple[str, str]]:
-        return [
-            (x, mimetypes.guess_type(x)[0]) for x in sorted(archive.namelist())
-            if not x.endswith('/') and mimetypes.guess_type(x)[0] and not x.endswith('xml')
-        ]
 
 
 class ComicStatus(models.Model):

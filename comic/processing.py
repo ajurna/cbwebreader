@@ -1,21 +1,27 @@
-import mimetypes
-import zipfile
 from itertools import chain
 from pathlib import Path
-from typing import NamedTuple, List, Optional, Union
 
-import rarfile
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
-from django.db.models import Count, Q, F, Case, When, PositiveSmallIntegerField, QuerySet, ExpressionWrapper, \
-    IntegerField
+from django.db.models import (
+    Case,
+    Count,
+    ExpressionWrapper,
+    F,
+    IntegerField,
+    PositiveSmallIntegerField,
+    Q,
+    QuerySet,
+    When,
+)
 
 from comic import models
+from comic.archives import get_archive_files
 from comic.errors import NotCompatibleArchive
 
 
-def generate_directory(user: AbstractBaseUser, directory: Optional[models.Directory] = None) \
-        -> List[Union[models.Directory, models.ComicBook]]:
+def generate_directory(user: AbstractBaseUser, directory: models.Directory | None = None) \
+        -> list[models.Directory | models.ComicBook]:
     dir_path = Path(settings.COMIC_BOOK_VOLUME, directory.path) if directory else settings.COMIC_BOOK_VOLUME
     files = []
 
@@ -63,9 +69,9 @@ def generate_directory(user: AbstractBaseUser, directory: Optional[models.Direct
     return files
 
 
-def clean_directories(directories: QuerySet, dir_path: Path, directory: Optional[models.Directory] = None) -> None:
-    dir_db_set = set(Path(settings.COMIC_BOOK_VOLUME, x.path) for x in directories)
-    dir_list = set(x for x in sorted(dir_path.glob('*')) if x.is_dir())
+def clean_directories(directories: QuerySet, dir_path: Path, directory: models.Directory | None = None) -> None:
+    dir_db_set = {Path(settings.COMIC_BOOK_VOLUME, x.path) for x in directories}
+    dir_list = {x for x in sorted(dir_path.glob('*')) if x.is_dir()}
     # Create new directories db instances
     for new_directory in dir_list - dir_db_set:
         models.Directory(name=new_directory.name, parent=directory).save()
@@ -75,10 +81,10 @@ def clean_directories(directories: QuerySet, dir_path: Path, directory: Optional
         models.Directory.objects.get(name=stale_directory.name, parent=directory).delete()
 
 
-def clean_files(files: QuerySet, user: AbstractBaseUser, dir_path: Path, directory: Optional[models.Directory] = None) \
+def clean_files(files: QuerySet, user: AbstractBaseUser, dir_path: Path, directory: models.Directory | None = None) \
         -> None:
-    file_list = set(x for x in sorted(dir_path.glob('*')) if x.is_file())
-    files_db_set = set(Path(dir_path, x.file_name) for x in files)
+    file_list = {x for x in sorted(dir_path.glob('*')) if x.is_file()}
+    files_db_set = {Path(dir_path, x.file_name) for x in files}
 
     # Parse new comics
     books_to_add = []
@@ -106,15 +112,3 @@ def clean_files(files: QuerySet, user: AbstractBaseUser, dir_path: Path, directo
     # Remove stale comic instances
     for stale_comic in files_db_set - file_list:
         models.ComicBook.objects.get(file_name=stale_comic.name, directory=directory).delete()
-
-
-class ArchiveFile(NamedTuple):
-    file_name: str
-    mime_type: str
-
-
-def get_archive_files(archive: Union[zipfile.ZipFile, rarfile.RarFile]) -> List[ArchiveFile]:
-    return [
-        ArchiveFile(x, mimetypes.guess_type(x)[0]) for x in sorted(archive.namelist())
-        if not x.endswith('/') and mimetypes.guess_type(x)[0]
-    ]

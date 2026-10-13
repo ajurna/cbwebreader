@@ -1,4 +1,3 @@
-from typing import Optional
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.base_user import AbstractBaseUser
@@ -27,7 +26,7 @@ class Command(BaseCommand):
         self.OUTPUT = options.get('out', False)
         self.scan_directory()
 
-    def scan_directory(self, user: Optional[AbstractBaseUser] = None, directory: Optional[Directory] = None) -> None:
+    def scan_directory(self, user: AbstractBaseUser | None = None, directory: Directory | None = None) -> None:
         if not user:
             user_model = get_user_model()
             user = user_model.objects.first()

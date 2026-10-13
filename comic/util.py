@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from comic.models import ComicBook, Directory
 
@@ -10,12 +9,12 @@ class Breadcrumb:
     selector: str = ''
 
 
-def generate_breadcrumbs_from_path(directory: Optional[Directory] = None, book: Optional[ComicBook] = None):
+def generate_breadcrumbs_from_path(
+        directory: Directory | None = None,
+        book: ComicBook | None = None,
+) -> list[Breadcrumb]:
     output = [Breadcrumb()]
-    if directory:
-        folders = directory.get_path_objects()
-    else:
-        folders = []
+    folders = directory.get_path_objects() if directory else []
     for item in folders[::-1]:
         output.append(
             Breadcrumb(

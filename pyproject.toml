@@ -39,13 +39,30 @@ dependencies = [
 [dependency-groups]
 dev = [
     "coverage>=7.13.5",
-    "flake8>=7.3.0",
-    "flake8-annotations>=3.2.0",
     "ipython>=9.13.0",
     "mypy>=2",
     "pre-commit>=4.6",
     "pylint>=4.0.5",
     "pylint-django>=2.7.0",
     "pyopenssl>=26.2.0",
+    "ruff>=0.17.0",
     "werkzeug>=3.1.8",
 ]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 120
+extend-exclude = [
+    "*/migrations/*",
+    "cbreader/settings",
+    "frontend",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "ANN", "B", "C4", "SIM", "UP"]
+# These were ignored by the previous flake8-annotations setup (ANN001 is the
+# modern name for the old ANN101).
+ignore = ["ANN001", "ANN002", "ANN003"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true

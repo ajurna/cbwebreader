@@ -23,10 +23,11 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 from rest_framework.routers import DefaultRouter
-# from rest_framework_extensions.routers import ExtendedDefaultRouter
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 
-from comic import rest, feeds
+# from rest_framework_extensions.routers import ExtendedDefaultRouter
+from rest_framework_simplejwt.views import TokenBlacklistView, TokenObtainPairView, TokenRefreshView
+
+from comic import feeds, rest
 
 schema_view = get_schema_view(
     openapi.Info(

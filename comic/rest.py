@@ -1,17 +1,18 @@
+import json
+from collections.abc import Iterable
 from http.client import HTTPResponse
 from pathlib import Path
-from typing import Union, Optional, Dict, Iterable, List
 from uuid import UUID
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.db.models import Case, When, F, PositiveSmallIntegerField, FileField, QuerySet
-from django.utils.crypto import get_random_string
+from django.db.models import Case, F, FileField, PositiveSmallIntegerField, QuerySet, When
 from django.http import FileResponse
+from django.utils.crypto import get_random_string
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets, serializers, mixins, permissions, status, renderers
+from rest_framework import mixins, permissions, renderers, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
@@ -21,6 +22,17 @@ from rest_framework.response import Response
 from comic import models
 from comic.processing import generate_directory
 from comic.util import generate_breadcrumbs_from_path
+
+
+def user_can_read(user: models.User, directory: models.Directory | None) -> bool:
+    """Whether the user's classification allowance covers this book.
+
+    Books that are not inside a directory are treated as the highest rating, which
+    matches how the browse API reports them.
+    """
+    misc, _ = models.UserMisc.objects.get_or_create(user=user)
+    classification = directory.classification if directory else models.Directory.Classification.C_18
+    return classification <= misc.allowed_to_read
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -61,16 +73,15 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         """
         target_user = get_object_or_404(User, id=pk)
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            if target_user.username == serializer.data['username']:
-                password = get_random_string(12)
-                target_user.set_password(password)
-                target_user.save()
-                resp_serializer = self.get_serializer({
-                    'username': target_user.username,
-                    'password': password
-                })
-                return Response(resp_serializer.data)
+        if serializer.is_valid() and target_user.username == serializer.data['username']:
+            password = get_random_string(12)
+            target_user.set_password(password)
+            target_user.save()
+            resp_serializer = self.get_serializer({
+                'username': target_user.username,
+                'password': password
+            })
+            return Response(resp_serializer.data)
 
         return Response({'errors': ['Invalid request']}, status.HTTP_400_BAD_REQUEST)
 
@@ -89,7 +100,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
 
 
 class BrowseFileField(serializers.FileField):
-    def to_representation(self, value: Optional[FileField]) -> Optional[str]:
+    def to_representation(self, value: FileField | None) -> str | None:
         if not value:
             return None
         return Path(settings.MEDIA_URL, value.name).as_posix()
@@ -127,7 +138,7 @@ class BrowseViewSet(viewsets.GenericViewSet):
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: BrowseSerializer(many=True)})
     def retrieve(self, request: Request, selector: UUID) -> Response:
-        directory = models.Directory.objects.get(selector=selector)
+        directory = get_object_or_404(models.Directory, selector=selector)
         serializer = self.get_serializer(generate_directory(request.user, directory), many=True)
         return Response(serializer.data)
 
@@ -135,12 +146,8 @@ class BrowseViewSet(viewsets.GenericViewSet):
     @action(methods=['get'], detail=True, serializer_class=BreadcrumbSerializer)
     def breadcrumbs(self, _request: Request, selector: UUID) -> Response:
         queryset = []
-        comic = False
-        try:
-            directory = models.Directory.objects.get(selector=selector)
-        except models.Directory.DoesNotExist:
-            comic = models.ComicBook.objects.get(selector=selector)
-            directory = comic.directory
+        comic = models.ComicBook.objects.filter(selector=selector).first()
+        directory = comic.directory if comic else get_object_or_404(models.Directory, selector=selector)
 
         for index, item in enumerate(generate_breadcrumbs_from_path(directory, comic)):
             queryset.append({
@@ -165,25 +172,17 @@ class GenerateThumbnailViewSet(viewsets.ViewSet):
     @swagger_auto_schema(responses={status.HTTP_200_OK: GenerateThumbnailSerializer()})
     def retrieve(self, _request: Request, selector: UUID) -> Response:
         try:
-            directory = models.Directory.objects.get(selector=selector)
-            if not directory.thumbnail:
-                directory.generate_thumbnail()
-            return Response(
-                self.serializer_class({
-                    "selector": directory.selector,
-                    "thumbnail": directory.thumbnail
-                }).data
-            )
+            target = models.Directory.objects.get(selector=selector)
         except models.Directory.DoesNotExist:
-            comic = models.ComicBook.objects.get(selector=selector)
-            if not comic.thumbnail:
-                comic.generate_thumbnail()
-            return Response(
-                self.serializer_class({
-                    "selector": comic.selector,
-                    "thumbnail": comic.thumbnail
-                }).data
-            )
+            target = get_object_or_404(models.ComicBook, selector=selector)
+        if not target.thumbnail:
+            target.generate_thumbnail()
+        return Response(
+            self.serializer_class({
+                "selector": target.selector,
+                "thumbnail": target.thumbnail
+            }).data
+        )
 
 
 class DirectionSerializer(serializers.Serializer):
@@ -213,9 +212,12 @@ class ReadViewSet(viewsets.GenericViewSet):
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'selector'
 
-    @swagger_auto_schema(responses={status.HTTP_200_OK: ReadSerializer()})
+    @swagger_auto_schema(responses={status.HTTP_200_OK: ReadSerializer(),
+                                    status.HTTP_403_FORBIDDEN: 'User below classification allowed'})
     def retrieve(self, request: Request, selector: UUID) -> Response:
         comic = get_object_or_404(models.ComicBook, selector=selector)
+        if not user_can_read(request.user, comic.directory):
+            return Response(status=status.HTTP_403_FORBIDDEN, data={'errors': 'Not allowed to read.'})
         _, _ = models.UserMisc.objects.get_or_create(user=request.user)
         comic_status, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
         comic_list = list(models.ComicBook.objects.filter(directory=comic.directory).order_by('file_name'))
@@ -247,17 +249,17 @@ class ReadViewSet(viewsets.GenericViewSet):
         return Response(serializer.data)
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: 'PDF Binary Data',
-                                    status.HTTP_400_BAD_REQUEST: 'User below classification allowed'})
+                                    status.HTTP_403_FORBIDDEN: 'User below classification allowed',
+                                    status.HTTP_404_NOT_FOUND: 'Comic file not found'})
     @action(methods=['get'], detail=True)
-    def pdf(self, request: Request, selector: UUID) -> Union[FileResponse, Response, HTTPResponse]:
-        book = models.ComicBook.objects.get(selector=selector)
-        misc, _ = models.UserMisc.objects.get_or_create(user=request.user)
-        try:
-            if book.directory.classification > misc.allowed_to_read:
-                return Response(status=400, data={'errors': 'Not allowed to read.'})
-        except AttributeError:
-            pass
-        return FileResponse(open(book.get_pdf(), 'rb'), content_type='application/pdf')
+    def pdf(self, request: Request, selector: UUID) -> FileResponse | Response | HTTPResponse:
+        book = get_object_or_404(models.ComicBook, selector=selector)
+        if not user_can_read(request.user, book.directory):
+            return Response(status=status.HTTP_403_FORBIDDEN, data={'errors': 'Not allowed to read.'})
+        pdf_path = book.get_pdf()
+        if not pdf_path.is_file():
+            return Response(status=status.HTTP_404_NOT_FOUND, data={'errors': 'Comic file not found.'})
+        return FileResponse(open(pdf_path, 'rb'), content_type='application/pdf')
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: TypeSerializer()})
     @action(methods=['get'], detail=True)
@@ -272,15 +274,11 @@ class ReadViewSet(viewsets.GenericViewSet):
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
-            comic_status, _ = models.ComicStatus.objects.annotate(page_count=F('comic__page_count')) \
-                .get_or_create(comic_id=selector, user=request.user)
+            comic = get_object_or_404(models.ComicBook, selector=selector)
+            comic_status, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
             comic_status.last_read_page = serializer.data['page']
             comic_status.unread = False
-            if comic_status.page_count - 1 == comic_status.last_read_page:
-                comic_status.finished = True
-            else:
-                comic_status.finished = False
-
+            comic_status.finished = comic.page_count > 0 and comic_status.last_read_page >= comic.page_count - 1
             comic_status.save()
             return Response(self.get_serializer(comic_status).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -293,20 +291,30 @@ class PassthroughRenderer(renderers.BaseRenderer):  # pylint: disable=too-few-pu
     media_type = '*/*'
     format = ''
 
-    def render(self, data: bytes, accepted_media_type: Optional[str] = None, renderer_context: Optional[str] = None) \
+    def render(self, data: bytes, accepted_media_type: str | None = None, renderer_context: str | None = None) \
             -> bytes:
-        return data
+        if isinstance(data, (bytes, bytearray)):
+            return data
+        # Error responses still need to be serialised.
+        return json.dumps(data).encode()
 
 
 class ImageViewSet(viewsets.ViewSet):
     queryset = models.ComicBook.objects.all()
     lookup_field = 'page'
-    renderer_classes = [PassthroughRenderer]
+    renderer_classes = [PassthroughRenderer, renderers.JSONRenderer]
+    permission_classes = [permissions.IsAuthenticated]
 
-    @swagger_auto_schema(responses={status.HTTP_200_OK: "A Binary Image response"})
-    def retrieve(self, _request: Request, selector: UUID, page: int) -> FileResponse:
-        book = models.ComicBook.objects.get(selector=selector)
+    @swagger_auto_schema(responses={status.HTTP_200_OK: "A Binary Image response",
+                                    status.HTTP_403_FORBIDDEN: 'User below classification allowed',
+                                    status.HTTP_404_NOT_FOUND: 'Comic or page not found'})
+    def retrieve(self, _request: Request, selector: UUID, page: int) -> Response:
+        book = get_object_or_404(models.ComicBook, selector=selector)
+        if not user_can_read(_request.user, book.directory):
+            return Response(status=status.HTTP_403_FORBIDDEN, data={'errors': 'Not allowed to read.'})
         img, content = book.get_image(int(page) - 1)
+        if not img:
+            return Response(status=status.HTTP_404_NOT_FOUND, data={'errors': 'Page could not be read.'})
         self.renderer_classes[0].media_type = content
         return FileResponse(img, content_type=content)
 
@@ -434,7 +442,7 @@ class ActionViewSet(viewsets.GenericViewSet):
                 obj, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
                 obj.unread = False
                 obj.finished = True
-                obj.last_read_page = comic.total_pages
+                obj.last_read_page = max(comic.page_count - 1, 0)
                 status_to_update.append(obj)
             models.ComicStatus.objects.bulk_update(status_to_update, ['unread', 'finished', 'last_read_page'])
             return Response({'status': 'marked_read'})
@@ -466,7 +474,7 @@ class ActionViewSet(viewsets.GenericViewSet):
         return Response(serializer.errors,
                         status=status.HTTP_400_BAD_REQUEST)
 
-    def get_comics(self, selectors: Iterable[Union[str, UUID]]) -> List[str]:
+    def get_comics(self, selectors: Iterable[str | UUID]) -> list[str]:
         data = set()
         data = data.union(
             set(models.ComicBook.objects.filter(selector__in=selectors).values_list('selector', flat=True)))
@@ -508,10 +516,10 @@ class PasswordResetSerializer(serializers.Serializer):
         try:
             validate_password(data)
         except ValidationError as err:
-            raise serializers.ValidationError(err)
+            raise serializers.ValidationError(err) from err
         return data
 
-    def validate(self, attrs: Dict[str, str]) -> Dict[str, str]:
+    def validate(self, attrs: dict[str, str]) -> dict[str, str]:
         super().validate(attrs)
         if attrs['new_password'] != attrs['new_password_confirm']:
             raise serializers.ValidationError('New passwords do not match')
@@ -582,37 +590,47 @@ class DirectoryViewSet(mixins.UpdateModelMixin, viewsets.GenericViewSet):
     permission_classes = [permissions.IsAdminUser]
     lookup_field = 'selector'
 
+    @staticmethod
+    def _descendants(directory: models.Directory) -> list[models.Directory]:
+        """The directory itself plus every directory below it."""
+        to_update = [directory]
+        to_visit = [directory]
+        while to_visit:
+            parent = to_visit.pop()
+            for child in models.Directory.objects.filter(parent=parent):
+                to_visit.append(child)
+                to_update.append(child)
+        return to_update
+
     @swagger_auto_schema(responses={200: DirectorySerializer(many=True)})
     def update(self, request: Request, selector: UUID) -> Response:  # pylint: disable=arguments-differ
         """
-        This will set the classification of a directory and all it's children.
+        This will set the classification of a directory and all of its children.
         """
         main_parent = get_object_or_404(models.Directory, selector=selector)
-
         serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-        if serializer.is_valid():
-            main_parent.classification = serializer.data['classification']
-            to_update = {main_parent}
-            to_visit = {main_parent}
+        to_update = self._descendants(main_parent)
+        for directory in to_update:
+            directory.classification = serializer.data['classification']
+        models.Directory.objects.bulk_update(to_update, fields=['classification'])
+        return Response(self.get_serializer(to_update, many=True).data)
 
-            while to_visit:
-                parent = to_visit.pop()
-                for child in models.Directory.objects.filter(parent=parent):
-                    child.classification = serializer.data['classification']
-                    to_visit.add(child)
-                    to_update.add(child)
-            models.Directory.objects.bulk_update(to_update, fields=['classification'])
-            data = models.Directory.objects.filter(directory__in=to_update)
-            response = self.get_serializer(data, many=True)
-            return Response(response.data)
-        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-
+    @swagger_auto_schema(responses={200: DirectorySerializer()})
     def partial_update(self, request: Request, *args, **kwargs) -> Response:
         """
         This will set the classification of a directory and none of its children.
         """
-        return super().update(request, *args, **kwargs)
+        directory = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+        directory.classification = serializer.data['classification']
+        directory.save()
+        return Response(self.get_serializer(directory).data)
 
 
 class InitialSetupSerializer(serializers.Serializer):

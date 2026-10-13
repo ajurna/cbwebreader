@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 from django.contrib import admin
 
-from .models import Directory, ComicBook, ComicStatus, UserMisc
+from .models import ComicBook, ComicStatus, Directory, UserMisc
 
 
 @admin.register(Directory)
