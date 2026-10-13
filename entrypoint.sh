@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
-uv run manage.py migrate --settings=cbreader.settings.base
+set -e
 
-uv run manage.py collectstatic --settings=cbreader.settings.base  --noinput --clear
+python manage.py migrate --settings=cbreader.settings.base
 
-uv run gunicorn --workers 3 --bind 0.0.0.0:8000 cbreader.wsgi:application
+python manage.py collectstatic --settings=cbreader.settings.base --noinput --clear
+
+exec gunicorn --workers 3 --bind 0.0.0.0:8000 cbreader.wsgi:application

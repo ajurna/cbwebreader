@@ -3,7 +3,6 @@
 
 !cbreader
 !comic
-!comic_auth
 !static
 !manage.py
 !pyproject.toml
@@ -14,6 +13,5 @@
 !package-lock.json
 !package.json
 !frontend
-!uv.lock
 /frontend/node_modules
 /frontend/dist
