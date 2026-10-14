@@ -25,14 +25,6 @@ module.exports = () => {
           use: 'vue-loader'
         },
         {
-          test: /\.ts$/,
-          loader: 'ts-loader',
-          options: {
-            appendTsSuffixTo: [/\.vue$/],
-            transpileOnly: true
-          }
-        },
-        {
           test: /\.css$/,
           use: [
             'style-loader',

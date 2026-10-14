@@ -11,7 +11,9 @@ module.exports = (env = {}) => {
   return {
 
     mode: 'production',
-    devtool: 'hidden-source-map',
+    // No source maps in production: they are not served to browsers, but collectstatic
+    // copies them into /static/ so browser devtools would pull ~3.3 MiB of maps.
+    devtool: false,
     entry: path.resolve(__dirname, './src/main.js'),
     output: {
       path: path.resolve(__dirname, './dist/bundles/'),
@@ -21,14 +23,6 @@ module.exports = (env = {}) => {
         {
           test: /\.vue$/,
           use: 'vue-loader'
-        },
-        {
-          test: /\.ts$/,
-          loader: 'ts-loader',
-          options: {
-            appendTsSuffixTo: [/\.vue$/],
-            transpileOnly: true
-          }
         },
         {
           test: /\.css$/,

@@ -23,6 +23,29 @@ def test_scan_indexes_nested_directories(comic_volume: Path, reader_user) -> Non
 
 
 @pytest.mark.django_db
+def test_scan_if_empty_scans_an_empty_database(comic_volume: Path) -> None:
+    make_cbz(comic_volume / 'issue.cbz', pages=1)
+
+    call_command('scan_comics', if_empty=True)
+
+    assert models.ComicBook.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_scan_if_empty_skips_when_books_already_exist(comic_volume: Path) -> None:
+    """Files added while the container was down are left to the cron scan."""
+    make_cbz(comic_volume / 'issue.cbz', pages=1)
+    call_command('scan_comics')
+
+    make_cbz(comic_volume / 'later.cbz', pages=1)
+    call_command('scan_comics', if_empty=True)
+    assert models.ComicBook.objects.count() == 1
+
+    call_command('scan_comics')
+    assert models.ComicBook.objects.count() == 2
+
+
+@pytest.mark.django_db
 def test_scan_runs_without_any_user(comic_volume: Path) -> None:
     """The command no longer needs a user, because statuses are created when a book is read."""
     make_cbz(comic_volume / 'issue.cbz', pages=1)

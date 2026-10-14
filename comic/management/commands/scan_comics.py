@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandParser
 from loguru import logger
 
-from comic.models import Directory
+from comic.models import ComicBook, Directory
 from comic.processing import reconcile
 
 
@@ -21,9 +21,17 @@ class Command(BaseCommand):
             action='store_true',
             help='Output to console',
         )
+        parser.add_argument(
+            '--if-empty',
+            action='store_true',
+            help='Do nothing when the database already contains books, so it is safe to run on startup.',
+        )
 
     def handle(self, *args, **options) -> None:
         self.OUTPUT = options.get('out', False)
+        if options.get('if_empty') and ComicBook.objects.exists():
+            logger.info('The database already contains books, so the startup scan is skipped.')
+            return
         self.scan_directory()
 
     def scan_directory(self, directory: Directory | None = None) -> None:

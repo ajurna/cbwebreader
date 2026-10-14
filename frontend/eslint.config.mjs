@@ -22,6 +22,23 @@ export default [
     },
   },
 
+  // Tests run under Vitest with a jsdom environment.
+  {
+    files: ['test/**'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        document: 'readonly',
+        localStorage: 'readonly',
+        console: 'readonly',
+        window: 'readonly',
+        HTMLElement: 'readonly',
+        KeyboardEvent: 'readonly',
+      },
+    },
+  },
+
   // Application code is browser code bundled by webpack.
   {
     files: ['src/**'],
