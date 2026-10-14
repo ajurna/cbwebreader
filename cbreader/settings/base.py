@@ -7,6 +7,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List
+from urllib.parse import quote
 
 import dj_database_url
 from dotenv import load_dotenv
@@ -72,8 +73,19 @@ WSGI_APPLICATION = "cbreader.wsgi.application"
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# docker-compose passes DB_* variables, not a URL. Without building one from them the
+# app silently falls back to sqlite inside the container, and the web and cron
+# containers end up with two separate databases.
+if not DATABASE_URL and os.getenv("DB_HOST"):
+    DATABASE_URL = "postgres://{}:{}@{}/{}".format(
+        quote(os.getenv("DB_USER", "postgres"), safe=""),
+        quote(os.getenv("DB_PASS", ""), safe=""),
+        os.getenv("DB_HOST"),
+        os.getenv("DB_DATABASE", "postgres"),
+    )
+
 if DATABASE_URL:
-    DATABASES = {"default": dj_database_url.config(conn_max_age=500)}
+    DATABASES = {"default": dj_database_url.parse(DATABASE_URL, conn_max_age=500)}
 else:
     DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": os.path.join(BASE_DIR, "db.sqlite3")}}
 

@@ -32,7 +32,7 @@ RUN . /etc/os-release \
     && echo "deb http://deb.debian.org/debian ${VERSION_CODENAME} non-free non-free-firmware" \
         > /etc/apt/sources.list.d/non-free.list \
     && apt update \
-    && apt install -y --no-install-recommends cron unrar libmariadb-dev pkg-config \
+    && apt install -y --no-install-recommends cron unrar \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src

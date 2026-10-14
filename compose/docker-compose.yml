@@ -30,6 +30,9 @@ services:
       - ${COMIC_BOOK_HOST_PATH}:${COMIC_BOOK_VOLUME}
       - media_files:/media
       - .env:/src/.env
+    # The image HEALTHCHECK probes the web port, which this service never serves.
+    healthcheck:
+      disable: true
     command: sh entrypoint-cron.sh
     restart: unless-stopped
 
