@@ -213,6 +213,8 @@ class ReadSerializer(serializers.Serializer):
     prev_comic = DirectionSerializer()
     next_comic = DirectionSerializer()
     pages = serializers.IntegerField()
+    # The folder this book is in, so the reader can link back to it.
+    directory = serializers.UUIDField(allow_null=True)
 
 
 class TypeSerializer(serializers.Serializer):
@@ -271,6 +273,7 @@ class ReadViewSet(viewsets.GenericViewSet):
             "prev_comic": prev_comic,
             "next_comic": next_comic,
             "pages": comic.page_count,
+            "directory": comic.directory.selector if comic.directory else None,
         }
         serializer = self.serializer_class(data)
         return Response(serializer.data)

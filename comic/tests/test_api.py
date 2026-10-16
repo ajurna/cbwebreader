@@ -69,6 +69,16 @@ def test_read_view_returns_progress_for_an_allowed_user(client, book, reader_use
     assert response.status_code == 200
     assert response.json()['pages'] == 3
     assert response.json()['title'] == 'issue.cbz'
+    assert response.json()['directory'] == str(book.directory.selector)
+
+
+@pytest.mark.django_db
+def test_read_view_reports_no_folder_for_an_unfiled_book(client, comic_volume, reader_user) -> None:
+    # retrieve() opens the archive to check the page count, so the file has to exist.
+    make_cbz(comic_volume / 'loose.cbz', pages=1)
+    unfiled = models.ComicBook.objects.create(file_name='loose.cbz', page_count=1)
+    client.force_login(reader_user)
+    assert client.get(f'/api/read/{unfiled.selector}/').json()['directory'] is None
 
 
 @pytest.mark.django_db

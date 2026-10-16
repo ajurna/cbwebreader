@@ -20,8 +20,8 @@
     </div>
     <div class="sentinel" ref="sentinel" v-if="mode === 'scroll' && rendered < pages"></div>
   </div>
-  <div class="row navButtons pb-2">
-    <div class="col-auto">
+  <div class="navButtons">
+    <div class="nav-item">
       <div class="btn-group btn-group-sm" role="group" aria-label="Reading mode">
         <button
           type="button"
@@ -37,7 +37,7 @@
         >Continuous</button>
       </div>
     </div>
-    <div class="col-auto">
+    <div class="nav-item pager">
       <comic-paginate
         v-model="paginate_page"
         :page_count="pages"
@@ -46,7 +46,14 @@
         @nextComic="nextComic"
       />
     </div>
-    <div class="col-auto">
+    <div class="nav-item" v-if="directory">
+      <router-link
+        class="btn btn-sm btn-outline-secondary ghost"
+        :to="{ name: 'browse', params: { selector: directory } }"
+        title="Back to this folder"
+      >Folder</router-link>
+    </div>
+    <div class="nav-item">
       <button
         type="button"
         class="btn btn-sm btn-outline-secondary"
@@ -97,6 +104,7 @@ export default {
       inview: new Set(),
       deck: null,
       title: '',
+      directory: '',
       prev_comic: {},
       next_comic: {},
       pages: 1,
@@ -116,6 +124,7 @@ export default {
         { keys: 'n / p', action: 'Next / previous page' },
         { keys: 'Home / End', action: 'First / last page' },
         { keys: 'm', action: 'Switch reading mode' },
+        { keys: 'b', action: 'Back to this folder' },
         { keys: '?', action: 'Show or hide this list' },
         { keys: 'Esc', action: 'Hide this list' },
       ],
@@ -247,9 +256,16 @@ export default {
         return
       }
 
-      // The reader listens on window, so a key pressed while a control has focus would
-      // otherwise page as well as activate that control.
-      if (e.target && e.target.closest && e.target.closest('input, select, textarea, button')) {
+      const key = e.key.toLowerCase()
+
+      // The reader listens on window, so a key pressed while a text control has focus
+      // would type as well as page. A focused button is left alone only for Space,
+      // because Space activates the button - otherwise the keyboard stops working after
+      // any click on the controls below the page.
+      if (e.target && e.target.closest && e.target.closest('input, select, textarea')) {
+        return
+      }
+      if (key === ' ' && e.target && e.target.closest && e.target.closest('button')) {
         return
       }
 
@@ -263,7 +279,6 @@ export default {
       // scrolling: the page is taller than the viewport, and intercepting them here would
       // double up with the native scroll. In continuous mode the observer records whichever
       // page is topmost, so scrolling inside a page does not change the saved page.
-      const key = e.key.toLowerCase()
       switch (key) {
         case 'arrowright':
         case 'n':
@@ -290,6 +305,11 @@ export default {
           return
         case 'm':
           this.setMode(this.mode === 'paged' ? 'scroll' : 'paged')
+          return
+        case 'b':
+          if (this.directory) {
+            this.$router.push({ name: 'browse', params: { selector: this.directory } })
+          }
           return
       }
     },
@@ -431,6 +451,7 @@ export default {
     api.get(comic_data_url)
     .then(response => {
       this.title = response.data.title
+      this.directory = response.data.directory || ''
       this.current_page = response.data.last_read_page
       this.prev_comic = response.data.prev_comic
       this.next_comic = response.data.next_comic
@@ -483,7 +504,31 @@ export default {
     bottom: 0;
     z-index: 1030;
   width: auto;
+  max-width: 100vw;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
   cursor: pointer;
+}
+
+/* Bootstrap's .row wraps, which put the ? button on a second line once the page list
+   got long. A long page list scrolls sideways instead of pushing the other controls down. */
+.pager {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+/* The link back to the folder is always there but stays quiet until it is hovered or
+   focused, so it does not compete with the page. */
+.ghost {
+  opacity: 0.45;
+}
+
+.ghost:hover,
+.ghost:focus {
+  opacity: 1;
 }
 section {
   padding-bottom: 60px;

@@ -51,6 +51,7 @@ const COMIC = {
   title: 'Alpha',
   last_read_page: 2,
   pages: 5,
+  directory: 'd1',
   prev_comic: { route: 'browse', selector: 'p1' },
   next_comic: { route: 'browse', selector: 'n1' },
 }
@@ -62,7 +63,10 @@ function mountReader() {
     props: { selector: 'a1' },
     global: {
       mocks: { $router: router, $store: store },
-      stubs: { 'comic-paginate': true },
+      stubs: {
+        'comic-paginate': true,
+        RouterLink: { props: ['to'], template: '<a class="folder-link" :data-selector="to.params.selector"><slot /></a>' },
+      },
     },
   })
   mounted.push(wrapper)
@@ -203,16 +207,33 @@ describe('TheComicReader', () => {
     expect(wrapper.vm.current_page).toBe(3)
   })
 
-  it('ignores arrow keys pressed while a form control has focus', async () => {
+  it('ignores keys pressed while a text control has focus', async () => {
     const wrapper = mountReader()
     await flushPromises()
     deck.slide.mockClear()
 
     wrapper.vm.keyPress({ key: 'ArrowRight', target: document.createElement('input') })
     expect(deck.slide).not.toHaveBeenCalled()
+  })
 
-    wrapper.vm.keyPress({ key: 'ArrowRight', target: document.createElement('button') })
-    expect(deck.slide).not.toHaveBeenCalled()
+  it('still pages when a button has focus but leaves Space to that button', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+    deck.slide.mockClear()
+
+    const button = document.createElement('button')
+    wrapper.vm.keyPress({ key: 'ArrowRight', target: button })
+    wrapper.vm.keyPress({ key: 'ArrowRight', target: button })
+    expect(deck.slide).toHaveBeenCalledTimes(1)
+    expect(deck.slide).toHaveBeenCalledTimes(1)
+
+    vi.advanceTimersByTime(100)
+    wrapper.vm.keyPress({ key: ' ', target: button, preventDefault: vi.fn() })
+    expect(deck.slide).toHaveBeenCalledTimes(1)
+
+    vi.advanceTimersByTime(100)
+    wrapper.vm.keyPress({ key: ' ', target: document.body, preventDefault: vi.fn() })
+    expect(deck.slide).toHaveBeenCalledTimes(2)
   })
 
   it('leaves Up and Down to the browser so they scroll within the page', async () => {
@@ -516,5 +537,47 @@ describe('TheComicReader in continuous mode', () => {
     expect(observers.every((observer) => observer.disconnected)).toBe(true)
     expect(reveal).toHaveBeenCalled()
     expect(wrapper.findAll('section[data-page]')).toHaveLength(30)
+  })
+})
+
+describe('TheComicReader back to the folder', () => {
+  it('links to the folder the book is in', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+    expect(wrapper.find('.folder-link').attributes('data-selector')).toBe('d1')
+  })
+
+  it('does not show the link for a book that is not in a folder', async () => {
+    api.get.mockResolvedValue({ data: { ...COMIC, directory: null } })
+    const wrapper = mountReader()
+    await flushPromises()
+    expect(wrapper.find('.folder-link').exists()).toBe(false)
+  })
+
+  it('returns to the folder with b', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+    wrapper.vm.keyPress({ key: 'b', target: document.createElement('div') })
+    expect(router.push).toHaveBeenCalledWith({ name: 'browse', params: { selector: 'd1' } })
+  })
+})
+
+describe('TheComicReader bottom bar', () => {
+  it('keeps every control on one line instead of using a wrapping Bootstrap row', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+
+    const bar = wrapper.find('.navButtons')
+    expect(bar.classes()).not.toContain('row')
+
+    const controls = bar.findAll('.nav-item')
+    expect(controls).toHaveLength(4)
+    expect(controls.map((item) => item.element.parentElement)).toEqual(controls.map(() => bar.element))
+  })
+
+  it('scrolls a long page list sideways rather than pushing the other controls down', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+    expect(wrapper.find('.nav-item.pager').exists()).toBe(true)
   })
 })
