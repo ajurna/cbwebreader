@@ -350,6 +350,30 @@ def test_continue_reading_lists_one_entry_per_series(client, book, reader_user) 
 
 
 @pytest.mark.django_db
+def test_continue_reading_skips_older_issues_in_the_same_series(client, reader_user) -> None:
+    """The shelf shows what to read next in a series, not every book that was started."""
+    directory = models.Directory.objects.create(name='Series')
+    older = models.ComicBook.objects.create(file_name='issue 1.cbz', directory=directory, page_count=2)
+    current = models.ComicBook.objects.create(file_name='issue 2.cbz', directory=directory, page_count=2)
+    next_issue = models.ComicBook.objects.create(file_name='issue 3.cbz', directory=directory, page_count=2)
+
+    client.force_login(reader_user)
+    stale = models.ComicStatus.objects.create(comic=older, user=reader_user, last_read_page=1, unread=False)
+    models.ComicStatus.objects.create(comic=current, user=reader_user, last_read_page=2,
+                                     finished=True, unread=False)
+
+    entries = client.get('/api/read/continue/').json()
+    assert [entry['title'] for entry in entries] == [next_issue.file_name]
+    assert entries[0]['on_deck'] is True
+
+    # Reading the older issue again makes it the thing to continue.
+    models.ComicStatus.objects.filter(pk=stale.pk).update(updated=timezone.now())
+    entries = client.get('/api/read/continue/').json()
+    assert [entry['title'] for entry in entries] == [older.file_name]
+    assert entries[0]['on_deck'] is False
+
+
+@pytest.mark.django_db
 def test_continue_reading_orders_the_shelf_by_most_recently_read(client, reader_user) -> None:
     recent_dir = models.Directory.objects.create(name='Recent')
     older_dir = models.Directory.objects.create(name='Older')

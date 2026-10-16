@@ -310,16 +310,15 @@ class ReadViewSet(viewsets.GenericViewSet):
     @swagger_auto_schema(responses={status.HTTP_200_OK: ContinueReadingSerializer(many=True)})
     @action(methods=['get'], detail=False, url_path='continue')
     def continue_reading(self, request: Request) -> Response:
-        """Books this user has started but not finished, most recently read first."""
+        """One entry per series: the most recently read book, or the next issue after it."""
         try:
             limit = min(max(int(request.query_params.get('limit', 20)), 1), 100)
         except ValueError:
             limit = 20
 
         statuses = (models.ComicStatus.objects
-                    .filter(user=request.user, finished=False, last_read_page__gt=0)
-                    .select_related('comic', 'comic__directory')
-                    .order_by('-updated'))
+                    .filter(user=request.user, last_read_page__gt=0)
+                    .select_related('comic', 'comic__directory'))
 
         # `unread` is not part of this filter: reading any page sets it to False, so requiring
         # it would exclude exactly the books a reader wants to continue.
@@ -344,33 +343,30 @@ class ReadViewSet(viewsets.GenericViewSet):
                 'on_deck': on_deck,
             }
 
-        data = [entry(comic_status.comic, comic_status.last_read_page, comic_status.updated, False)
-                for comic_status in statuses]
-
-        # The next issue after the most recently finished one in each series, so finishing an
-        # issue puts the following one on the shelf. One entry per series: a book that is
-        # already partway through is the thing to read next in that series.
-        finished = (models.ComicStatus.objects
-                    .filter(user=request.user, finished=True)
-                    .select_related('comic', 'comic__directory'))
-        if book_directory:
-            finished = finished.filter(comic__directory=book_directory)
-
-        covered = {item['directory'] for item in data}
-        for comic_status in finished.order_by('-updated'):
-            if len(data) >= limit:
-                break
+        # One entry per series, taken from the most recent status in that series. If the most
+        # recent status is finished the entry is the next issue; if it is partway through, the
+        # entry is that book. Older issues in the same series are not listed because they are
+        # not what to read next. A book that is not in a folder is its own series.
+        latest: dict[str, models.ComicStatus] = {}
+        for comic_status in statuses.order_by('-updated'):
             series = comic_status.comic.directory
-            if series is None or series.selector in covered:
+            key = str(series.selector) if series else f'book:{comic_status.comic.selector}'
+            if key not in latest:
+                latest[key] = comic_status
+
+        data = []
+        for comic_status in latest.values():
+            comic = comic_status.comic
+            if not user_can_read(request.user, comic.directory):
                 continue
-            covered.add(series.selector)
-            if not user_can_read(request.user, series):
-                continue
-            books = processing.natural_order(models.ComicBook.objects.filter(directory=series))
-            index = books.index(comic_status.comic)
-            if index + 1 >= len(books):
-                continue
-            data.append(entry(books[index + 1], 0, comic_status.updated, True))
+            if comic_status.finished:
+                books = processing.natural_order(models.ComicBook.objects.filter(directory=comic.directory))
+                index = books.index(comic)
+                if index + 1 >= len(books):
+                    continue
+                data.append(entry(books[index + 1], 0, comic_status.updated, True))
+            else:
+                data.append(entry(comic, comic_status.last_read_page, comic_status.updated, False))
 
         # Partway books and on-deck issues are interleaved by recency, not grouped, so the
         # shelf reads most recently touched first.
