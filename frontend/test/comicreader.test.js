@@ -231,6 +231,98 @@ describe('TheComicReader', () => {
     expect(api.put).not.toHaveBeenCalled()
   })
 
+  it('shows the shortcut list with ? and hides it again', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+
+    expect(wrapper.find('.shortcuts').exists()).toBe(false)
+
+    wrapper.vm.keyPress({ key: '?' })
+    await flushPromises()
+    expect(wrapper.find('.shortcuts').exists()).toBe(true)
+
+    wrapper.vm.keyPress({ key: '?' })
+    await flushPromises()
+    expect(wrapper.find('.shortcuts').exists()).toBe(false)
+  })
+
+  it('hides the shortcut list with Escape even when a control has focus', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+
+    wrapper.vm.keyPress({ key: '?' })
+    await flushPromises()
+    expect(wrapper.find('.shortcuts').exists()).toBe(true)
+
+    wrapper.vm.keyPress({ key: 'Escape', target: document.createElement('input') })
+    await flushPromises()
+    expect(wrapper.find('.shortcuts').exists()).toBe(false)
+  })
+
+  it('toggles the shortcut list from the ? button', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+
+    const button = wrapper.find('button[aria-pressed]')
+    await button.trigger('click')
+    expect(wrapper.find('.shortcuts').exists()).toBe(true)
+    expect(button.attributes('aria-pressed')).toBe('true')
+  })
+
+  it('pages with Space and Shift+Space', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+    deck.slide.mockClear()
+
+    const preventDefault = vi.fn()
+    wrapper.vm.keyPress({ key: ' ', preventDefault })
+    expect(preventDefault).toHaveBeenCalled()
+    expect(deck.slide).toHaveBeenCalledWith(3)
+
+    vi.advanceTimersByTime(100)
+    wrapper.vm.keyPress({ key: ' ', shiftKey: true, preventDefault })
+    expect(deck.slide).toHaveBeenCalledWith(2)
+  })
+
+  it('pages with n and p whatever the case', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+    deck.slide.mockClear()
+
+    wrapper.vm.keyPress({ key: 'n' })
+    expect(deck.slide).toHaveBeenCalledWith(3)
+
+    vi.advanceTimersByTime(100)
+    wrapper.vm.keyPress({ key: 'P' })
+    expect(deck.slide).toHaveBeenCalledWith(2)
+  })
+
+  it('jumps to the first and last page with Home and End', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+    deck.slide.mockClear()
+
+    const preventDefault = vi.fn()
+    wrapper.vm.keyPress({ key: 'Home', preventDefault })
+    expect(preventDefault).toHaveBeenCalled()
+    expect(deck.slide).toHaveBeenCalledWith(0)
+
+    vi.advanceTimersByTime(100)
+    wrapper.vm.keyPress({ key: 'End', preventDefault })
+    expect(deck.slide).toHaveBeenCalledWith(4)
+  })
+
+  it('switches reading mode with m', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+
+    wrapper.vm.keyPress({ key: 'm' })
+    await flushPromises()
+
+    expect(store.commit).toHaveBeenCalledWith('setReaderMode', 'scroll')
+    expect(wrapper.vm.mode).toBe('scroll')
+  })
+
   it('shows the top of the page when changing pages in paged mode', async () => {
     const wrapper = mountReader()
     await flushPromises()

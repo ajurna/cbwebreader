@@ -46,6 +46,29 @@
         @nextComic="nextComic"
       />
     </div>
+    <div class="col-auto">
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        :class="{ active: show_shortcuts }"
+        :aria-pressed="show_shortcuts ? 'true' : 'false'"
+        @click="show_shortcuts = !show_shortcuts"
+      >?</button>
+    </div>
+  </div>
+  <div class="shortcuts" v-if="show_shortcuts" role="dialog" aria-label="Keyboard shortcuts">
+    <div class="shortcuts-head">
+      <strong>Keyboard shortcuts</strong>
+      <button type="button" class="btn btn-sm btn-outline-secondary" @click="show_shortcuts = false">Close</button>
+    </div>
+    <table>
+      <tbody>
+        <tr v-for="shortcut in shortcuts" :key="shortcut.keys">
+          <td><kbd>{{ shortcut.keys }}</kbd></td>
+          <td>{{ shortcut.action }}</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
 </template>
@@ -84,6 +107,18 @@ export default {
       save_timeout: null,
       key_locked: false,
       key_timeout: null,
+      show_shortcuts: false,
+      shortcuts: [
+        { keys: '← / →', action: 'Previous / next page' },
+        { keys: '↑ / ↓', action: 'Scroll within the page' },
+        { keys: 'Space', action: 'Next page' },
+        { keys: 'Shift + Space', action: 'Previous page' },
+        { keys: 'n / p', action: 'Next / previous page' },
+        { keys: 'Home / End', action: 'First / last page' },
+        { keys: 'm', action: 'Switch reading mode' },
+        { keys: '?', action: 'Show or hide this list' },
+        { keys: 'Esc', action: 'Hide this list' },
+      ],
     }
   },
   props: {
@@ -181,6 +216,10 @@ export default {
         return
       }
 
+      if (!this.deck) {
+        return
+      }
+
       this.current_page = pageNum-1
       this.deck.slide(this.current_page)
     },
@@ -194,6 +233,17 @@ export default {
       // Alt+Left is the browser's back button and Ctrl/Cmd+Arrow moves a caret in a
       // form control, so only a bare arrow key pages.
       if (e.ctrlKey || e.metaKey || e.altKey) {
+        return
+      }
+
+      // These only show or hide the shortcut list, so they still work when a control
+      // has focus.
+      if (e.key === 'Escape') {
+        this.show_shortcuts = false
+        return
+      }
+      if (e.key === '?') {
+        this.show_shortcuts = !this.show_shortcuts
         return
       }
 
@@ -213,10 +263,34 @@ export default {
       // scrolling: the page is taller than the viewport, and intercepting them here would
       // double up with the native scroll. In continuous mode the observer records whichever
       // page is topmost, so scrolling inside a page does not change the saved page.
-      if (e.key === 'ArrowRight') {
-        this.nextPage('auto')
-      } else if (e.key === 'ArrowLeft') {
-        this.prevPage('auto')
+      const key = e.key.toLowerCase()
+      switch (key) {
+        case 'arrowright':
+        case 'n':
+          this.nextPage('auto')
+          return
+        case 'arrowleft':
+        case 'p':
+          this.prevPage('auto')
+          return
+        case ' ':
+          // Space would otherwise scroll the page as well as turning it.
+          e.preventDefault?.()
+          if (e.shiftKey) {
+            this.prevPage('auto')
+          } else {
+            this.nextPage('auto')
+          }
+          return
+        case 'home':
+        case 'end':
+          // Same for Home/End, which the browser would scroll to the page edges.
+          e.preventDefault?.()
+          this.setPage(key === 'home' ? 1 : this.pages)
+          return
+        case 'm':
+          this.setMode(this.mode === 'paged' ? 'scroll' : 'paged')
+          return
       }
     },
     // Continuous mode: reveal is not used for visibility here, so the page in view is
@@ -413,6 +487,36 @@ export default {
 }
 section {
   padding-bottom: 60px;
+}
+
+.shortcuts {
+  position: fixed;
+  right: 12px;
+  bottom: 64px;
+  max-width: 340px;
+  padding: 10px 12px;
+  border: 1px solid #adb5bd;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 0.85rem;
+  z-index: 20;
+}
+
+.shortcuts-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.shortcuts td {
+  padding: 2px 8px 2px 0;
+  vertical-align: top;
+}
+
+.shortcuts kbd {
+  font-family: inherit;
+  white-space: nowrap;
 }
 
 /* reveal.css is deliberately not loaded, so visibility is the `hidden` attribute and
