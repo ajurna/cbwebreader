@@ -127,25 +127,55 @@ class ScanSerializer(serializers.Serializer):
     selector = serializers.UUIDField(required=False, allow_null=True)
 
 
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
+def read_param(request: Request) -> bool | None:
+    """The read/unread filter as a three-state value: None means both."""
+    value = request.query_params.get('read')
+    if value is None:
+        return None
+    return value == 'true'
+
+
 class BrowseViewSet(viewsets.GenericViewSet):
     serializer_class = BrowseSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
     lookup_field = 'selector'
 
     def get_queryset(self) -> None:
         return
 
+    def page(self, request: Request, directory: models.Directory | None = None) -> Response:
+        """One page of a listing, so a folder with hundreds of entries is not all sent at once.
+
+        BrowseSerializer is named here rather than through self.get_serializer because the
+        scan action overrides serializer_class with the request serializer.
+        """
+        items = processing.list_directory(request.user, directory, request.query_params.get('search', ''),
+                                         read_param(request))
+        page = self.paginate_queryset(items)
+        if page is None:
+            return Response(BrowseSerializer(items, many=True).data)
+        return self.get_paginated_response(BrowseSerializer(page, many=True).data)
+
+    @swagger_auto_schema(responses={status.HTTP_200_OK: BrowseSerializer(many=True)},
+                     paginator_extend_schema=True)
     def list(self, request: Request) -> Response:
-        serializer = self.get_serializer(processing.list_directory(request.user), many=True)
-        return Response(serializer.data)
+        return self.page(request)
 
-    @swagger_auto_schema(responses={status.HTTP_200_OK: BrowseSerializer(many=True)})
+    @swagger_auto_schema(responses={status.HTTP_200_OK: BrowseSerializer(many=True)},
+                     paginator_extend_schema=True)
     def retrieve(self, request: Request, selector: UUID) -> Response:
-        directory = get_object_or_404(models.Directory, selector=selector)
-        serializer = self.get_serializer(processing.list_directory(request.user, directory), many=True)
-        return Response(serializer.data)
+        return self.page(request, get_object_or_404(models.Directory, selector=selector))
 
-    @swagger_auto_schema(request_body=ScanSerializer, responses={status.HTTP_200_OK: BrowseSerializer(many=True)})
+    @swagger_auto_schema(request_body=ScanSerializer,
+                     responses={status.HTTP_200_OK: BrowseSerializer(many=True)},
+                     paginator_extend_schema=True)
     @action(methods=['post'], detail=False, serializer_class=ScanSerializer)
     def scan(self, request: Request) -> Response:
         """Read one directory from disk, then return it. Null selector means the root."""
@@ -155,8 +185,7 @@ class BrowseViewSet(viewsets.GenericViewSet):
         selector = serializer.validated_data.get('selector')
         tasks.scan_directory.enqueue(str(selector) if selector else None)
         directory = models.Directory.objects.filter(selector=selector).first() if selector else None
-        data = processing.list_directory(request.user, directory)
-        return Response(BrowseSerializer(data, many=True).data)
+        return self.page(request, directory)
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: BreadcrumbSerializer(many=True)})
     @action(methods=['get'], detail=True, serializer_class=BreadcrumbSerializer)
@@ -419,12 +448,6 @@ class ImageViewSet(viewsets.ViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND, data={'errors': 'Page could not be read.'})
         self.renderer_classes[0].media_type = content
         return FileResponse(img, content_type=content)
-
-
-class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    max_page_size = 100
 
 
 class RecentComicsSerializer(serializers.ModelSerializer):

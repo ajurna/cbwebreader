@@ -38,9 +38,14 @@ def reconcile(directory: models.Directory | None = None) -> None:
     clean_thumbnails(models.ComicBook.objects.filter(directory=directory))
 
 
-def list_directory(user: AbstractBaseUser, directory: models.Directory | None = None) \
-        -> list[models.Directory | models.ComicBook]:
-    """Return the contents of one directory for one user, reading only."""
+def list_directory(user: AbstractBaseUser, directory: models.Directory | None = None, search: str = '',
+                   read: bool | None = None) -> list[models.Directory | models.ComicBook]:
+    """Return the contents of one directory for one user, reading only.
+
+    `search` matches a folder name or a file name and `read` filters on the finished flag.
+    Both are applied to the two queries so a filtered listing still contains folders and
+    books together, in the same order as an unfiltered one.
+    """
     dir_db_query = models.Directory.objects.filter(parent=directory).annotate(
         total=Count('comicbook', distinct=True),
         progress=Count('comicbook__comicstatus', Q(comicbook__comicstatus__finished=True,
@@ -62,6 +67,14 @@ def list_directory(user: AbstractBaseUser, directory: models.Directory | None = 
             output_field=PositiveSmallIntegerField(choices=models.Directory.Classification.choices)
         )
     ).filter(Q(user__isnull=True) | Q(user=user.id))
+
+    if search:
+        dir_db_query = dir_db_query.filter(name__icontains=search)
+        file_db_query = file_db_query.filter(file_name__icontains=search)
+
+    if read is not None:
+        dir_db_query = dir_db_query.filter(finished=read)
+        file_db_query = file_db_query.filter(finished=read)
 
     files = list(dir_db_query) + list(file_db_query)
     files.sort(key=lambda x: x.title)

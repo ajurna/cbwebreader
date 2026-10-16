@@ -191,23 +191,79 @@ def test_scan_endpoint_indexes_files_that_are_only_on_disk(client, reader_user, 
     target.mkdir()
     make_cbz(target / 'issue.cbz', pages=2)
 
-    assert [entry['title'] for entry in client.get('/api/browse/').json()] == []
+    assert [entry['title'] for entry in client.get('/api/browse/').json()['results']] == []
 
     response = client.post('/api/browse/scan/', data='{}', content_type='application/json')
     assert response.status_code == 200
-    assert [entry['title'] for entry in response.json()] == ['Series']
+    assert [entry['title'] for entry in response.json()['results']] == ['Series']
 
     directory = models.Directory.objects.get(name='Series')
     response = client.post('/api/browse/scan/',
                            data=json.dumps({'selector': str(directory.selector)}),
                            content_type='application/json')
     assert response.status_code == 200
-    entries = response.json()
+    entries = response.json()['results']
     assert [entry['title'] for entry in entries] == ['issue.cbz']
     assert entries[0]['type'] == 'ComicBook'
     assert entries[0]['total'] == 2
     assert entries[0]['progress'] == 0
     assert entries[0]['unread'] is True
+
+
+@pytest.mark.django_db
+def test_browse_search_matches_names_in_both_queries(client, reader_user, comic_volume) -> None:
+    client.force_login(reader_user)
+    series = comic_volume / 'Transmetropolitan'
+    series.mkdir()
+    make_cbz(series / 'issue 1.cbz', pages=2)
+    make_cbz(comic_volume / 'other.cbz', pages=2)
+
+    # A root scan indexes the root only, so the folder has to be scanned as well.
+    client.post('/api/browse/scan/', data='{}', content_type='application/json')
+    folder = models.Directory.objects.get(name='Transmetropolitan')
+    client.post('/api/browse/scan/', data=json.dumps({'selector': str(folder.selector)}),
+                content_type='application/json')
+
+    body = client.get('/api/browse/', data={'search': 'trans'}).json()
+    assert [entry['title'] for entry in body['results']] == ['Transmetropolitan']
+
+    body = client.get(f'/api/browse/{folder.selector}/', data={'search': 'issue 1'}).json()
+    assert [entry['title'] for entry in body['results']] == ['issue 1.cbz']
+
+    assert client.get('/api/browse/', data={'search': 'nothing'}).json()['results'] == []
+
+
+@pytest.mark.django_db
+def test_browse_read_filter_follows_the_finished_flag(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    status = models.ComicStatus.objects.create(user=reader_user, comic=book, last_read_page=1)
+
+    body = client.get('/api/browse/', data={'read': 'false'}).json()
+    assert [entry['title'] for entry in body['results']] == ['Rated']
+    assert client.get('/api/browse/', data={'read': 'true'}).json()['results'] == []
+
+    status.finished = True
+    status.save()
+    body = client.get('/api/browse/', data={'read': 'true'}).json()
+    assert [entry['title'] for entry in body['results']] == ['Rated']
+    assert client.get('/api/browse/', data={'read': 'false'}).json()['results'] == []
+
+
+@pytest.mark.django_db
+def test_browse_listing_is_paginated(client, reader_user, comic_volume) -> None:
+    client.force_login(reader_user)
+    for index in range(12):
+        make_cbz(comic_volume / f'book{index:02d}.cbz', pages=1)
+    client.post('/api/browse/scan/', data='{}', content_type='application/json')
+
+    body = client.get('/api/browse/').json()
+    assert body['count'] == 12
+    assert len(body['results']) == 10
+    assert body['next']
+
+    assert len(client.get('/api/browse/', data={'page': 2}).json()['results']) == 2
+    assert client.get('/api/browse/', data={'page': 3}).status_code == 404
+    assert len(client.get('/api/browse/', data={'page_size': 100}).json()['results']) == 12
 
 
 @pytest.mark.django_db
