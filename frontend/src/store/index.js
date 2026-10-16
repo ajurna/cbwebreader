@@ -14,6 +14,12 @@ function get_user_from_storage(){
   }
 }
 
+// Reading mode is a preference rather than part of the session, so it is kept on its own.
+function get_reader_mode_from_storage(){
+  const mode = localStorage.getItem('reader_mode')
+  return mode === 'scroll' ? 'scroll' : 'paged'
+}
+
 function session_expired_query(next){
   return {
     name: 'login',
@@ -28,6 +34,7 @@ export default createStore({
   state: {
     filters: {},
     user: get_user_from_storage(),
+    reader_mode: get_reader_mode_from_storage(),
     classifications: [
       {label: 'G', value: '0'},
       {label: 'PG', value: '1'},
@@ -56,6 +63,13 @@ export default createStore({
     updateUser(state, userData){
       localStorage.setItem('u', JSON.stringify(userData));
       state.user = userData
+    },
+    setReaderMode(state, mode){
+      if (mode !== 'paged' && mode !== 'scroll') {
+        return
+      }
+      localStorage.setItem('reader_mode', mode);
+      state.reader_mode = mode
     },
   },
   actions: {

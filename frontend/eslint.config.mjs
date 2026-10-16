@@ -52,6 +52,7 @@ export default [
         console: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        IntersectionObserver: 'readonly',
         process: 'readonly',
       },
     },

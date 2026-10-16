@@ -40,6 +40,30 @@ describe('session state', () => {
   })
 })
 
+describe('reader mode', () => {
+  it('starts in paged mode when nothing is stored', async () => {
+    vi.resetModules()
+    const fresh = (await import('@/store')).default
+
+    expect(fresh.state.reader_mode).toBe('paged')
+  })
+
+  it('keeps the chosen mode in localStorage', () => {
+    store.commit('setReaderMode', 'scroll')
+
+    expect(store.state.reader_mode).toBe('scroll')
+    expect(localStorage.getItem('reader_mode')).toBe('scroll')
+  })
+
+  it('ignores a mode it does not recognise', () => {
+    store.commit('setReaderMode', 'scroll')
+    store.commit('setReaderMode', 'banana')
+
+    expect(store.state.reader_mode).toBe('scroll')
+    expect(localStorage.getItem('reader_mode')).toBe('scroll')
+  })
+})
+
 describe('restoreSession', () => {
   it('refreshes the stored profile from the cookie session', async () => {
     store.commit('updateUser', { id: 1, is_superuser: false })
