@@ -1,8 +1,10 @@
 """Tests for the API behaviour of the comic viewsets."""
 
 import json
+from datetime import timedelta
 
 import pytest
+from django.utils import timezone
 
 from comic import models
 from comic.tests.factories import make_cbz
@@ -201,3 +203,128 @@ def test_scan_endpoint_indexes_files_that_are_only_on_disk(client, reader_user, 
 @pytest.mark.django_db
 def test_scan_endpoint_requires_authentication(client) -> None:
     assert client.post('/api/browse/scan/', data='{}', content_type='application/json').status_code == 401
+
+
+@pytest.mark.django_db
+def test_continue_reading_lists_books_that_are_partway_through(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    models.ComicStatus.objects.create(comic=book, user=reader_user, last_read_page=1)
+
+    response = client.get('/api/read/continue/')
+    assert response.status_code == 200
+    entries = response.json()
+    assert len(entries) == 1
+    assert entries[0]['selector'] == str(book.selector)
+    assert entries[0]['progress'] == 1
+    assert entries[0]['total'] == 3
+    assert entries[0]['directory'] == str(book.directory.selector)
+
+
+@pytest.mark.django_db
+def test_continue_reading_ignores_finished_and_untouched_books(client, reader_user) -> None:
+    """A finished book is not listed, but the next issue in the same series is on deck."""
+    directory = models.Directory.objects.create(name='Series')
+    finished = models.ComicBook.objects.create(file_name='issue 1.cbz', directory=directory, page_count=2)
+    next_issue = models.ComicBook.objects.create(file_name='issue 2.cbz', directory=directory, page_count=2)
+    models.ComicStatus.objects.create(comic=finished, user=reader_user, last_read_page=2,
+                                     finished=True, unread=False)
+    models.ComicStatus.objects.create(comic=next_issue, user=reader_user, last_read_page=0)
+
+    client.force_login(reader_user)
+    entries = client.get('/api/read/continue/').json()
+    assert len(entries) == 1
+    assert entries[0]['selector'] == str(next_issue.selector)
+    assert entries[0]['on_deck'] is True
+    assert entries[0]['progress'] == 0
+
+
+@pytest.mark.django_db
+def test_continue_reading_orders_issues_by_number_not_by_string(client, reader_user) -> None:
+    directory = models.Directory.objects.create(name='Series')
+    second = models.ComicBook.objects.create(file_name='issue 2.cbz', directory=directory, page_count=2)
+    tenth = models.ComicBook.objects.create(file_name='issue 10.cbz', directory=directory, page_count=2)
+    models.ComicStatus.objects.create(comic=second, user=reader_user, last_read_page=2,
+                                     finished=True, unread=False)
+
+    client.force_login(reader_user)
+    assert [entry['title'] for entry in client.get('/api/read/continue/').json()] == [tenth.file_name]
+
+
+@pytest.mark.django_db
+def test_reader_next_issue_follows_issue_number_not_the_string(client, comic_volume, reader_user) -> None:
+    """The shelf and the reader must agree about which issue is next."""
+    directory = models.Directory.objects.create(name='Series')
+    volume = comic_volume / 'Series'
+    volume.mkdir(parents=True, exist_ok=True)
+    second = models.ComicBook.objects.create(file_name='issue 2.cbz', directory=directory, page_count=2)
+    tenth = models.ComicBook.objects.create(file_name='issue 10.cbz', directory=directory, page_count=2)
+    make_cbz(volume / 'issue 2.cbz', pages=2)
+    make_cbz(volume / 'issue 10.cbz', pages=2)
+
+    client.force_login(reader_user)
+    data = client.get(f'/api/read/{second.selector}/').json()
+    assert data['next_comic']['selector'] == str(tenth.selector)
+
+
+@pytest.mark.django_db
+def test_continue_reading_lists_one_entry_per_series(client, book, reader_user) -> None:
+    """A book that is partway through is already the next thing to read in that series."""
+    client.force_login(reader_user)
+    models.ComicBook.objects.create(file_name='issue 2.cbz', directory=book.directory, page_count=2)
+    models.ComicStatus.objects.create(comic=book, user=reader_user, last_read_page=1, unread=False)
+    earlier = models.Directory.objects.create(name='Earlier')
+    finished = models.ComicBook.objects.create(file_name='issue 1.cbz', directory=earlier, page_count=2)
+    models.ComicStatus.objects.create(comic=finished, user=reader_user, last_read_page=2,
+                                     finished=True, unread=False)
+    models.ComicBook.objects.create(file_name='issue 2.cbz', directory=earlier, page_count=2)
+
+    entries = client.get('/api/read/continue/').json()
+    assert sorted(entry['title'] for entry in entries) == sorted([book.file_name, 'issue 2.cbz'])
+    assert sorted(entry['on_deck'] for entry in entries) == [False, True]
+
+
+@pytest.mark.django_db
+def test_continue_reading_orders_the_shelf_by_most_recently_read(client, reader_user) -> None:
+    recent_dir = models.Directory.objects.create(name='Recent')
+    older_dir = models.Directory.objects.create(name='Older')
+    recent = models.ComicBook.objects.create(file_name='recent.cbz', directory=recent_dir, page_count=5)
+    older = models.ComicBook.objects.create(file_name='older.cbz', directory=older_dir, page_count=5)
+
+    client.force_login(reader_user)
+    for book, days in ((older, 5), (recent, 1)):
+        comic_status = models.ComicStatus.objects.create(comic=book, user=reader_user, last_read_page=1)
+        # `updated` is auto_now, so set it after the insert.
+        models.ComicStatus.objects.filter(pk=comic_status.pk).update(updated=timezone.now() - timedelta(days=days))
+
+    assert [entry['title'] for entry in client.get('/api/read/continue/').json()] == [recent.file_name, older.file_name]
+
+
+@pytest.mark.django_db
+def test_continue_reading_only_shows_the_logged_in_users_progress(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    other_user = models.User.objects.create_user('other', 'other@example.com', 'password12345')
+    models.ComicStatus.objects.create(comic=book, user=other_user, last_read_page=1)
+
+    assert client.get('/api/read/continue/').json() == []
+
+
+@pytest.mark.django_db
+def test_continue_reading_includes_books_that_are_read_but_not_finished(client, book, reader_user) -> None:
+    """Reading a page sets unread to False, so the panel must not require unread=True."""
+    client.force_login(reader_user)
+    models.ComicStatus.objects.create(comic=book, user=reader_user, last_read_page=1, unread=False)
+
+    assert len(client.get('/api/read/continue/').json()) == 1
+
+
+@pytest.mark.django_db
+def test_continue_reading_can_be_scoped_to_a_folder(client, book, reader_user) -> None:
+    other = models.Directory.objects.create(name='Other')
+    other_book = models.ComicBook.objects.create(file_name='other.cbz', directory=other, page_count=5)
+    models.ComicStatus.objects.create(comic=other_book, user=reader_user, last_read_page=2)
+    models.ComicStatus.objects.create(comic=book, user=reader_user, last_read_page=1)
+
+    client.force_login(reader_user)
+    entries = client.get(f'/api/read/continue/?directory={book.directory.selector}').json()
+    assert [entry['title'] for entry in entries] == [book.file_name]
+    assert client.get(f'/api/read/continue/?directory={UNKNOWN}').status_code == 404

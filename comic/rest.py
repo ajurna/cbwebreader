@@ -219,6 +219,17 @@ class TypeSerializer(serializers.Serializer):
     type = serializers.CharField()
 
 
+class ContinueReadingSerializer(serializers.Serializer):
+    selector = serializers.UUIDField()
+    title = serializers.CharField()
+    progress = serializers.IntegerField()
+    total = serializers.IntegerField()
+    last_read_time = serializers.DateTimeField()
+    directory = serializers.UUIDField(allow_null=True)
+    thumbnail = BrowseFileField()
+    on_deck = serializers.BooleanField()
+
+
 class ReadPageSerializer(serializers.Serializer):
     page = serializers.IntegerField(source='last_read_page')
 
@@ -236,7 +247,7 @@ class ReadViewSet(viewsets.GenericViewSet):
             return Response(status=status.HTTP_403_FORBIDDEN, data={'errors': 'Not allowed to read.'})
         _, _ = models.UserMisc.objects.get_or_create(user=request.user)
         comic_status, _ = models.ComicStatus.objects.get_or_create(comic=comic, user=request.user)
-        comic_list = list(models.ComicBook.objects.filter(directory=comic.directory).order_by('file_name'))
+        comic_list = processing.natural_order(models.ComicBook.objects.filter(directory=comic.directory))
         comic_index = comic_list.index(comic)
         current_page_count = comic.get_page_count()
         if comic.page_count != current_page_count:
@@ -263,6 +274,78 @@ class ReadViewSet(viewsets.GenericViewSet):
         }
         serializer = self.serializer_class(data)
         return Response(serializer.data)
+
+    @swagger_auto_schema(responses={status.HTTP_200_OK: ContinueReadingSerializer(many=True)})
+    @action(methods=['get'], detail=False, url_path='continue')
+    def continue_reading(self, request: Request) -> Response:
+        """Books this user has started but not finished, most recently read first."""
+        try:
+            limit = min(max(int(request.query_params.get('limit', 20)), 1), 100)
+        except ValueError:
+            limit = 20
+
+        statuses = (models.ComicStatus.objects
+                    .filter(user=request.user, finished=False, last_read_page__gt=0)
+                    .select_related('comic', 'comic__directory')
+                    .order_by('-updated'))
+
+        # `unread` is not part of this filter: reading any page sets it to False, so requiring
+        # it would exclude exactly the books a reader wants to continue.
+        directory = request.query_params.get('directory')
+        book_directory = None
+        if directory:
+            try:
+                book_directory = models.Directory.objects.get(selector=directory)
+            except (models.Directory.DoesNotExist, ValueError):
+                return Response(status=status.HTTP_404_NOT_FOUND)
+            statuses = statuses.filter(comic__directory=book_directory)
+
+        def entry(book: models.ComicBook, progress: int, last_read_time, on_deck: bool) -> dict:
+            return {
+                'selector': book.selector,
+                'title': book.file_name,
+                'progress': progress,
+                'total': book.page_count,
+                'last_read_time': last_read_time,
+                'directory': book.directory.selector if book.directory else None,
+                'thumbnail': book.thumbnail,
+                'on_deck': on_deck,
+            }
+
+        data = [entry(comic_status.comic, comic_status.last_read_page, comic_status.updated, False)
+                for comic_status in statuses]
+
+        # The next issue after the most recently finished one in each series, so finishing an
+        # issue puts the following one on the shelf. One entry per series: a book that is
+        # already partway through is the thing to read next in that series.
+        finished = (models.ComicStatus.objects
+                    .filter(user=request.user, finished=True)
+                    .select_related('comic', 'comic__directory'))
+        if book_directory:
+            finished = finished.filter(comic__directory=book_directory)
+
+        covered = {item['directory'] for item in data}
+        for comic_status in finished.order_by('-updated'):
+            if len(data) >= limit:
+                break
+            series = comic_status.comic.directory
+            if series is None or series.selector in covered:
+                continue
+            covered.add(series.selector)
+            if not user_can_read(request.user, series):
+                continue
+            books = processing.natural_order(models.ComicBook.objects.filter(directory=series))
+            index = books.index(comic_status.comic)
+            if index + 1 >= len(books):
+                continue
+            data.append(entry(books[index + 1], 0, comic_status.updated, True))
+
+        # Partway books and on-deck issues are interleaved by recency, not grouped, so the
+        # shelf reads most recently touched first.
+        data.sort(key=lambda item: item['last_read_time'], reverse=True)
+        data = data[:limit]
+
+        return Response(ContinueReadingSerializer(data, many=True).data)
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: 'PDF Binary Data',
                                     status.HTTP_403_FORBIDDEN: 'User below classification allowed',

@@ -1,3 +1,4 @@
+import re
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -66,6 +67,15 @@ def list_directory(user: AbstractBaseUser, directory: models.Directory | None = 
     files.sort(key=lambda x: x.title)
     files.sort(key=lambda x: x.type, reverse=True)
     return files
+
+
+def natural_key(name: str) -> list:
+    """Split a file name into text and number chunks so issue 2 sorts before issue 10."""
+    return [int(part) if part.isdigit() else part.lower() for part in re.split(r'(\d+)', name) if part]
+
+
+def natural_order(books: Iterable) -> list:
+    return sorted(books, key=lambda book: natural_key(book.file_name))
 
 
 def clean_directories(directories: QuerySet, dir_path: Path, directory: models.Directory | None = None) -> None:
