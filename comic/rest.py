@@ -115,6 +115,19 @@ class BrowseSerializer(serializers.Serializer):
     classification = serializers.IntegerField()
     finished = serializers.BooleanField()
     unread = serializers.BooleanField()
+    metadata = serializers.SerializerMethodField()
+
+    def get_metadata(self, item: models.Directory | models.ComicBook) -> dict:
+        """The ComicInfo fields, or nothing for a folder."""
+        if not isinstance(item, models.ComicBook):
+            return {}
+        return {
+            'series': item.series,
+            'issue': item.issue_number,
+            'writer': item.writer,
+            'artist': item.artist,
+            'year': item.year,
+        }
 
 
 class BreadcrumbSerializer(serializers.Serializer):

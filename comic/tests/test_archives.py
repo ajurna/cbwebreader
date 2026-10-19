@@ -3,7 +3,7 @@
 import zipfile
 from pathlib import Path
 
-from comic.archives import get_archive_files
+from comic.archives import get_archive_files, read_metadata
 from comic.tests.factories import make_cbz
 
 
@@ -40,3 +40,44 @@ def test_mime_type_is_guessed_from_the_file_name(tmp_path: Path) -> None:
     path = make_cbz(tmp_path / 'issue.cbz', pages=1, metadata=False)
     with zipfile.ZipFile(path) as archive:
         assert get_archive_files(archive)[0].mime_type == 'image/png'
+
+
+def test_read_metadata_returns_the_comicinfo_fields(tmp_path: Path) -> None:
+    path = make_cbz(tmp_path / 'issue.cbz', pages=1)
+    with zipfile.ZipFile(path) as archive:
+        assert read_metadata(archive) == {
+            'metadata_title': 'The Test Title',
+            'series': 'Test Series',
+            'issue_number': '12',
+            'writer': 'Test Writer',
+            'artist': 'Test Artist',
+            'year': 2003,
+        }
+
+
+def test_read_metadata_returns_nothing_when_the_archive_has_no_comicinfo(tmp_path: Path) -> None:
+    path = make_cbz(tmp_path / 'issue.cbz', pages=1, metadata=False)
+    with zipfile.ZipFile(path) as archive:
+        assert read_metadata(archive) == {}
+
+
+def test_read_metadata_finds_comicinfo_in_a_subdirectory(tmp_path: Path) -> None:
+    path = tmp_path / 'issue.cbz'
+    with zipfile.ZipFile(path, 'w') as archive:
+        archive.writestr('Metadata/ComicInfo.xml', '<ComicInfo><Title>Found</Title></ComicInfo>')
+    with zipfile.ZipFile(path) as archive:
+        assert read_metadata(archive) == {'metadata_title': 'Found'}
+
+
+def test_unparseable_xml_and_empty_fields_are_ignored(tmp_path: Path) -> None:
+    path = tmp_path / 'issue.cbz'
+    with zipfile.ZipFile(path, 'w') as archive:
+        archive.writestr('ComicInfo.xml', '<ComicInfo><Title>Unclosed')
+    with zipfile.ZipFile(path) as archive:
+        assert read_metadata(archive) == {}
+
+    with zipfile.ZipFile(path, 'w') as archive:
+        empty = '<ComicInfo><Title></Title><Year>not a year</Year><Summary>x</Summary></ComicInfo>'
+        archive.writestr('ComicInfo.xml', empty)
+    with zipfile.ZipFile(path) as archive:
+        assert read_metadata(archive) == {}

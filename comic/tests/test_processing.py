@@ -2,7 +2,7 @@
 
 import pytest
 
-from comic import models
+from comic import models, processing
 from comic.processing import clean_directories, clean_files, list_directory, reconcile
 from comic.tests.factories import make_cbz
 
@@ -57,7 +57,8 @@ def test_list_directory_reports_an_unread_book_without_creating_a_status(comic_v
     directory = models.Directory.objects.create(name='Series')
     target = comic_volume / 'Series'
     target.mkdir(parents=True)
-    make_cbz(target / 'issue.cbz', pages=3)
+    # metadata=False so the titles in this test are the file names, not ComicInfo titles
+    make_cbz(target / 'issue.cbz', pages=3, metadata=False)
     reconcile(directory)
 
     entries = list_directory(reader_user, directory)
@@ -133,3 +134,40 @@ def test_clean_directories_does_not_duplicate_rows_when_another_request_inserts_
     clean_directories(stale, comic_volume / 'Series', parent)
 
     assert models.Directory.objects.filter(parent=parent).count() == 1
+
+
+@pytest.mark.django_db
+def test_clean_files_reads_metadata_for_new_books(comic_volume, reader_user) -> None:
+    directory = models.Directory.objects.create(name='Series')
+    target = comic_volume / 'Series'
+    target.mkdir(parents=True)
+    make_cbz(target / 'issue.cbz', pages=2)
+
+    clean_files(models.ComicBook.objects.filter(directory=directory), target, directory)
+
+    book = models.ComicBook.objects.get(directory=directory)
+    assert book.page_count == 2
+    assert book.title == 'The Test Title'
+    assert book.series == 'Test Series'
+    assert book.issue_number == '12'
+    assert book.year == 2003
+    assert book.metadata_parsed is True
+
+
+@pytest.mark.django_db
+def test_metadata_is_read_once_for_books_that_are_already_indexed(comic_volume, reader_user, monkeypatch) -> None:
+    directory = models.Directory.objects.create(name='Series')
+    target = comic_volume / 'Series'
+    target.mkdir(parents=True)
+    book = models.ComicBook.objects.create(file_name='issue.cbz', directory=directory)
+    make_cbz(target / 'issue.cbz', pages=2)
+
+    clean_files(models.ComicBook.objects.filter(directory=directory), target, directory)
+    book.refresh_from_db()
+    assert book.title == 'The Test Title'
+    assert book.metadata_parsed is True
+
+    calls = []
+    monkeypatch.setattr(processing, 'read_metadata', lambda archive: calls.append(archive) or {})
+    clean_files(models.ComicBook.objects.filter(directory=directory), target, directory)
+    assert calls == []

@@ -8,6 +8,7 @@
         <h5 class="card-title text-break mb-0">
           <router-link :to="(data.type === 'Directory' ? {'name': 'browse', params: { selector: data.selector }} : {'name': 'read', params: { selector: data.selector }})">{{ data.title }}</router-link>
         </h5>
+        <small class="text-muted text-break" v-if="details">{{ details }}</small>
       </div>
       <div class="card-footer px-0 pb-0">
         <div class="progress position-relative">
@@ -161,6 +162,21 @@ export default {
       } else {
         return this.data.progress / this.data.total * 100
       }
+    },
+    // ComicInfo fields, shown only when the archive has them. The card title already uses
+    // the metadata title when there is one, so this line is the rest of the metadata.
+    details () {
+      const metadata = this.data.metadata || {}
+      const parts = []
+      if (metadata.series) {
+        parts.push(metadata.issue ? `${metadata.series} #${metadata.issue}` : metadata.series)
+      } else if (metadata.issue) {
+        parts.push(`#${metadata.issue}`)
+      }
+      if (metadata.writer) parts.push(metadata.writer)
+      if (metadata.artist) parts.push(metadata.artist)
+      if (metadata.year) parts.push(String(metadata.year))
+      return parts.join(' · ')
     }
   }
 }

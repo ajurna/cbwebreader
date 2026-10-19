@@ -189,7 +189,8 @@ def test_scan_endpoint_indexes_files_that_are_only_on_disk(client, reader_user, 
     client.force_login(reader_user)
     target = comic_volume / 'Series'
     target.mkdir()
-    make_cbz(target / 'issue.cbz', pages=2)
+    # metadata=False so the titles in this test are the file names, not ComicInfo titles
+    make_cbz(target / 'issue.cbz', pages=2, metadata=False)
 
     assert [entry['title'] for entry in client.get('/api/browse/').json()['results']] == []
 
@@ -215,7 +216,8 @@ def test_browse_search_matches_names_in_both_queries(client, reader_user, comic_
     client.force_login(reader_user)
     series = comic_volume / 'Transmetropolitan'
     series.mkdir()
-    make_cbz(series / 'issue 1.cbz', pages=2)
+    # metadata=False so the titles in this test are the file names, not ComicInfo titles
+    make_cbz(series / 'issue 1.cbz', pages=2, metadata=False)
     make_cbz(comic_volume / 'other.cbz', pages=2)
 
     # A root scan indexes the root only, so the folder has to be scanned as well.
@@ -418,3 +420,43 @@ def test_continue_reading_can_be_scoped_to_a_folder(client, book, reader_user) -
     entries = client.get(f'/api/read/continue/?directory={book.directory.selector}').json()
     assert [entry['title'] for entry in entries] == [book.file_name]
     assert client.get(f'/api/read/continue/?directory={UNKNOWN}').status_code == 404
+
+
+@pytest.mark.django_db
+def test_browse_search_matches_metadata_fields(client, reader_user, comic_volume) -> None:
+    client.force_login(reader_user)
+    series = comic_volume / 'Series'
+    series.mkdir()
+    make_cbz(series / 'issue.cbz', pages=2)
+
+    # A root scan indexes the root only, so the folder has to be scanned as well.
+    client.post('/api/browse/scan/', data='{}', content_type='application/json')
+    folder = models.Directory.objects.get(name='Series')
+    client.post('/api/browse/scan/', data=json.dumps({'selector': str(folder.selector)}),
+                content_type='application/json')
+
+    # The book is inside a folder, so the search has to be run inside that folder.
+    for term in ('test title', 'test series'):
+        body = client.get(f'/api/browse/{folder.selector}/', data={'search': term}).json()
+        assert [entry['title'] for entry in body['results']] == ['The Test Title']
+
+
+@pytest.mark.django_db
+def test_browse_reports_metadata_for_books_and_nothing_for_folders(client, reader_user, book) -> None:
+    book.metadata_title = 'The Test Title'
+    book.series = 'Test Series'
+    book.issue_number = '12'
+    book.writer = 'Test Writer'
+    book.artist = 'Test Artist'
+    book.year = 2003
+    book.save()
+
+    client.force_login(reader_user)
+    folder = client.get('/api/browse/').json()['results'][0]
+    assert folder['type'] == 'Directory'
+    assert folder['metadata'] == {}
+
+    entry = client.get(f'/api/browse/{book.directory.selector}/').json()['results'][0]
+    assert entry['title'] == 'The Test Title'
+    assert entry['metadata'] == {'series': 'Test Series', 'issue': '12', 'writer': 'Test Writer',
+                                 'artist': 'Test Artist', 'year': 2003}

@@ -80,3 +80,12 @@ def test_duplicate_directory_names_are_rejected() -> None:
     models.Directory.objects.create(name='Volume 1', parent=parent)
     with pytest.raises(IntegrityError):
         models.Directory.objects.create(name='Volume 1', parent=parent)
+
+
+@pytest.mark.django_db
+def test_title_prefers_the_metadata_title() -> None:
+    book = models.ComicBook.objects.create(file_name='issue.cbz')
+    assert book.title == 'issue.cbz'
+
+    book.metadata_title = 'The Test Title'
+    assert book.title == 'The Test Title'

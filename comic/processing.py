@@ -20,7 +20,7 @@ from django.db.models import (
 from django.db.models.functions import Coalesce
 
 from comic import models
-from comic.archives import get_archive_files
+from comic.archives import get_archive_files, read_metadata
 from comic.errors import NotCompatibleArchive
 
 
@@ -42,9 +42,9 @@ def list_directory(user: AbstractBaseUser, directory: models.Directory | None = 
                    read: bool | None = None) -> list[models.Directory | models.ComicBook]:
     """Return the contents of one directory for one user, reading only.
 
-    `search` matches a folder name or a file name and `read` filters on the finished flag.
-    Both are applied to the two queries so a filtered listing still contains folders and
-    books together, in the same order as an unfiltered one.
+    `search` matches a folder name, a file name or the ComicInfo fields of a book, and `read`
+    filters on the finished flag. Both are applied to the two queries so a filtered listing
+    still contains folders and books together, in the same order as an unfiltered one.
     """
     dir_db_query = models.Directory.objects.filter(parent=directory).annotate(
         total=Count('comicbook', distinct=True),
@@ -70,7 +70,8 @@ def list_directory(user: AbstractBaseUser, directory: models.Directory | None = 
 
     if search:
         dir_db_query = dir_db_query.filter(name__icontains=search)
-        file_db_query = file_db_query.filter(file_name__icontains=search)
+        file_db_query = file_db_query.filter(
+            Q(file_name__icontains=search) | Q(metadata_title__icontains=search) | Q(series__icontains=search))
 
     if read is not None:
         dir_db_query = dir_db_query.filter(finished=read)
@@ -118,11 +119,14 @@ def clean_files(files: QuerySet, dir_path: Path, directory: models.Directory | N
                 archive, archive_type = new_book.get_archive()
                 if archive_type == 'archive':
                     new_book.page_count = len(get_archive_files(archive))
+                    for field, value in read_metadata(archive).items():
+                        setattr(new_book, field, value)
                 elif archive_type == 'pdf':
                     new_book.page_count = archive.page_count
             except NotCompatibleArchive:
                 # Unreadable/corrupt archive - index the file with no page count
                 pass
+            new_book.metadata_parsed = True
             books_to_add.append(new_book)
 
     # ignore_conflicts: a concurrent scan may have indexed the same file, and
@@ -132,6 +136,19 @@ def clean_files(files: QuerySet, dir_path: Path, directory: models.Directory | N
     # Remove stale comic instances
     for stale_comic in files_db_set - file_list:
         models.ComicBook.objects.filter(file_name=stale_comic.name, directory=directory).delete()
+
+    # Books that were already in the database are not opened on every scan. Metadata is read
+    # once per book, so a library that has never been checked is opened one time only.
+    for book in files.filter(metadata_parsed=False):
+        try:
+            archive, archive_type = book.get_archive()
+            if archive_type == 'archive':
+                for field, value in read_metadata(archive).items():
+                    setattr(book, field, value)
+        except NotCompatibleArchive:
+            pass
+        book.metadata_parsed = True
+        book.save()
 
 
 def clean_thumbnails(items: Iterable[models.Directory | models.ComicBook]) -> None:

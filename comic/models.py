@@ -117,6 +117,16 @@ class ComicBook(models.Model):
                                     null=True)
     thumbnail_index = models.PositiveIntegerField(default=0)
     page_count = models.IntegerField(default=0)
+    # ComicInfo.xml fields, filled by the scan. They stay empty for books that have no
+    # metadata; `metadata_parsed` records that a book has been looked at so a scan does not
+    # open every archive again on each run.
+    metadata_title = models.TextField(blank=True)
+    series = models.TextField(blank=True)
+    issue_number = models.CharField(max_length=32, blank=True)
+    writer = models.TextField(blank=True)
+    artist = models.TextField(blank=True)
+    year = models.PositiveIntegerField(null=True, blank=True)
+    metadata_parsed = models.BooleanField(default=False)
 
     class Meta:
         constraints = [
@@ -128,7 +138,8 @@ class ComicBook(models.Model):
 
     @property
     def title(self) -> str:
-        return self.file_name
+        """The name to show: the ComicInfo title when there is one, otherwise the file name."""
+        return self.metadata_title or self.file_name
 
     @property
     def type(self) -> str:

@@ -7,6 +7,16 @@ from pathlib import Path
 import pymupdf
 from PIL import Image
 
+COMIC_INFO = """<ComicInfo>
+    <Title>The Test Title</Title>
+    <Series>Test Series</Series>
+    <Number>12</Number>
+    <Writer>Test Writer</Writer>
+    <Artist>Test Artist</Artist>
+    <Year>2003</Year>
+    <Summary>Not read by the reader.</Summary>
+</ComicInfo>"""
+
 
 def make_cbz(path: Path, pages: int = 3, metadata: bool = True) -> Path:
     """Write a .cbz containing PNG pages and, optionally, a ComicInfo.xml."""
@@ -17,7 +27,7 @@ def make_cbz(path: Path, pages: int = 3, metadata: bool = True) -> Path:
             image.save(buffer, format='PNG')
             archive.writestr(f'page{page:02}.png', buffer.getvalue())
         if metadata:
-            archive.writestr('ComicInfo.xml', '<ComicInfo><Title>Test</Title></ComicInfo>')
+            archive.writestr('ComicInfo.xml', COMIC_INFO)
     return path
 
 
