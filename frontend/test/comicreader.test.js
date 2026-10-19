@@ -562,6 +562,40 @@ describe('TheComicReader back to the folder', () => {
   })
 })
 
+describe('TheComicReader progress', () => {
+  it('shows the share of the book that has been reached', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+
+    // The fixture is on page 3 of 5.
+    expect(wrapper.find('.nav-item.reading-progress').exists()).toBe(true)
+    expect(wrapper.find('[role="progressbar"]').attributes('aria-valuenow')).toBe('60')
+    expect(wrapper.text()).toContain('60%')
+    expect(wrapper.find('.progress-bar').attributes('style')).toContain('width: 60%;')
+  })
+
+  it('counts the page being shown as reached', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+
+    wrapper.vm.setPage(5)
+    await flushPromises()
+    expect(wrapper.find('[role="progressbar"]').attributes('aria-valuenow')).toBe('100')
+
+    wrapper.vm.setPage(1)
+    await flushPromises()
+    expect(wrapper.find('[role="progressbar"]').attributes('aria-valuenow')).toBe('20')
+  })
+
+  it('leaves the bar out of a book that cannot show progress', async () => {
+    api.get.mockResolvedValue({ data: { ...COMIC, pages: 1 } })
+    const wrapper = mountReader()
+    await flushPromises()
+
+    expect(wrapper.find('.nav-item.reading-progress').exists()).toBe(false)
+  })
+})
+
 describe('TheComicReader bottom bar', () => {
   it('keeps every control on one line instead of using a wrapping Bootstrap row', async () => {
     const wrapper = mountReader()
@@ -571,7 +605,7 @@ describe('TheComicReader bottom bar', () => {
     expect(bar.classes()).not.toContain('row')
 
     const controls = bar.findAll('.nav-item')
-    expect(controls).toHaveLength(4)
+    expect(controls).toHaveLength(5)
     expect(controls.map((item) => item.element.parentElement)).toEqual(controls.map(() => bar.element))
   })
 

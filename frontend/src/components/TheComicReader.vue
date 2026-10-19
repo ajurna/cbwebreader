@@ -46,6 +46,12 @@
         @nextComic="nextComic"
       />
     </div>
+    <div class="nav-item reading-progress" v-if="pages > 1">
+      <div class="progress position-relative" role="progressbar" aria-label="Reading progress" :aria-valuenow="progress_percent" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-bar" :style="'width: ' + progress_percent + '%;'"></div>
+        <small class="justify-content-center d-flex position-absolute w-100 h-100 text-muted" style="line-height: normal">{{ progress_percent }}%</small>
+      </div>
+    </div>
     <div class="nav-item" v-if="directory">
       <router-link
         class="btn btn-sm btn-outline-secondary ghost"
@@ -145,6 +151,13 @@ export default {
         return Array.from({length: this.pages}, (_item, index) => index + 1)
       }
       return Array.from({length: Math.min(this.rendered, this.pages)}, (_item, index) => index + 1)
+    },
+    // The page being shown counts as reached, so a reader on page 3 of 10 is 30% through.
+    progress_percent () {
+      if (this.pages < 1) {
+        return 0
+      }
+      return Math.round(Math.min(this.current_page + 1, this.pages) / this.pages * 100)
     }
   },
   methods: {
@@ -518,6 +531,13 @@ export default {
 .pager {
   min-width: 0;
   overflow-x: auto;
+}
+
+/* The reading progress bar is a fixed width so the percentage of it is a percentage of a
+   known length, and it stays put whatever else the bar holds. */
+.reading-progress {
+  flex: none;
+  width: 120px;
 }
 
 /* The link back to the folder is always there but stays quiet until it is hovered or
