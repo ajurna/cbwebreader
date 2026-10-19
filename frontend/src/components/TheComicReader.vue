@@ -96,6 +96,11 @@ import ComicPaginate from "@/components/ComicPaginate";
 // reader approaches the end of what has already been rendered.
 const WINDOW_SIZE = 20;
 
+// Pages fetched and decoded before the reader asks for them. In continuous mode the DOM
+// images are `loading="lazy"`, so the browser would not start the next page until it is
+// already close to the viewport, and a page still being scrolled to would pop in blank.
+const PREFETCH_AHEAD = 2;
+
 // Held keys repeat, so a key press is handled immediately and then ignored for this
 // long. The page write is already debounced by queue_save, so nothing is sent per key.
 const KEY_THROTTLE_MS = 100;
@@ -108,6 +113,7 @@ export default {
       current_page: 0,
       paginate_page: 1,
       inview: new Set(),
+      preloaded: new Map(),
       deck: null,
       title: '',
       directory: '',
@@ -163,6 +169,28 @@ export default {
   methods: {
     image_url (page) {
       return '/api/read/' + this.selector + '/image/' + page + '/'
+    },
+    // Detached <img> elements: setting src starts the fetch and the decode straight away,
+    // and the element is kept in a Map so the bitmap is not collected before the page it
+    // belongs to is reached. Same URL as the one that is shown, so nothing is fetched
+    // twice.
+    preload_pages (page) {
+      const displayed = page + 1
+      for (let offset = 1; offset <= PREFETCH_AHEAD; offset += 1) {
+        const next = displayed + offset
+        if (next <= this.pages && !this.preloaded.has(next)) {
+          const image = document.createElement('img')
+          image.src = this.image_url(next)
+          this.preloaded.set(next, image)
+        }
+      }
+      // Pages at or behind the one being shown are dropped so a long book does not keep
+      // every image it has fetched alive.
+      for (const passed of [...this.preloaded.keys()]) {
+        if (passed <= displayed) {
+          this.preloaded.delete(passed)
+        }
+      }
     },
     prevPage(behavior = 'smooth'){
       if (this.mode === 'scroll') {
@@ -429,6 +457,7 @@ export default {
     teardown () {
       clearTimeout(this.save_timeout)
       this.inview.clear()
+      this.preloaded.clear()
 
       if (this.page_observer) {
         this.page_observer.disconnect()
@@ -456,6 +485,7 @@ export default {
   watch: {
     'current_page' (new_page) {
       this.paginate_page = new_page + 1
+      this.preload_pages(new_page)
     }
   },
   mounted () {

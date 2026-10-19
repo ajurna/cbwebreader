@@ -562,6 +562,38 @@ describe('TheComicReader back to the folder', () => {
   })
 })
 
+describe('TheComicReader preloading', () => {
+  it('fetches the pages after the one being shown', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+
+    // The fixture is on page 3 of 5, so pages 4 and 5 are the ones ahead of it.
+    expect(Array.from(wrapper.vm.preloaded.keys())).toEqual([4, 5])
+  })
+
+  it('leaves nothing to fetch at the last page', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+
+    wrapper.vm.setPage(5)
+    await flushPromises()
+    expect(Array.from(wrapper.vm.preloaded.keys())).toEqual([])
+
+    wrapper.vm.setPage(1)
+    await flushPromises()
+    expect(Array.from(wrapper.vm.preloaded.keys())).toEqual([2, 3])
+  })
+
+  it('drops the images it fetched when the reader is torn down', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+
+    wrapper.vm.setMode('scroll')
+    await flushPromises()
+    expect(Array.from(wrapper.vm.preloaded.keys())).toEqual([])
+  })
+})
+
 describe('TheComicReader progress', () => {
   it('shows the share of the book that has been reached', async () => {
     const wrapper = mountReader()
