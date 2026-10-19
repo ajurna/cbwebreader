@@ -10,7 +10,7 @@ from pathlib import Path
 from cbreader.settings.base import *  # noqa: F403
 from cbreader.settings.base import BASE_DIR
 
-SECRET_KEY = 'test-secret-key'
+SECRET_KEY = 'test-secret-key-0123456789abcdef0123456789'  # 42 bytes: PyJWT warns below 32
 ALLOWED_HOSTS = ['*']
 
 DATABASES = {
