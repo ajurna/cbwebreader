@@ -568,10 +568,14 @@ describe('TheComicReader progress', () => {
     await flushPromises()
 
     // The fixture is on page 3 of 5.
-    expect(wrapper.find('.nav-item.reading-progress').exists()).toBe(true)
+    expect(wrapper.find('.reading-progress').exists()).toBe(true)
     expect(wrapper.find('[role="progressbar"]').attributes('aria-valuenow')).toBe('60')
     expect(wrapper.text()).toContain('60%')
     expect(wrapper.find('.progress-bar').attributes('style')).toContain('width: 60%;')
+
+    // The bar is a sibling of the bottom bar, not one of its controls, so it sits at the
+    // top of the screen instead of joining the row of buttons.
+    expect(wrapper.element.querySelector('.navButtons').querySelector('.reading-progress')).toBe(null)
   })
 
   it('counts the page being shown as reached', async () => {
@@ -592,7 +596,7 @@ describe('TheComicReader progress', () => {
     const wrapper = mountReader()
     await flushPromises()
 
-    expect(wrapper.find('.nav-item.reading-progress').exists()).toBe(false)
+    expect(wrapper.find('.reading-progress').exists()).toBe(false)
   })
 })
 
@@ -605,7 +609,7 @@ describe('TheComicReader bottom bar', () => {
     expect(bar.classes()).not.toContain('row')
 
     const controls = bar.findAll('.nav-item')
-    expect(controls).toHaveLength(5)
+    expect(controls).toHaveLength(4)
     expect(controls.map((item) => item.element.parentElement)).toEqual(controls.map(() => bar.element))
   })
 

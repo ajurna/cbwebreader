@@ -20,6 +20,12 @@
     </div>
     <div class="sentinel" ref="sentinel" v-if="mode === 'scroll' && rendered < pages"></div>
   </div>
+  <div class="reading-progress" v-if="pages > 1">
+    <div class="progress position-relative" role="progressbar" aria-label="Reading progress" :aria-valuenow="progress_percent" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress-bar" :style="'width: ' + progress_percent + '%;'"></div>
+      <small class="justify-content-center d-flex position-absolute w-100 h-100 text-muted" style="line-height: normal">{{ progress_percent }}%</small>
+    </div>
+  </div>
   <div class="navButtons">
     <div class="nav-item">
       <div class="btn-group btn-group-sm" role="group" aria-label="Reading mode">
@@ -45,12 +51,6 @@
         @prevComic="prevComic"
         @nextComic="nextComic"
       />
-    </div>
-    <div class="nav-item reading-progress" v-if="pages > 1">
-      <div class="progress position-relative" role="progressbar" aria-label="Reading progress" :aria-valuenow="progress_percent" aria-valuemin="0" aria-valuemax="100">
-        <div class="progress-bar" :style="'width: ' + progress_percent + '%;'"></div>
-        <small class="justify-content-center d-flex position-absolute w-100 h-100 text-muted" style="line-height: normal">{{ progress_percent }}%</small>
-      </div>
     </div>
     <div class="nav-item" v-if="directory">
       <router-link
@@ -533,11 +533,22 @@ export default {
   overflow-x: auto;
 }
 
-/* The reading progress bar is a fixed width so the percentage of it is a percentage of a
-   known length, and it stays put whatever else the bar holds. */
+/* The progress bar is at the top centre, away from the controls, because the page fills
+   the middle of the screen and the bar must not compete with it or with the page list.
+   The light backdrop is the one the shortcuts panel uses, so the bar stays legible over
+   artwork; pointer-events: none leaves the page underneath clickable and scrollable. */
 .reading-progress {
-  flex: none;
-  width: 120px;
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 160px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 1030;
+  pointer-events: none;
+  cursor: default;
 }
 
 /* The link back to the folder is always there but stays quiet until it is hovered or
