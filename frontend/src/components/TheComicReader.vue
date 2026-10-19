@@ -11,7 +11,6 @@
           :style="ratio_style(page)"
         >
         <img
-          :class="{ shown: mode === 'scroll' && inview.has(page) }"
           :src="mode === 'scroll' ? image_url(page) : null"
           :data-src="mode === 'paged' ? image_url(page) : null"
           :loading="mode === 'scroll' ? 'lazy' : null"
@@ -126,6 +125,9 @@ const WINDOW_SIZE = 20;
 // images are `loading="lazy"`, so the browser would not start the next page until it is
 // already close to the viewport, and a page still being scrolled to would pop in blank.
 const PREFETCH_AHEAD = 2;
+// The pane is always being scrolled, so what is asked for is a page that is already
+// sliding in: fetching further ahead is what keeps its sheet from being blank.
+const PANE_PREFETCH_AHEAD = 4;
 
 // The page aspect ratio (width over height) used until a page reports its own. A
 // definite height is needed before an image has loaded, so the length of the pane does
@@ -153,7 +155,6 @@ export default {
     return {
       current_page: 0,
       paginate_page: 1,
-      inview: new Set(),
       preloaded: new Map(),
       sizes: new Map(),
       deck: null,
@@ -259,7 +260,8 @@ export default {
     // twice.
     preload_pages (page) {
       const displayed = page + 1
-      for (let offset = 1; offset <= PREFETCH_AHEAD; offset += 1) {
+      const ahead = this.mode === 'scroll' ? PANE_PREFETCH_AHEAD : PREFETCH_AHEAD
+      for (let offset = 1; offset <= ahead; offset += 1) {
         const next = displayed + offset
         if (next <= this.pages && !this.preloaded.has(next)) {
           const image = document.createElement('img')
@@ -270,6 +272,12 @@ export default {
           image.onload = () => {
             if (image.naturalWidth && image.naturalHeight) {
               this.sizes.set(next, {width: image.naturalWidth, height: image.naturalHeight})
+            }
+            // Decoding is what costs a frame, and it would otherwise happen the first
+            // time the page is painted: asking for the bitmap here moves it off the
+            // scroll. The element stays in the Map so the bitmap is kept, not recollected.
+            if (image.decode) {
+              image.decode()
             }
           }
           this.preloaded.set(next, image)
@@ -480,7 +488,6 @@ export default {
     // worked out from what is actually intersecting the viewport.
     start_scroll () {
       this.visible.clear()
-      this.inview.clear()
 
       const pane = this.$refs.pane
       // The pane clips what is shown, so the observer is told about the pane rather than
@@ -491,10 +498,8 @@ export default {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             this.visible.set(entry.target, entry.boundingClientRect.top)
-            this.inview.add(Number(entry.target.dataset.page))
           } else {
             this.visible.delete(entry.target)
-            this.inview.delete(Number(entry.target.dataset.page))
           }
         }
 
@@ -583,7 +588,6 @@ export default {
     },
     teardown () {
       clearTimeout(this.save_timeout)
-      this.inview.clear()
       this.preloaded.clear()
 
       if (this.page_observer) {
@@ -807,26 +811,17 @@ section {
   padding-bottom: 12px;
 }
 
-/* A panned page settles on its edge. Support is uneven, so this is an enhancement: the
-   pan is smooth and pages are simply not snapped to where it is missing. */
-@supports (scroll-snap-type: y proximity) {
-  .continuous .pane {
-    scroll-snap-type: y proximity;
-  }
+/* Nothing snaps here on purpose. A snap area is the size of a page, so proximity would
+   take the next page edge as soon as a pan starts and hold the reader there: that hold
+   is the freeze the reader feels between pages, not a page settling into place. A page
+   chosen from the pager is aligned by scrolling its section to the top of the pane, which
+   is exact with or without snapping. */
 
-  .continuous .pane section {
-    scroll-snap-align: start;
-  }
-}
-
-.continuous img {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.continuous img.shown {
-  opacity: 1;
-}
+/* The pane does not fade its pages: a sheet that is half transparent while it slides in
+   is read as a blank gap, and the page being solid the moment it is in the pane is the
+   point of the pane. What is late is the fetch and the decode, and both are asked for
+   ahead of the reader above. One page at a time still fades, because there the page is
+   swapped rather than moved. */
 
 @keyframes page-fade {
   from { opacity: 0; }
@@ -834,10 +829,8 @@ section {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal section.present img,
-  .continuous img {
+  .reveal section.present img {
     animation: none;
-    transition: none;
   }
 }
 </style>

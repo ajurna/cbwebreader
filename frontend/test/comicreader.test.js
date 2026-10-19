@@ -494,21 +494,20 @@ describe('TheComicReader in continuous mode', () => {
     expect(api.put).toHaveBeenCalledWith('/api/read/a1/set_page/', { page: 6 })
   })
 
-  it('marks the page in view as shown so it fades in', async () => {
+  it('keeps the pages it holds visible, so nothing is revealed as it slides in', async () => {
     const wrapper = mountContinuous(30)
     await flushPromises()
 
     const sections = wrapper.findAll('section[data-page]')
+    expect(sections[2].find('img').element.getAttribute('src')).to.contain('/api/read/')
+    expect(sections[2].find('img').classes()).to.not.include('shown')
+
+    // What is in the pane is drawn as it enters, so observing a page changes what is
+    // being read, never what can be seen.
     const observer = pageObserver()
     observer.fire([{ isIntersecting: true, target: sections[2].element, boundingClientRect: { top: 0 } }])
     await flushPromises()
-
-    expect(sections[2].find('img').classes()).toContain('shown')
-    expect(sections[0].find('img').classes()).not.toContain('shown')
-
-    observer.fire([{ isIntersecting: false, target: sections[2].element, boundingClientRect: { top: 0 } }])
-    await flushPromises()
-    expect(sections[2].find('img').classes()).not.toContain('shown')
+    expect(wrapper.html()).to.not.contain('shown')
   })
 
   it('scrolls to a page chosen from the pager, rendering it first if it is outside the window', async () => {
@@ -760,5 +759,14 @@ describe('TheComicReader in a pane', () => {
     await flushPromises()
     expect(store.commit).toHaveBeenLastCalledWith('setReaderZoom', 325)
     expect(wrapper.find('.pane').element.getAttribute('style')).to.contain('--page-zoom: 2')
+  })
+
+  it('fetches the pages that are about to slide in, further than one page at a time', async () => {
+    const wrapper = mountContinuous(8)
+    await flushPromises()
+
+    // The fixture is on page 3 of 8, so four pages ahead of it are fetched; one page
+    // at a time fetches two, because reveal's own lazy loader covers the rest.
+    expect(Array.from(wrapper.vm.preloaded.keys())).toEqual([4, 5, 6, 7])
   })
 })
