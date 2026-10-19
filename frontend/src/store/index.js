@@ -20,6 +20,30 @@ function get_reader_mode_from_storage(){
   return mode === 'scroll' ? 'scroll' : 'paged'
 }
 
+// How a page is sized in the pane is kept the same way. 'width' is the page as wide as
+// the screen, 'page' is the whole page inside the screen.
+function get_reader_fit_from_storage(){
+  return localStorage.getItem('reader_fit') === 'page' ? 'page' : 'width'
+}
+
+// A percentage of that size. The bounds keep a stray value in localStorage from either
+// hiding the page or making it wider than the screen it was sized to.
+const MIN_READER_ZOOM = 25;
+const MAX_READER_ZOOM = 200;
+
+function get_reader_zoom_from_storage(){
+  const stored = localStorage.getItem('reader_zoom')
+  // An absent key is "no choice yet", not zero, so it must not be clamped to the floor.
+  if (stored === null || stored === '') {
+    return 100
+  }
+  const zoom = Number(stored)
+  if (!Number.isFinite(zoom)) {
+    return 100
+  }
+  return Math.min(Math.max(zoom, MIN_READER_ZOOM), MAX_READER_ZOOM)
+}
+
 function session_expired_query(next){
   return {
     name: 'login',
@@ -35,6 +59,8 @@ export default createStore({
     filters: {},
     user: get_user_from_storage(),
     reader_mode: get_reader_mode_from_storage(),
+    reader_fit: get_reader_fit_from_storage(),
+    reader_zoom: get_reader_zoom_from_storage(),
     classifications: [
       {label: 'G', value: '0'},
       {label: 'PG', value: '1'},
@@ -70,6 +96,21 @@ export default createStore({
       }
       localStorage.setItem('reader_mode', mode);
       state.reader_mode = mode
+    },
+    setReaderFit(state, fit){
+      if (fit !== 'width' && fit !== 'page') {
+        return
+      }
+      localStorage.setItem('reader_fit', fit);
+      state.reader_fit = fit
+    },
+    setReaderZoom(state, zoom){
+      const clamped = Math.min(Math.max(Number(zoom), MIN_READER_ZOOM), MAX_READER_ZOOM)
+      if (!Number.isFinite(clamped)) {
+        return
+      }
+      localStorage.setItem('reader_zoom', String(clamped));
+      state.reader_zoom = clamped
     },
   },
   actions: {

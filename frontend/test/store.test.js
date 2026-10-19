@@ -64,6 +64,49 @@ describe('reader mode', () => {
   })
 })
 
+describe('reader page size', () => {
+  it('fits the page to the width at full scale when nothing is stored', async () => {
+    // An earlier test in this file may have stored a choice, so start from nothing.
+    localStorage.removeItem('reader_fit')
+    localStorage.removeItem('reader_zoom')
+    vi.resetModules()
+    const fresh = (await import('@/store')).default
+
+    expect(fresh.state.reader_fit).toBe('width')
+    expect(fresh.state.reader_zoom).toBe(100)
+  })
+
+  it('keeps the chosen size in localStorage', () => {
+    store.commit('setReaderFit', 'page')
+    store.commit('setReaderZoom', 150)
+
+    expect(store.state.reader_fit).toBe('page')
+    expect(store.state.reader_zoom).toBe(150)
+    expect(localStorage.getItem('reader_fit')).toBe('page')
+    expect(localStorage.getItem('reader_zoom')).toBe('150')
+  })
+
+  it('keeps a zoom it was asked for within its bounds', () => {
+    store.commit('setReaderZoom', 10)
+    expect(store.state.reader_zoom).toBe(25)
+
+    store.commit('setReaderZoom', 500)
+    expect(store.state.reader_zoom).toBe(200)
+
+    // A value that is not a number is not a zoom, so nothing is kept.
+    store.commit('setReaderZoom', 'banana')
+    expect(store.state.reader_zoom).toBe(200)
+  })
+
+  it('ignores a size it does not recognise', () => {
+    store.commit('setReaderFit', 'page')
+    store.commit('setReaderFit', 'banana')
+
+    expect(store.state.reader_fit).toBe('page')
+    expect(localStorage.getItem('reader_fit')).toBe('page')
+  })
+})
+
 describe('restoreSession', () => {
   it('refreshes the stored profile from the cookie session', async () => {
     store.commit('updateUser', { id: 1, is_superuser: false })

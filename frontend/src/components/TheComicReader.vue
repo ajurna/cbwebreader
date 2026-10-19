@@ -1,24 +1,28 @@
 <template>
   <div class="reveal" :class="{ continuous: mode === 'scroll' }" id="comic_box" ref="comic_box">
-    <div id="slides_div" class="slides" ref="slides">
-      <section
-        v-for="page in visible_pages"
-        :key="page"
-        :data-page="page"
-        :data-menu-title="page"
-        :hidden="mode === 'paged'"
-      >
+    <div class="pane" :class="fit_class" ref="pane" :style="zoom_style">
+      <div id="slides_div" class="slides" ref="slides">
+        <section
+          v-for="page in visible_pages"
+          :key="page"
+          :data-page="page"
+          :data-menu-title="page"
+          :hidden="mode === 'paged'"
+          :style="ratio_style(page)"
+        >
         <img
           :class="{ shown: mode === 'scroll' && inview.has(page) }"
           :src="mode === 'scroll' ? image_url(page) : null"
           :data-src="mode === 'paged' ? image_url(page) : null"
           :loading="mode === 'scroll' ? 'lazy' : null"
+          :style="page_style(page)"
           class="w-100"
           :alt="page"
         >
-      </section>
+        </section>
+      </div>
+      <div class="sentinel" ref="sentinel" v-if="mode === 'scroll' && rendered < pages"></div>
     </div>
-    <div class="sentinel" ref="sentinel" v-if="mode === 'scroll' && rendered < pages"></div>
   </div>
   <div class="reading-progress" v-if="pages > 1">
     <div class="progress position-relative" role="progressbar" aria-label="Reading progress" :aria-valuenow="progress_percent" aria-valuemin="0" aria-valuemax="100">
@@ -51,6 +55,28 @@
         @prevComic="prevComic"
         @nextComic="nextComic"
       />
+    </div>
+    <div class="nav-item" v-if="mode === 'scroll'">
+      <div class="btn-group btn-group-sm" role="group" aria-label="Page size">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          :class="{ active: fit === 'width' }"
+          @click="set_fit('width')"
+        >Fit width</button>
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          :class="{ active: fit === 'page' }"
+          @click="set_fit('page')"
+        >Fit page</button>
+      </div>
+    </div>
+    <div class="nav-item" v-if="mode === 'scroll'">
+      <div class="btn-group btn-group-sm" role="group" aria-label="Zoom">
+        <button type="button" class="btn btn-outline-secondary" @click="zoom_by(-25)">−</button>
+        <button type="button" class="btn btn-outline-secondary" @click="zoom_by(25)">+</button>
+      </div>
     </div>
     <div class="nav-item" v-if="directory">
       <router-link
@@ -101,6 +127,21 @@ const WINDOW_SIZE = 20;
 // already close to the viewport, and a page still being scrolled to would pop in blank.
 const PREFETCH_AHEAD = 2;
 
+// The page aspect ratio (width over height) used until a page reports its own. A
+// definite height is needed before an image has loaded, so the length of the pane does
+// not change as pages load.
+const DEFAULT_PAGE_RATIO = 0.71;
+
+// A pane is a real scroll container, so panning within a page is ours rather than the
+// browser's: one press moves the page this much of the pane.
+const PANE_SCROLL_STEP = 0.4;
+const DEFAULT_PANE_HEIGHT = 1000;
+
+// Zoom is a percentage of the fitted size, in these steps, within these bounds.
+const ZOOM_STEP = 25;
+const MIN_READER_ZOOM = 25;
+const MAX_READER_ZOOM = 200;
+
 // Held keys repeat, so a key press is handled immediately and then ignored for this
 // long. The page write is already debounced by queue_save, so nothing is sent per key.
 const KEY_THROTTLE_MS = 100;
@@ -114,6 +155,7 @@ export default {
       paginate_page: 1,
       inview: new Set(),
       preloaded: new Map(),
+      sizes: new Map(),
       deck: null,
       title: '',
       directory: '',
@@ -130,7 +172,8 @@ export default {
       show_shortcuts: false,
       shortcuts: [
         { keys: '← / →', action: 'Previous / next page' },
-        { keys: '↑ / ↓', action: 'Scroll within the page' },
+        { keys: '↑ / ↓', action: 'Pan within the page' },
+        { keys: '− / +', action: 'Zoom out / in' },
         { keys: 'Space', action: 'Next page' },
         { keys: 'Shift + Space', action: 'Previous page' },
         { keys: 'n / p', action: 'Next / previous page' },
@@ -164,11 +207,51 @@ export default {
         return 0
       }
       return Math.round(Math.min(this.current_page + 1, this.pages) / this.pages * 100)
+    },
+    fit () {
+      return this.$store.state.reader_fit === 'page' ? 'page' : 'width'
+    },
+    fit_class () {
+      return 'fit-' + this.fit
+    },
+    zoom_percent () {
+      const zoom = Number(this.$store.state.reader_zoom)
+      if (!Number.isFinite(zoom)) {
+        return 100
+      }
+      return Math.min(Math.max(zoom, MIN_READER_ZOOM), MAX_READER_ZOOM)
+    },
+    // The pane's own custom properties are what the sizing rules read, so a resized
+    // window resizes the pages without any of this running again.
+    zoom_style () {
+      return '--page-zoom: ' + this.zoom_percent / 100
     }
   },
   methods: {
     image_url (page) {
       return '/api/read/' + this.selector + '/image/' + page + '/'
+    },
+    // A page's own aspect ratio, once its image has reported one. A method rather than
+    // a computed: the page number is an argument, and the sizes are still read while the
+    // page is being rendered, so a newly measured page redraws its box.
+    page_ratio (page) {
+      const measured = this.sizes.get(page)
+      if (measured) {
+        return measured.width / measured.height
+      }
+      // The pages of a book are one size, so any page already measured is a better
+      // guess than the default, and the default only applies before the first one.
+      const known = [...this.sizes.values()][0]
+      if (known) {
+        return known.width / known.height
+      }
+      return DEFAULT_PAGE_RATIO
+    },
+    ratio_style (page) {
+      return '--page-ratio: ' + this.page_ratio(page)
+    },
+    page_style (page) {
+      return 'aspect-ratio: ' + this.page_ratio(page)
     },
     // Detached <img> elements: setting src starts the fetch and the decode straight away,
     // and the element is kept in a Map so the bitmap is not collected before the page it
@@ -181,6 +264,14 @@ export default {
         if (next <= this.pages && !this.preloaded.has(next)) {
           const image = document.createElement('img')
           image.src = this.image_url(next)
+          // The measured size is what the page box is sized from: the pane is scrolled
+          // by the height of the pages as they are drawn, so an assumed height that is
+          // corrected later would move the reading position.
+          image.onload = () => {
+            if (image.naturalWidth && image.naturalHeight) {
+              this.sizes.set(next, {width: image.naturalWidth, height: image.naturalHeight})
+            }
+          }
           this.preloaded.set(next, image)
         }
       }
@@ -191,6 +282,22 @@ export default {
           this.preloaded.delete(passed)
         }
       }
+    },
+    set_fit (fit) {
+      this.$store.commit('setReaderFit', fit)
+    },
+    zoom_by (step) {
+      this.$store.commit('setReaderZoom', this.zoom_percent + step)
+    },
+    scroll_within (direction) {
+      const pane = this.$refs.pane
+      if (!pane) {
+        return
+      }
+      const height = pane.clientHeight || DEFAULT_PANE_HEIGHT
+      // Assigning scrollTop is the one form of programmatic scrolling every browser
+      // supports, and it clamps to the content at both ends.
+      pane.scrollTop = Math.max(0, (pane.scrollTop || 0) + Math.round(direction * height * PANE_SCROLL_STEP))
     },
     prevPage(behavior = 'smooth'){
       if (this.mode === 'scroll') {
@@ -316,11 +423,18 @@ export default {
       this.key_locked = true
       this.key_timeout = setTimeout(() => { this.key_locked = false }, KEY_THROTTLE_MS)
 
-      // Left and Right change pages. Up and Down are left to the browser's default
-      // scrolling: the page is taller than the viewport, and intercepting them here would
-      // double up with the native scroll. In continuous mode the observer records whichever
-      // page is topmost, so scrolling inside a page does not change the saved page.
+      // Left and Right change pages. Up and Down are only ours in the pane: the pane is
+      // a scroll container of its own, so the browser's default arrow scrolling would not
+      // reach it. In paged mode the document still scrolls the page, and intercepting it
+      // there doubled up with that scroll.
       switch (key) {
+        case 'arrowup':
+        case 'arrowdown':
+          if (this.mode === 'scroll') {
+            e.preventDefault?.()
+            this.scroll_within(key === 'arrowup' ? -1 : 1)
+          }
+          return
         case 'arrowright':
         case 'n':
           this.nextPage('auto')
@@ -347,6 +461,14 @@ export default {
         case 'm':
           this.setMode(this.mode === 'paged' ? 'scroll' : 'paged')
           return
+        case '-':
+        case '_':
+          this.zoom_by(-ZOOM_STEP)
+          return
+        case '+':
+        case '=':
+          this.zoom_by(ZOOM_STEP)
+          return
         case 'b':
           if (this.directory) {
             this.$router.push({ name: 'browse', params: { selector: this.directory } })
@@ -360,6 +482,11 @@ export default {
       this.visible.clear()
       this.inview.clear()
 
+      const pane = this.$refs.pane
+      // The pane clips what is shown, so the observer is told about the pane rather than
+      // about the window: a page that has been scrolled out of the pane is not being read
+      // even while its rectangle is still inside the window.
+      const bounds = pane ? {root: pane} : {}
       this.page_observer = new IntersectionObserver((entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
@@ -381,13 +508,13 @@ export default {
           this.current_page = page - 1
           this.queue_save(page - 1)
         }
-      }, { threshold: 0 })
+      }, {threshold: 0, ...bounds})
 
       this.growth_observer = new IntersectionObserver((entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
           this.extend_window()
         }
-      }, { rootMargin: '1200px 0px' })
+      }, {rootMargin: '1200px 0px', ...bounds})
 
       this.observe_pages()
       if (this.$refs.sentinel) {
@@ -631,6 +758,65 @@ section {
    present; continuous mode uses a transition driven by the IntersectionObserver. */
 .reveal section.present img {
   animation: page-fade 0.3s ease;
+}
+
+/* The pane is a scroll container, so the wheel, the touch drag and the scrollbar all
+   work inside it and what it scrolls is the height of the pages as they are drawn.
+   It starts below the progress bar and stops above the row of controls, which is where
+   the bottom bar sits: the inset is the height of each, so neither covers a page. */
+.continuous .pane {
+  --pane-w: 100vw;
+  --pane-h: calc(100vh - 96px);
+  --page-ratio: 0.71;
+  --page-zoom: 1;
+  position: fixed;
+  top: 40px;
+  left: 0;
+  right: 0;
+  bottom: 56px;
+  overflow-y: auto;
+  z-index: 1;
+}
+
+/* Width comes from the pane rather than from a class, so a resized window resizes the
+   pages. Bootstrap's w-100 is !important, so this has to be as well, and the more
+   specific selector wins; max-width is what would otherwise keep a zoomed-in page from
+   exceeding the pane. */
+.continuous .pane img {
+  max-width: none;
+  height: auto;
+}
+
+.continuous .pane.fit-width img {
+  width: calc(var(--pane-w) * var(--page-zoom)) !important;
+}
+
+/* Fit page is the widest a page can be and still be seen whole: the pane height times
+   the page aspect ratio, or the pane width when that is narrower. */
+.continuous .pane.fit-page img {
+  width: min(calc(var(--pane-w) * var(--page-zoom)), calc(var(--pane-h) * var(--page-ratio) * var(--page-zoom))) !important;
+}
+
+/* A page is centred when it is narrower than the pane, and the gutter between pages is
+   only what keeps two from touching: the clearance from the controls is the pane's inset.
+   The 60px below a page is for paged mode, where the page scrolls in the document. */
+.continuous .pane section {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-bottom: 12px;
+}
+
+/* A panned page settles on its edge. Support is uneven, so this is an enhancement: the
+   pan is smooth and pages are simply not snapped to where it is missing. */
+@supports (scroll-snap-type: y proximity) {
+  .continuous .pane {
+    scroll-snap-type: y proximity;
+  }
+
+  .continuous .pane section {
+    scroll-snap-align: start;
+  }
 }
 
 .continuous img {

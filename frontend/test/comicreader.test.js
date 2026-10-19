@@ -87,6 +87,14 @@ beforeEach(() => {
     if (name === 'setReaderMode' && (value === 'paged' || value === 'scroll')) {
       store.state.reader_mode = value
     }
+    // The reader settings are kept the way the store keeps them, so a test that asks
+    // for a size can see the page sizing follow it.
+    if (name === 'setReaderFit' && (value === 'width' || value === 'page')) {
+      store.state.reader_fit = value
+    }
+    if (name === 'setReaderZoom') {
+      store.state.reader_zoom = Math.min(Math.max(Number(value), 25), 200)
+    }
   })
   observers.length = 0
   globalThis.IntersectionObserver = FakeIntersectionObserver
@@ -649,5 +657,108 @@ describe('TheComicReader bottom bar', () => {
     const wrapper = mountReader()
     await flushPromises()
     expect(wrapper.find('.nav-item.pager').exists()).toBe(true)
+  })
+})
+
+describe('TheComicReader in a pane', () => {
+  function mountContinuous(pageCount) {
+    store.state.reader_mode = 'scroll'
+    api.get.mockResolvedValue({ data: { ...COMIC, pages: pageCount } })
+    return mountReader()
+  }
+
+  // The pane is moved by assigning scrollTop, so the test records what it is asked for
+  // and what it was last at.
+  function trackScrolling(wrapper) {
+    const pane = wrapper.find('.pane').element
+    const scrolled = []
+    Object.defineProperty(pane, 'scrollTop', {
+      get: () => (scrolled.length ? scrolled[scrolled.length - 1] : 0),
+      set: (position) => { scrolled.push(position) },
+    })
+    return scrolled
+  }
+
+  it('scrolls the pages inside a pane of their own, sized by the screen', async () => {
+    const wrapper = mountContinuous(45)
+    await flushPromises()
+
+    const pane = wrapper.find('.pane')
+    expect(pane.classes()).to.include('fit-width')
+    expect(pane.element.getAttribute('style')).to.contain('--page-zoom: 1')
+    // The pane is only a scroller in this mode; the reveal root is what marks the mode,
+    // and the sizing rules are hung under it.
+    expect(pane.element.parentElement.getAttribute('class')).to.contain('continuous')
+
+    // A page has a height before it has loaded, so the length of the pane does not
+    // change as pages load.
+    expect(wrapper.find('section[data-page="2"]').element.getAttribute('style')).to.contain('--page-ratio')
+    expect(wrapper.find('img').element.getAttribute('style')).to.contain('aspect-ratio')
+  })
+
+  it('pans within the page with the arrow keys, which the browser would not scroll', async () => {
+    const wrapper = mountContinuous(45)
+    await flushPromises()
+    const scrolled = trackScrolling(wrapper)
+
+    wrapper.vm.keyPress({ key: 'ArrowDown', preventDefault: vi.fn() })
+    await flushPromises()
+    expect(scrolled).toEqual([400])
+
+    vi.advanceTimersByTime(100)
+    wrapper.vm.keyPress({ key: 'ArrowUp', preventDefault: vi.fn() })
+    await flushPromises()
+    expect(scrolled).toEqual([400, 0])
+  })
+
+  it('leaves the arrow keys alone when one page at a time is shown', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+    const scrolled = trackScrolling(wrapper)
+
+    wrapper.vm.keyPress({ key: 'ArrowDown', preventDefault: vi.fn() })
+    await flushPromises()
+    expect(scrolled).toEqual([])
+    expect(wrapper.vm.$refs.pane.parentElement.getAttribute('class')).to.not.contain('continuous')
+  })
+
+  it('offers the page sizing controls only where there is a pane', async () => {
+    const paged = mountReader()
+    await flushPromises()
+    const pagedButtons = paged.findAll('button').map((button) => button.text())
+    expect(pagedButtons).to.not.include('Fit page')
+
+    const wrapper = mountContinuous(45)
+    await flushPromises()
+    const buttons = wrapper.findAll('button').map((button) => button.text())
+    expect(buttons).to.contain('Fit width')
+    expect(buttons).to.contain('Fit page')
+  })
+
+  it('draws the whole page when asked to', async () => {
+    const wrapper = mountContinuous(45)
+    await flushPromises()
+
+    wrapper.vm.set_fit('page')
+    await flushPromises()
+    expect(store.commit).toHaveBeenCalledWith('setReaderFit', 'page')
+    expect(wrapper.vm.fit).toBe('page')
+    expect(wrapper.find('.pane').classes()).to.contain('fit-page')
+  })
+
+  it('zooms within bounds and the pane follows', async () => {
+    const wrapper = mountContinuous(45)
+    await flushPromises()
+
+    wrapper.vm.keyPress({ key: '+' })
+    await flushPromises()
+    expect(store.commit).toHaveBeenCalledWith('setReaderZoom', 125)
+    expect(wrapper.find('.pane').element.getAttribute('style')).to.contain('--page-zoom: 1.25')
+
+    // The step is what is asked for; the bounds are what is kept.
+    wrapper.vm.zoom_by(200)
+    await flushPromises()
+    expect(store.commit).toHaveBeenLastCalledWith('setReaderZoom', 325)
+    expect(wrapper.find('.pane').element.getAttribute('style')).to.contain('--page-zoom: 2')
   })
 })
