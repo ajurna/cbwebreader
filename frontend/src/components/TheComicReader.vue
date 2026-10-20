@@ -10,14 +10,16 @@
           :hidden="mode === 'paged'"
           :style="ratio_style(page)"
         >
-        <img
-          :src="mode === 'scroll' ? image_url(page) : null"
-          :data-src="mode === 'paged' ? image_url(page) : null"
-          :loading="mode === 'scroll' ? 'lazy' : null"
-          :style="page_style(page)"
-          class="w-100"
-          :alt="page"
-        >
+        <div class="page" :style="page_style(page)">
+          <img
+            :src="mode === 'scroll' ? image_url(page) : null"
+            :data-src="mode === 'paged' ? image_url(page) : null"
+            :loading="mode === 'scroll' ? 'lazy' : null"
+            class="w-100"
+            :alt="page"
+          >
+          <span class="page-mark" aria-hidden="true">{{ page }}</span>
+        </div>
         </section>
       </div>
       <div class="sentinel" ref="sentinel" v-if="mode === 'scroll' && rendered < pages"></div>
@@ -829,23 +831,51 @@ section {
   z-index: 1;
 }
 
-/* Width comes from the pane rather than from a class, so a resized window resizes the
-   pages. Bootstrap's w-100 is !important, so this has to be as well, and the more
-   specific selector wins; max-width is what would otherwise keep a zoomed-in page from
-   exceeding the pane. */
-.continuous .pane img {
-  max-width: none;
+/* Every page is a box of its own rather than a loose image in the flow, so the number of
+   the page can be drawn where the page is: a number pinned to the pane would sit over a
+   neighbouring page whenever this one is narrower than the window it is shown in. The box
+   is what is sized, and the image fills it. */
+.reveal .page {
+  position: relative;
+}
+
+/* The box is what the pane sizes, and the image fills it at its own shape: sizing the
+   box rather than the image is what lets a page be marked with its own number, and what
+   leaves the image undistorted - only a box the page reported a height for is asked of it.
+   The image is a block so it does not sit on a text baseline inside its box. */
+.continuous .pane .page img {
+  display: block;
   height: auto;
 }
 
-.continuous .pane.fit-width img {
-  width: calc(var(--pane-w) * var(--page-zoom)) !important;
+.continuous .pane.fit-width .page {
+  width: calc(var(--pane-w) * var(--page-zoom));
 }
 
 /* Fit page is the widest a page can be and still be seen whole: the pane height times
    the page aspect ratio, or the pane width when that is narrower. */
-.continuous .pane.fit-page img {
-  width: min(calc(var(--pane-w) * var(--page-zoom)), calc(var(--pane-h) * var(--page-ratio) * var(--page-zoom))) !important;
+.continuous .pane.fit-page .page {
+  width: min(calc(var(--pane-w) * var(--page-zoom)), calc(var(--pane-h) * var(--page-ratio) * var(--page-zoom)));
+}
+
+/* The page number is a stamp on the sheet it belongs to, in the corner where the reader
+   looks for it. The digits are translucent so they sit with the artwork rather than as a
+   panel over it, and the halo behind them is what carries the contrast - on a pale page
+   the translucent digits alone would be the colour of the page. The size does not follow
+   the zoom: this is a corner mark, and one that grew with the page would end up covering
+   the art it is written over, and it stays at the page's corner wherever the reader is.
+   It is not interactive, and it is hidden from readers who are told the page number by
+   the image's own description. */
+.reveal .page-mark {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.85), 0 1px 1px rgba(0, 0, 0, 0.6);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  pointer-events: none;
 }
 
 /* A page is centred when it is narrower than the pane, and the gutter between pages is

@@ -747,6 +747,21 @@ describe('TheComicReader in a pane', () => {
     expect(wrapper.vm.page_style(4)).toBeNull()
   })
 
+  it('marks the sheet it is on with the page it is on, in both readings', async () => {
+    const wrapper = mountContinuous(45)
+    await flushPromises()
+
+    // A page is a box of its own now, so the mark is asked of the box rather than of the
+    // row: in fit page a page is narrower than the pane, and a number that belonged to
+    // the pane would sit over the neighbouring page.
+    const third = wrapper.find('section[data-page="3"]').element
+    const mark = third.querySelector('.page-mark')
+    expect(mark.textContent).toBe('3')
+    // Only the pages that are rendered are marked, so the numbers in the pane are the
+    // pages in it - which is what the reader is asked to trust.
+    expect(wrapper.findAll('.page-mark')).toHaveLength(wrapper.findAll('section[data-page]').length)
+  })
+
   it('pans within the page with the arrow keys, which the browser would not scroll', async () => {
     const wrapper = mountContinuous(45)
     await flushPromises()
