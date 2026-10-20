@@ -212,8 +212,10 @@ export default {
       }
       return Math.round(Math.min(this.current_page + 1, this.pages) / this.pages * 100)
     },
-    // Where the reader is in this comic, counted the way the pager and the saved progress
-    // count, so the number on the screen is the number the reader can ask to go back to.
+    // Where the reader is in this comic, counted the way the progress is saved and a page
+    // can be asked for, so the number on the screen is the number the reader can go back
+    // to. The pages of a book with no pages at all - one that could not be read - start at
+    // one rather than showing a page that does not exist.
     page_position () {
       if (this.pages < 1) {
         return 1
@@ -330,14 +332,20 @@ export default {
     zoom_by (step) {
       this.$store.commit('setReaderZoom', this.zoom_percent + step)
     },
-    // Where the top of the pane is on the screen, for the times the observer is not told
-    // the bounds of the root it was given.
-    pane_top () {
+    // How far a page's own middle is from the middle of the pane, used only for the times
+    // the point being read falls in the gap between two sheets.
+    distance_from_middle (rect, middle) {
+      return Math.abs(rect.top + rect.height / 2 - middle)
+    },
+    // Where the middle of the pane is on the screen, for the times the observer is not
+    // told the bounds of the root it was given.
+    pane_box () {
       const pane = this.$refs.pane
       if (!pane) {
-        return 0
+        return {top: 0, height: DEFAULT_PANE_HEIGHT}
       }
-      return pane.getBoundingClientRect().top
+      const box = pane.getBoundingClientRect()
+      return {top: box.top, height: box.height || DEFAULT_PANE_HEIGHT}
     },
     scroll_within (direction) {
       const pane = this.$refs.pane
@@ -477,7 +485,7 @@ export default {
       } else {
         // A page that is not one of this comic's is not a jump, and the field is put back
         // to where the reader is, so it never shows a page they are not on.
-        field.value = this.current_page + 1
+        field.value = this.page_position
       }
     },
     keyPress (e) {
@@ -583,7 +591,7 @@ export default {
       this.page_observer = new IntersectionObserver((entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            this.visible.set(entry.target, entry.boundingClientRect.top)
+            this.visible.set(entry.target, entry.boundingClientRect)
           } else {
             this.visible.delete(entry.target)
           }
@@ -593,17 +601,24 @@ export default {
           return
         }
 
-        // The page being read is the one covering the top of the pane, which is the page
-        // whose top is nearest the pane's own top - not the highest one on the screen.
-        // The page being left is still partly in view above after a pan, and picking that
-        // one is what returns the number to where it was. A page that has only started to
-        // come in at the bottom is further from the top, so it is not read yet either.
-        const bounds = entries[0].rootBounds
-        const edge = bounds ? bounds.top : this.pane_top()
-        const section = [...this.visible.entries()].sort(
-          (a, b) => Math.abs(a[1] - edge) - Math.abs(b[1] - edge),
-        )[0][0]
-        const page = Number(section.dataset.page)
+        // The page being read is the one under the middle of the pane, which is where the
+        // reader's eye is: the page covering that point is the page they are looking at.
+        // A page's top reaching the top of the pane is not enough to make it current - at
+        // that point the new page is only a strip at the bottom of the view, and the page
+        // being left still holds the view - and a page that has not reached the middle yet
+        // is not being read either. Where no page covers the middle, between two sheets, the
+        // one whose own middle is nearer is the one in view.
+        const root = entries[0].rootBounds || this.pane_box()
+        const middle = root.top + root.height / 2
+        const covering = [...this.visible.entries()].filter(
+          ([, rect]) => rect.top <= middle && rect.top + rect.height > middle,
+        )
+        const in_view = covering.length
+          ? covering[0][0]
+          : [...this.visible.entries()].sort(
+            (a, b) => this.distance_from_middle(a[1], middle) - this.distance_from_middle(b[1], middle),
+          )[0][0]
+        const page = Number(in_view.dataset.page)
         if (page && page !== this.current_page + 1) {
           this.current_page = page - 1
           this.queue_save(page - 1)

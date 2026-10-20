@@ -436,20 +436,23 @@ describe('TheComicReader in continuous mode', () => {
     expect(wrapper.find('.sentinel').exists()).toBe(false)
   })
 
-  it('records the page at the top of the viewport', async () => {
+  it('records the page holding the middle of the pane, not the one highest on the screen', async () => {
     const wrapper = mountContinuous(30)
     await flushPromises()
     api.put.mockClear()
 
     const sections = wrapper.findAll('section[data-page]')
+    // The page being read is the one under the middle of the pane. A page whose top is the
+    // highest on the screen is only a strip at the bottom of the view, so it is not being
+    // read yet; the page covering the middle is.
     pageObserver().fire([
-      { isIntersecting: true, target: sections[4].element, boundingClientRect: { top: 10 } },
-      { isIntersecting: true, target: sections[2].element, boundingClientRect: { top: 400 } },
+      { isIntersecting: true, target: sections[4].element, boundingClientRect: { top: -1200, height: 1400 } },
+      { isIntersecting: true, target: sections[5].element, boundingClientRect: { top: 200, height: 1400 } },
     ])
 
-    expect(wrapper.vm.current_page).toBe(4)
+    expect(wrapper.vm.current_page).toBe(5)
     vi.advanceTimersByTime(500)
-    expect(api.put).toHaveBeenCalledWith('/api/read/a1/set_page/', { page: 4 })
+    expect(api.put).toHaveBeenCalledWith('/api/read/a1/set_page/', { page: 5 })
   })
 
   it('keeps the recorded page while scrolling inside a page taller than the viewport', async () => {
@@ -459,28 +462,29 @@ describe('TheComicReader in continuous mode', () => {
 
     const sections = wrapper.findAll('section[data-page]')
     const observer = pageObserver()
-    observer.fire([{ isIntersecting: true, target: sections[4].element, boundingClientRect: { top: 0 } }])
+    observer.fire([{ isIntersecting: true, target: sections[4].element, boundingClientRect: { top: 0, height: 1400 } }])
     vi.advanceTimersByTime(500)
     expect(api.put).toHaveBeenCalledWith('/api/read/a1/set_page/', { page: 4 })
 
-    // Scrolling down inside that page leaves it topmost, so nothing is written.
+    // Panning within that page leaves its own middle still on the one being read, so
+    // nothing is written.
     api.put.mockClear()
-    observer.fire([{ isIntersecting: true, target: sections[4].element, boundingClientRect: { top: -300 } }])
+    observer.fire([{ isIntersecting: true, target: sections[4].element, boundingClientRect: { top: -300, height: 1400 } }])
     vi.advanceTimersByTime(500)
     expect(wrapper.vm.current_page).toBe(4)
     expect(api.put).not.toHaveBeenCalled()
 
-    // The recorded page only changes when the next page becomes the topmost one.
+    // The recorded page only changes when the next page becomes the one in view.
     observer.fire([
       { isIntersecting: false, target: sections[4].element },
-      { isIntersecting: true, target: sections[5].element, boundingClientRect: { top: 0 } },
+      { isIntersecting: true, target: sections[5].element, boundingClientRect: { top: 0, height: 1400 } },
     ])
     vi.advanceTimersByTime(500)
     expect(wrapper.vm.current_page).toBe(5)
     expect(api.put).toHaveBeenCalledWith('/api/read/a1/set_page/', { page: 5 })
   })
 
-  it('keeps the page a pan moved to when the page being left is still partly in view', async () => {
+  it('hands the page over where the next one holds the middle of the pane', async () => {
     const wrapper = mountContinuous(30)
     await flushPromises()
     api.put.mockClear()
@@ -488,13 +492,23 @@ describe('TheComicReader in continuous mode', () => {
     const sections = wrapper.findAll('section[data-page]')
     const observer = pageObserver()
     // A pan moves the pages up, so the page being left still has its top above the top of
-    // the pane and is still partly in view. The page whose top is nearest the top of the
-    // pane is the one being read - taking the page whose top is the highest on the screen
-    // is what writes the page being left, and the number in the bar returns to where it
-    // was, which the reader did not ask for.
+    // the pane and is still partly in view. The page whose own middle is on the middle of
+    // the pane is the one being read - taking the page whose top is the highest on the
+    // screen is what writes the page being left, and the number in the bar returns to
+    // where it was, which the reader did not ask for.
     observer.fire([
-      { isIntersecting: true, target: sections[4].element, boundingClientRect: { top: -400 } },
-      { isIntersecting: true, target: sections[5].element, boundingClientRect: { top: 200 } },
+      { isIntersecting: true, target: sections[4].element, boundingClientRect: { top: -400, height: 1400 } },
+      { isIntersecting: true, target: sections[5].element, boundingClientRect: { top: 1000, height: 1400 } },
+    ])
+    vi.advanceTimersByTime(500)
+    expect(wrapper.vm.current_page).toBe(4)
+    expect(api.put).toHaveBeenCalledWith('/api/read/a1/set_page/', { page: 4 })
+
+    // Panning on pushes the page being left past the middle of the pane and brings the
+    // next one over it, which is where the page changes.
+    observer.fire([
+      { isIntersecting: true, target: sections[4].element, boundingClientRect: { top: -1200, height: 1400 } },
+      { isIntersecting: true, target: sections[5].element, boundingClientRect: { top: 200, height: 1400 } },
     ])
     vi.advanceTimersByTime(500)
     expect(wrapper.vm.current_page).toBe(5)
@@ -508,8 +522,8 @@ describe('TheComicReader in continuous mode', () => {
 
     const sections = wrapper.findAll('section[data-page]')
     const observer = pageObserver()
-    observer.fire([{ isIntersecting: true, target: sections[5].element, boundingClientRect: { top: 400 } }])
-    observer.fire([{ isIntersecting: true, target: sections[6].element, boundingClientRect: { top: 0 } }])
+    observer.fire([{ isIntersecting: true, target: sections[5].element, boundingClientRect: { top: -1000, height: 1400 } }])
+    observer.fire([{ isIntersecting: true, target: sections[6].element, boundingClientRect: { top: 400, height: 1400 } }])
     vi.advanceTimersByTime(500)
 
     expect(api.put).toHaveBeenCalledTimes(1)
@@ -527,7 +541,7 @@ describe('TheComicReader in continuous mode', () => {
     // What is in the pane is drawn as it enters, so observing a page changes what is
     // being read, never what can be seen.
     const observer = pageObserver()
-    observer.fire([{ isIntersecting: true, target: sections[2].element, boundingClientRect: { top: 0 } }])
+    observer.fire([{ isIntersecting: true, target: sections[2].element, boundingClientRect: { top: 0, height: 1400 } }])
     await flushPromises()
     expect(wrapper.html()).to.not.contain('shown')
   })
