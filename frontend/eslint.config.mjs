@@ -35,6 +35,8 @@ export default [
         window: 'readonly',
         HTMLElement: 'readonly',
         KeyboardEvent: 'readonly',
+        // A change event is what says the reader typed a page into the field.
+        Event: 'readonly',
       },
     },
   },
@@ -53,6 +55,7 @@ export default [
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
         IntersectionObserver: 'readonly',
+        Event: 'readonly',
         process: 'readonly',
       },
     },

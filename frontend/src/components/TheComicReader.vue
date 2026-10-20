@@ -32,52 +32,38 @@
     </div>
   </div>
   <div class="navButtons">
-    <div class="nav-item">
-      <div class="btn-group btn-group-sm" role="group" aria-label="Reading mode">
-        <button
-          type="button"
-          class="btn btn-outline-secondary"
-          :class="{ active: mode === 'paged' }"
-          @click="setMode('paged')"
-        >One page</button>
-        <button
-          type="button"
-          class="btn btn-outline-secondary"
-          :class="{ active: mode === 'scroll' }"
-          @click="setMode('scroll')"
-        >Continuous</button>
-      </div>
-    </div>
-    <div class="nav-item pager">
-      <comic-paginate
-        v-model="paginate_page"
-        :page_count="pages"
-        @setPage="this.setPage"
-        @prevComic="prevComic"
-        @nextComic="nextComic"
+    <div class="nav-item pager" role="group" aria-label="Position in this comic" v-if="pages">
+      <input
+        type="number"
+        ref="page_jump"
+        class="page-field"
+        aria-label="Page"
+        :value="page_position"
+        min="1"
+        :max="pages"
+        @change="jump_to_page"
       />
+      <span class="text-muted small-text">&nbsp;/ {{ pages }}</span>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        title="Previous page"
+        @click="prevPage()"
+      >‹</button>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        title="Next page"
+        @click="nextPage()"
+      >›</button>
     </div>
-    <div class="nav-item" v-if="mode === 'scroll'">
-      <div class="btn-group btn-group-sm" role="group" aria-label="Page size">
-        <button
-          type="button"
-          class="btn btn-outline-secondary"
-          :class="{ active: fit === 'width' }"
-          @click="set_fit('width')"
-        >Fit width</button>
-        <button
-          type="button"
-          class="btn btn-outline-secondary"
-          :class="{ active: fit === 'page' }"
-          @click="set_fit('page')"
-        >Fit page</button>
-      </div>
-    </div>
-    <div class="nav-item" v-if="mode === 'scroll'">
-      <div class="btn-group btn-group-sm" role="group" aria-label="Zoom">
-        <button type="button" class="btn btn-outline-secondary" @click="zoom_by(-25)">−</button>
-        <button type="button" class="btn btn-outline-secondary" @click="zoom_by(25)">+</button>
-      </div>
+    <div class="nav-item">
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        :title="'Read this comic ' + other_mode"
+        @click="setMode(this.mode === 'paged' ? 'scroll' : 'paged')"
+      >{{ other_mode }}</button>
     </div>
     <div class="nav-item" v-if="directory">
       <router-link
@@ -90,16 +76,34 @@
       <button
         type="button"
         class="btn btn-sm btn-outline-secondary"
-        :class="{ active: show_shortcuts }"
-        :aria-pressed="show_shortcuts ? 'true' : 'false'"
-        @click="show_shortcuts = !show_shortcuts"
+        :class="{ active: show_options }"
+        :aria-pressed="show_options ? 'true' : 'false'"
+        @click="show_options = !show_options"
       >?</button>
     </div>
   </div>
-  <div class="shortcuts" v-if="show_shortcuts" role="dialog" aria-label="Keyboard shortcuts">
-    <div class="shortcuts-head">
-      <strong>Keyboard shortcuts</strong>
-      <button type="button" class="btn btn-sm btn-outline-secondary" @click="show_shortcuts = false">Close</button>
+  <div class="options" v-if="show_options" role="dialog" aria-label="Reading options and keyboard shortcuts">
+    <div class="options-head">
+      <strong>Page size</strong>
+      <button type="button" class="btn btn-sm btn-outline-secondary" @click="show_options = false">Close</button>
+    </div>
+    <div class="btn-group btn-group-sm" role="group" aria-label="Page size" v-if="mode === 'scroll'">
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        :class="{ active: fit === 'width' }"
+        @click="set_fit('width')"
+      >Fit width</button>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        :class="{ active: fit === 'page' }"
+        @click="set_fit('page')"
+      >Fit page</button>
+    </div>
+    <div class="btn-group btn-group-sm" role="group" aria-label="Zoom" v-if="mode === 'scroll'">
+      <button type="button" class="btn btn-sm btn-outline-secondary" @click="zoom_by(-ZOOM_STEP)">−</button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" @click="zoom_by(ZOOM_STEP)">+</button>
     </div>
     <table>
       <tbody>
@@ -117,7 +121,6 @@
 import Reveal from "reveal.js";
 import api from "@/api";
 import Hammer from 'hammerjs'
-import ComicPaginate from "@/components/ComicPaginate";
 
 // How many pages are rendered at a time in continuous mode. The window grows as the
 // reader approaches the end of what has already been rendered.
@@ -152,11 +155,9 @@ const KEY_THROTTLE_MS = 100;
 
 export default {
   name: "TheComicReader",
-  components: {ComicPaginate},
   data () {
     return {
       current_page: 0,
-      paginate_page: 1,
       preloaded: new Map(),
       sizes: new Map(),
       deck: null,
@@ -172,7 +173,7 @@ export default {
       save_timeout: null,
       key_locked: false,
       key_timeout: null,
-      show_shortcuts: false,
+      show_options: false,
       shortcuts: [
         { keys: '← / →', action: 'Previous / next page' },
         { keys: '↑ / ↓', action: 'Pan within the page' },
@@ -210,6 +211,20 @@ export default {
         return 0
       }
       return Math.round(Math.min(this.current_page + 1, this.pages) / this.pages * 100)
+    },
+    // Where the reader is in this comic, counted the way the pager and the saved progress
+    // count, so the number on the screen is the number the reader can ask to go back to.
+    page_position () {
+      if (this.pages < 1) {
+        return 1
+      }
+      return Math.min(this.current_page + 1, this.pages)
+    },
+    // The bar carries one control for the reading mode. The mode in use is already what the
+    // pages look like, so what the reader can ask for is the other one, named in plain
+    // words rather than by the internal mode names.
+    other_mode () {
+      return this.mode === 'paged' ? 'in one stream' : 'one page at a time'
     },
     fit () {
       return this.$store.state.reader_fit === 'page' ? 'page' : 'width'
@@ -437,6 +452,25 @@ export default {
         }
       }
     },
+    // The page field in the bar is where the reader says a page starts: Vue writes the
+    // field whenever the position changes, so the field only has to answer for a value the
+    // reader typed, which is any value that is not already the page being read. A value
+    // outside the comic's pages is not a page, so it is left alone and the field keeps
+    // showing where the reader is.
+    jump_to_page () {
+      const field = this.$refs.page_jump
+      if (!field) {
+        return
+      }
+      const asked = Number(field.value)
+      if (asked >= 1 && asked <= this.pages && asked !== this.current_page + 1) {
+        this.setPage(asked)
+      } else {
+        // A page that is not one of this comic's is not a jump, and the field is put back
+        // to where the reader is, so it never shows a page they are not on.
+        field.value = this.current_page + 1
+      }
+    },
     keyPress (e) {
       // Alt+Left is the browser's back button and Ctrl/Cmd+Arrow moves a caret in a
       // form control, so only a bare arrow key pages.
@@ -447,11 +481,11 @@ export default {
       // These only show or hide the shortcut list, so they still work when a control
       // has focus.
       if (e.key === 'Escape') {
-        this.show_shortcuts = false
+        this.show_options = false
         return
       }
       if (e.key === '?') {
-        this.show_shortcuts = !this.show_shortcuts
+        this.show_options = !this.show_options
         return
       }
 
@@ -664,7 +698,6 @@ export default {
   },
   watch: {
     'current_page' (new_page) {
-      this.paginate_page = new_page + 1
       this.preload_pages(new_page)
     }
   },
@@ -720,6 +753,8 @@ export default {
 
 
 <style scoped>
+/* The bar is one row that does not wrap: the controls it holds are few and each is
+   narrow, so nothing here needs to scroll sideways. */
 .navButtons {
     position: fixed;
     left: 50%;
@@ -736,17 +771,18 @@ export default {
   cursor: pointer;
 }
 
-/* Bootstrap's .row wraps, which put the ? button on a second line once the page list
-   got long. A long page list scrolls sideways instead of pushing the other controls down. */
+/* What the page field is grouped with: the count of pages next to the page number makes
+   the position readable as a position rather than as a number on its own. */
 .pager {
-  min-width: 0;
-  overflow-x: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* The progress bar is at the top centre, away from the controls, because the page fills
-   the middle of the screen and the bar must not compete with it or with the page list.
-   The light backdrop is the one the shortcuts panel uses, so the bar stays legible over
-   artwork; pointer-events: none leaves the page underneath clickable and scrollable. */
+   the middle of the screen and the bar must not compete with it; the light backdrop is
+   the one the settings panel uses, so it stays legible over artwork, and pointer-events:
+   none leaves the page underneath clickable and scrollable. */
 .reading-progress {
   position: fixed;
   top: 8px;
@@ -775,7 +811,7 @@ section {
   padding-bottom: 60px;
 }
 
-.shortcuts {
+.options {
   position: fixed;
   right: 12px;
   bottom: 64px;
@@ -788,21 +824,35 @@ section {
   z-index: 20;
 }
 
-.shortcuts-head {
+.options-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 6px;
 }
 
-.shortcuts td {
+.options td {
   padding: 2px 8px 2px 0;
   vertical-align: top;
 }
 
-.shortcuts kbd {
+.options kbd {
   font-family: inherit;
   white-space: nowrap;
+}
+
+/* The page field is part of the readout, not a control that stands on its own: it takes
+   the bar's colours so the position reads as one line, and it is wide enough that a
+   three digit page number does not push the count of pages along. */
+.page-field {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  margin: 0 6px 0 0;
+  min-width: 2.5em;
 }
 
 /* reveal.css is deliberately not loaded, so visibility is the `hidden` attribute and

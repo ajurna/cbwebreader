@@ -64,7 +64,6 @@ function mountReader() {
     global: {
       mocks: { $router: router, $store: store },
       stubs: {
-        'comic-paginate': true,
         RouterLink: { props: ['to'], template: '<a class="folder-link" :data-selector="to.params.selector"><slot /></a>' },
       },
     },
@@ -124,14 +123,16 @@ describe('TheComicReader', () => {
     expect(api.put).toHaveBeenCalledWith('/api/read/a1/set_page/', { page: 2 })
   })
 
-  it('keeps the page indicator in step with the deck', async () => {
+  it('keeps the position in the bar in step with the deck', async () => {
     const wrapper = mountReader()
     await flushPromises()
 
     wrapper.vm.setPage(4)
     expect(deck.slide).toHaveBeenCalledWith(3)
     await flushPromises()
-    expect(wrapper.vm.paginate_page).toBe(4)
+    // The number the reader sees is the page they are on, so a page asked for later can
+    // name it - which is the page progress is saved against.
+    expect(wrapper.find('input[type="number"]').attributes('value')).toBe('4')
   })
 
   it('acts on the first arrow key and ignores held keys until the throttle expires', async () => {
@@ -260,41 +261,41 @@ describe('TheComicReader', () => {
     expect(api.put).not.toHaveBeenCalled()
   })
 
-  it('shows the shortcut list with ? and hides it again', async () => {
+  it('shows the reading options with ? and hides them again', async () => {
     const wrapper = mountReader()
     await flushPromises()
 
-    expect(wrapper.find('.shortcuts').exists()).toBe(false)
+    expect(wrapper.find('.options').exists()).toBe(false)
 
     wrapper.vm.keyPress({ key: '?' })
     await flushPromises()
-    expect(wrapper.find('.shortcuts').exists()).toBe(true)
+    expect(wrapper.find('.options').exists()).toBe(true)
 
     wrapper.vm.keyPress({ key: '?' })
     await flushPromises()
-    expect(wrapper.find('.shortcuts').exists()).toBe(false)
+    expect(wrapper.find('.options').exists()).toBe(false)
   })
 
-  it('hides the shortcut list with Escape even when a control has focus', async () => {
+  it('hides the reading options with Escape even when a control has focus', async () => {
     const wrapper = mountReader()
     await flushPromises()
 
     wrapper.vm.keyPress({ key: '?' })
     await flushPromises()
-    expect(wrapper.find('.shortcuts').exists()).toBe(true)
+    expect(wrapper.find('.options').exists()).toBe(true)
 
     wrapper.vm.keyPress({ key: 'Escape', target: document.createElement('input') })
     await flushPromises()
-    expect(wrapper.find('.shortcuts').exists()).toBe(false)
+    expect(wrapper.find('.options').exists()).toBe(false)
   })
 
-  it('toggles the shortcut list from the ? button', async () => {
+  it('toggles the reading options from the ? button', async () => {
     const wrapper = mountReader()
     await flushPromises()
 
     const button = wrapper.find('button[aria-pressed]')
     await button.trigger('click')
-    expect(wrapper.find('.shortcuts').exists()).toBe(true)
+    expect(wrapper.find('.options').exists()).toBe(true)
     expect(button.attributes('aria-pressed')).toBe('true')
   })
 
@@ -683,15 +684,90 @@ describe('TheComicReader bottom bar', () => {
     const bar = wrapper.find('.navButtons')
     expect(bar.classes()).not.toContain('row')
 
+    // A position in the comic, the one control for the reading mode, the way back to the
+    // folder, and the trigger for the settings: the page list, both page-size groups and
+    // the mode buttons that used to stand here are each said by something else.
     const controls = bar.findAll('.nav-item')
     expect(controls).toHaveLength(4)
     expect(controls.map((item) => item.element.parentElement)).toEqual(controls.map(() => bar.element))
+    const buttons = bar.findAll('button').map((button) => button.text())
+    expect(buttons).to.include('‹')
+    expect(buttons).to.include('›')
+    expect(buttons).to.not.include('One page')
+    expect(buttons).to.not.include('Fit width')
+    expect(bar.find('input[type="number"]').exists()).toBe(true)
   })
 
-  it('scrolls a long page list sideways rather than pushing the other controls down', async () => {
+  it('shows where the reader is and takes a page from a field', async () => {
     const wrapper = mountReader()
     await flushPromises()
-    expect(wrapper.find('.nav-item.pager').exists()).toBe(true)
+
+    // The readout is the position the reader is at, in the same pages the progress is
+    // saved in, so it cannot disagree with what happens when they return.
+    const field = wrapper.find('input[type="number"]')
+    // The fixture's comic was read up to page 2, so the reader resumes on page 3 and that
+    // is what the field and the readout show.
+    expect(field.attributes('value')).toBe('3')
+    expect(wrapper.element.querySelector('.nav-item.pager').textContent).to.contain('/ 5')
+  })
+
+  it('jumps to a page the reader types into the field', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+    deck.slide.mockClear()
+
+    const input = wrapper.find('input[type="number"]')
+    // Vue only fires the change handler for a value the reader supplies, which is any value
+    // other than the page being read - so it is only ever asked for those.
+    const typed = input.element
+    typed.value = 5
+    typed.dispatchEvent(new Event('change'))
+    await flushPromises()
+
+    // One page at a time, reveal is told the page in one step rather than walked through
+    // the pages between, and the view moves there instantly.
+    expect(deck.slide).toHaveBeenCalledTimes(1)
+    expect(wrapper.vm.current_page).toBe(4)
+    // The readout and the field follow the jump, so a reader who types a page sees the
+    // page they are on - which is what is saved when they return. The count of this
+    // comic's pages is next to the number, so the position cannot be read out of context.
+    expect(input.attributes('value')).toBe('5')
+    expect(wrapper.element.querySelector('.nav-item.pager').textContent).to.contain('/ 5')
+  })
+
+  it('leaves a page that is not in this comic alone', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+    deck.slide.mockClear()
+
+    const typed = wrapper.find('input[type="number"]').element
+    typed.value = 999
+    typed.dispatchEvent(new Event('change'))
+    await flushPromises()
+
+    // A value outside the comic's pages is not a page, so the reader is not moved, and the
+    // field is put back to where they are.
+    expect(deck.slide).toHaveBeenCalledTimes(0)
+    expect(wrapper.vm.current_page).toBe(2)
+    expect(typed.value).toBe('3')
+  })
+
+  it('asks for the other way of reading, and keeps a position when the mode changes', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+    store.state.reader_mode = 'paged'
+
+    const buttons = wrapper.findAll('button')
+    const button = buttons.find((item) => item.text() === 'in one stream')
+    expect(button.text()).toBe('in one stream')
+    await button.trigger('click')
+    await flushPromises()
+
+    expect(store.commit).toHaveBeenCalledWith('setReaderMode', 'scroll')
+    expect(store.state.reader_mode).toBe('scroll')
+    // Changing how the pages are read does not move the reader, so the position shown is
+    // still the page they were on before.
+    expect(wrapper.find('input[type="number"]').attributes('value')).toBe('3')
   })
 })
 
@@ -788,13 +864,20 @@ describe('TheComicReader in a pane', () => {
     expect(wrapper.vm.$refs.pane.parentElement.getAttribute('class')).to.not.contain('continuous')
   })
 
-  it('offers the page sizing controls only where there is a pane', async () => {
+  it('keeps the page size and the zoom out of the way until a pane is being scrolled', async () => {
     const paged = mountReader()
     await flushPromises()
+    // In one page at a time the deck sizes the page and there is nothing to pan or zoom,
+    // so the settings that would do nothing are not offered.
     const pagedButtons = paged.findAll('button').map((button) => button.text())
     expect(pagedButtons).to.not.include('Fit page')
+    expect(paged.find('.options').exists()).toBe(false)
 
     const wrapper = mountContinuous(45)
+    await flushPromises()
+    // They are offered when the options are shown, which is where they live now: a setting
+    // that is not being used does not need to stand in the bar all the time.
+    wrapper.vm.keyPress({ key: '?' })
     await flushPromises()
     const buttons = wrapper.findAll('button').map((button) => button.text())
     expect(buttons).to.contain('Fit width')
