@@ -480,6 +480,27 @@ describe('TheComicReader in continuous mode', () => {
     expect(api.put).toHaveBeenCalledWith('/api/read/a1/set_page/', { page: 5 })
   })
 
+  it('keeps the page a pan moved to when the page being left is still partly in view', async () => {
+    const wrapper = mountContinuous(30)
+    await flushPromises()
+    api.put.mockClear()
+
+    const sections = wrapper.findAll('section[data-page]')
+    const observer = pageObserver()
+    // A pan moves the pages up, so the page being left still has its top above the top of
+    // the pane and is still partly in view. The page whose top is nearest the top of the
+    // pane is the one being read - taking the page whose top is the highest on the screen
+    // is what writes the page being left, and the number in the bar returns to where it
+    // was, which the reader did not ask for.
+    observer.fire([
+      { isIntersecting: true, target: sections[4].element, boundingClientRect: { top: -400 } },
+      { isIntersecting: true, target: sections[5].element, boundingClientRect: { top: 200 } },
+    ])
+    vi.advanceTimersByTime(500)
+    expect(wrapper.vm.current_page).toBe(5)
+    expect(api.put).toHaveBeenCalledWith('/api/read/a1/set_page/', { page: 5 })
+  })
+
   it('writes once for a burst of scrolling rather than once per intersection', async () => {
     const wrapper = mountContinuous(30)
     await flushPromises()
