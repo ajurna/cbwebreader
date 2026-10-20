@@ -376,7 +376,9 @@ export default {
         this.current_page = page - 1
         this.$nextTick(() => {
           this.observe_pages()
-          this.scroll_to_page(page)
+          // A page chosen by number is what the reader wants to see, so the pane goes
+          // to it rather than sliding through the pages between.
+          this.scroll_to_page(page, 'instant')
         })
         return
       }
@@ -387,6 +389,10 @@ export default {
 
       this.current_page = pageNum-1
       this.deck.slide(this.current_page)
+      // The pages are laid out in the document, so the view has to move to the one that
+      // was chosen as well as reveal being told about it: leaving the scroll where it was
+      // shows the middle of a tall page instead of its top.
+      this.scroll_to_page(pageNum, 'instant')
     },
     scroll_to_page (page, behavior = 'smooth') {
       const section = this.$refs.slides.querySelector('section[data-page="' + page + '"]')
