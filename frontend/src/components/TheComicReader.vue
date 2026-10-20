@@ -390,8 +390,22 @@ export default {
     },
     scroll_to_page (page, behavior = 'smooth') {
       const section = this.$refs.slides.querySelector('section[data-page="' + page + '"]')
-      if (section) {
-        section.scrollIntoView({behavior: behavior, block: 'start'})
+      if (!section) {
+        return
+      }
+      this.show_page(page)
+      section.scrollIntoView({behavior: behavior, block: 'start'})
+    },
+    // A page the reader asked for is looked at straight away, so it must not wait for the
+    // browser to notice that it is near enough: every page in the pane is inserted while
+    // it is off screen, and after a jump a lazy one shows as a blank sheet. The pages on
+    // either side of it are the ones the pan brings in next, so they are started as well.
+    show_page (page) {
+      for (const near of [page - 1, page, page + 1]) {
+        const image = this.$refs.slides.querySelector('section[data-page="' + near + '"] img')
+        if (image) {
+          image.removeAttribute('loading')
+        }
       }
     },
     keyPress (e) {

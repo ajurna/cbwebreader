@@ -524,6 +524,25 @@ describe('TheComicReader in continuous mode', () => {
     expect(spy).toHaveBeenCalled()
   })
 
+  it('starts the page it jumps to loading, since it was put in the pane off screen', async () => {
+    const wrapper = mountContinuous(45)
+    await flushPromises()
+
+    const imgs = wrapper.findAll('img')
+    expect(imgs[11].element.getAttribute('loading')).toBe('lazy')
+
+    wrapper.vm.setPage(12)
+    await flushPromises()
+
+    // The page asked for and its neighbours are read straight away, so their fetches
+    // start now; nothing else is started, so a jump does not fetch the whole book.
+    const moved = wrapper.findAll('img')
+    expect(moved[10].element.getAttribute('loading')).toBe(null)
+    expect(moved[11].element.getAttribute('loading')).toBe(null)
+    expect(moved[12].element.getAttribute('loading')).toBe(null)
+    expect(moved[17].element.getAttribute('loading')).toBe('lazy')
+  })
+
   it('disconnects both observers when it is unmounted', async () => {
     const wrapper = mountContinuous(30)
     await flushPromises()
