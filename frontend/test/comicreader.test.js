@@ -726,9 +726,25 @@ describe('TheComicReader in a pane', () => {
     expect(pane.element.parentElement.getAttribute('class')).to.contain('continuous')
 
     // A page has a height before it has loaded, so the length of the pane does not
-    // change as pages load.
+    // change as pages load - only the width is guessed at then, never the shape of a page.
     expect(wrapper.find('section[data-page="2"]').element.getAttribute('style')).to.contain('--page-ratio')
-    expect(wrapper.find('img').element.getAttribute('style')).to.contain('aspect-ratio')
+    // Nothing has reported a size yet, so no ratio is asked of a page: a box from a guess
+    // is what shows a page squeezed rather than as drawn.
+    expect(wrapper.find('img').element.getAttribute('style')).toBe(null)
+  })
+
+  it('sizes a page only from a size the image reported, so a page is drawn as it is', async () => {
+    const wrapper = mountContinuous(45)
+    await flushPromises()
+
+    wrapper.vm.record_size(3, {naturalWidth: 1200, naturalHeight: 1600})
+    expect(wrapper.vm.page_ratio(3)).toBeCloseTo(0.75)
+    expect(wrapper.vm.page_style(3)).toBe('aspect-ratio: 0.75')
+    // The pages of a book are one size, so a size that was reported is a good guess for
+    // the width of the rest - but only the width: the shape of an unmeasured page is left
+    // to the image, so it is never stretched into a guessed box.
+    expect(wrapper.vm.page_ratio(4)).toBeCloseTo(0.75)
+    expect(wrapper.vm.page_style(4)).toBeNull()
   })
 
   it('pans within the page with the arrow keys, which the browser would not scroll', async () => {

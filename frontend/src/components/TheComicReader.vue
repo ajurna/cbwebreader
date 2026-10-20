@@ -232,6 +232,14 @@ export default {
     image_url (page) {
       return '/api/read/' + this.selector + '/image/' + page + '/'
     },
+    // One measured size per page, from whichever image reported first: the detached one
+    // the warm up made, or the one that decoded in the pane. The box is reserved from the
+    // real size, so the length of the pane does not change as pages load.
+    record_size (page, image) {
+      if (image.naturalWidth && image.naturalHeight && !this.sizes.has(page)) {
+        this.sizes.set(page, {width: image.naturalWidth, height: image.naturalHeight})
+      }
+    },
     // A page's own aspect ratio, once its image has reported one. A method rather than
     // a computed: the page number is an argument, and the sizes are still read while the
     // page is being rendered, so a newly measured page redraws its box.
@@ -251,8 +259,18 @@ export default {
     ratio_style (page) {
       return '--page-ratio: ' + this.page_ratio(page)
     },
+    // Only a size the page reported can be asked of its box. A box built from a guessed
+    // ratio is where the page is squeezed: the page is drawn into the box it is given, so
+    // a page that has not reported a size yet keeps its own, and its height comes from the
+    // image. That is why the pane grows as a page enters it rather than holding a length
+    // that is wrong for the page.
     page_style (page) {
-      return 'aspect-ratio: ' + this.page_ratio(page)
+      const measured = this.sizes.get(page)
+      if (!measured) {
+        // Nothing is asked of the box, so the page is drawn as the image has it.
+        return null
+      }
+      return 'aspect-ratio: ' + measured.width / measured.height
     },
     // Detached <img> elements: setting src starts the fetch and the decode straight away,
     // and the element is kept in a Map so the bitmap is not collected before the page it
@@ -270,9 +288,7 @@ export default {
           // by the height of the pages as they are drawn, so an assumed height that is
           // corrected later would move the reading position.
           image.onload = () => {
-            if (image.naturalWidth && image.naturalHeight) {
-              this.sizes.set(next, {width: image.naturalWidth, height: image.naturalHeight})
-            }
+            this.record_size(next, image)
             // Decoding is what costs a frame, and it would otherwise happen the first
             // time the page is painted: asking for the bitmap here moves it off the
             // scroll. The element stays in the Map so the bitmap is kept, not recollected.
@@ -554,6 +570,12 @@ export default {
     },
     observe_pages () {
       this.$refs.slides.querySelectorAll('section[data-page]').forEach((section) => {
+        const image = section.querySelector('img')
+        // A page that has decoded in the pane has reported its real size, so its box is
+        // reserved from that rather than from a guess.
+        if (image) {
+          this.record_size(Number(section.dataset.page), image)
+        }
         this.page_observer.observe(section)
       })
     },
