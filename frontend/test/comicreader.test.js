@@ -510,7 +510,7 @@ describe('TheComicReader in continuous mode', () => {
     expect(wrapper.html()).to.not.contain('shown')
   })
 
-  it('scrolls to a page chosen from the pager, rendering it first if it is outside the window', async () => {
+  it('scrolls to a page chosen from the pager, rendering what the jump reaches first', async () => {
     const wrapper = mountContinuous(30)
     await flushPromises()
 
@@ -520,8 +520,23 @@ describe('TheComicReader in continuous mode', () => {
     wrapper.vm.setPage(20)
     await flushPromises()
 
-    expect(wrapper.vm.rendered).toBe(20)
     expect(spy).toHaveBeenCalled()
+    expect(wrapper.vm.rendered).toBe(30)
+    expect(wrapper.findAll('section[data-page]')).toHaveLength(30)
+  })
+
+  it('fills the window ahead of a jump instead of adding pages as the pan reaches them', async () => {
+    const wrapper = mountContinuous(45)
+    await flushPromises()
+
+    wrapper.vm.setPage(12)
+    await flushPromises()
+
+    // A window of pages past the page chosen is in the pane, so reading on from a jump
+    // shows sheets that are already there and being fetched, rather than one blank page at
+    // a time as the pane grew.
+    expect(wrapper.vm.rendered).toBe(32)
+    expect(wrapper.findAll('section[data-page]')).toHaveLength(32)
   })
 
   it('starts the page it jumps to loading, since it was put in the pane off screen', async () => {
@@ -534,12 +549,14 @@ describe('TheComicReader in continuous mode', () => {
     wrapper.vm.setPage(12)
     await flushPromises()
 
-    // The page asked for and its neighbours are read straight away, so their fetches
-    // start now; nothing else is started, so a jump does not fetch the whole book.
+    // The page asked for and the pages after it are read straight away, so their fetches
+    // start at the jump; a page beyond that band keeps its lazy hint, so a jump does not
+    // fetch the book up to that page.
     const moved = wrapper.findAll('img')
     expect(moved[10].element.getAttribute('loading')).toBe(null)
     expect(moved[11].element.getAttribute('loading')).toBe(null)
-    expect(moved[12].element.getAttribute('loading')).toBe(null)
+    expect(moved[15].element.getAttribute('loading')).toBe(null)
+    expect(moved[16].element.getAttribute('loading')).toBe('lazy')
     expect(moved[17].element.getAttribute('loading')).toBe('lazy')
   })
 

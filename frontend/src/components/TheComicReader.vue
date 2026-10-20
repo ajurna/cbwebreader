@@ -372,7 +372,11 @@ export default {
     setPage(pageNum){
       if (this.mode === 'scroll') {
         const page = Math.min(pageNum, this.pages)
-        this.rendered = Math.max(this.rendered, page)
+        // A jump leaves the end of the window at the page chosen, so the pages after it
+        // would be added one at a time as the pan reached them, and each one arrives as a
+        // blank sheet while it is fetched. The window is filled ahead of the jump instead,
+        // the same way it is filled when the reader resumes at a page.
+        this.rendered = Math.min(this.pages, Math.max(this.rendered, page + WINDOW_SIZE))
         this.current_page = page - 1
         this.$nextTick(() => {
           this.observe_pages()
@@ -404,10 +408,11 @@ export default {
     },
     // A page the reader asked for is looked at straight away, so it must not wait for the
     // browser to notice that it is near enough: every page in the pane is inserted while
-    // it is off screen, and after a jump a lazy one shows as a blank sheet. The pages on
-    // either side of it are the ones the pan brings in next, so they are started as well.
+    // it is off screen, and after a jump a lazy one shows as a blank sheet. The pages after
+    // it are the ones the pan brings in next, so their fetches start at the jump as well -
+    // the same pages the warm up asks for ahead, so the fetch is shared.
     show_page (page) {
-      for (const near of [page - 1, page, page + 1]) {
+      for (let near = page - 1; near <= page + PANE_PREFETCH_AHEAD; near += 1) {
         const image = this.$refs.slides.querySelector('section[data-page="' + near + '"] img')
         if (image) {
           image.removeAttribute('loading')
