@@ -132,7 +132,7 @@ describe('TheComicReader', () => {
     await flushPromises()
     // The number the reader sees is the page they are on, so a page asked for later can
     // name it - which is the page progress is saved against.
-    expect(wrapper.find('input[type="number"]').attributes('value')).toBe('4')
+    expect(wrapper.find('.page-field').attributes('value')).toBe('4')
   })
 
   it('acts on the first arrow key and ignores held keys until the throttle expires', async () => {
@@ -730,7 +730,7 @@ describe('TheComicReader bottom bar', () => {
     expect(buttons).to.include('›')
     expect(buttons).to.not.include('One page')
     expect(buttons).to.not.include('Fit width')
-    expect(bar.find('input[type="number"]').exists()).toBe(true)
+    expect(bar.find('.page-field').exists()).toBe(true)
   })
 
   it('shows where the reader is and takes a page from a field', async () => {
@@ -739,7 +739,7 @@ describe('TheComicReader bottom bar', () => {
 
     // The readout is the position the reader is at, in the same pages the progress is
     // saved in, so it cannot disagree with what happens when they return.
-    const field = wrapper.find('input[type="number"]')
+    const field = wrapper.find('.page-field')
     // The fixture's comic was read up to page 2, so the reader resumes on page 3 and that
     // is what the field and the readout show.
     expect(field.attributes('value')).toBe('3')
@@ -751,7 +751,7 @@ describe('TheComicReader bottom bar', () => {
     await flushPromises()
     deck.slide.mockClear()
 
-    const input = wrapper.find('input[type="number"]')
+    const input = wrapper.find('.page-field')
     // Vue only fires the change handler for a value the reader supplies, which is any value
     // other than the page being read - so it is only ever asked for those.
     const typed = input.element
@@ -775,7 +775,7 @@ describe('TheComicReader bottom bar', () => {
     await flushPromises()
     deck.slide.mockClear()
 
-    const typed = wrapper.find('input[type="number"]').element
+    const typed = wrapper.find('.page-field').element
     typed.value = 999
     typed.dispatchEvent(new Event('change'))
     await flushPromises()
@@ -802,7 +802,39 @@ describe('TheComicReader bottom bar', () => {
     expect(store.state.reader_mode).toBe('scroll')
     // Changing how the pages are read does not move the reader, so the position shown is
     // still the page they were on before.
-    expect(wrapper.find('input[type="number"]').attributes('value')).toBe('3')
+    expect(wrapper.find('.page-field').attributes('value')).toBe('3')
+  })
+
+  it('asks for the page number through a text field, so the browser adds no arrows of its own', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+    const field = wrapper.find('.page-field')
+
+    // A number field grows a spin of its own - the up and down arrows the browser draws
+    // over it - which is a second way of moving pages next to the arrows in this row and
+    // the pane's own scroll, so the digits are read from a text field and checked here.
+    expect(field.attributes('type')).toBe('text')
+    expect(field.attributes('inputmode')).toBe('numeric')
+  })
+
+  it('leaves anything the reader types that is not a page alone', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+    deck.slide.mockClear()
+    const typed = wrapper.find('.page-field').element
+
+    typed.value = 'banana'
+    typed.dispatchEvent(new Event('change'))
+    await flushPromises()
+    typed.value = '2.5'
+    typed.dispatchEvent(new Event('change'))
+    await flushPromises()
+
+    // A text field takes whatever is typed, so a word and a half a page are not pages:
+    // the reader is not moved and the field goes back to where they are.
+    expect(deck.slide).toHaveBeenCalledTimes(0)
+    expect(wrapper.vm.current_page).toBe(2)
+    expect(typed.value).toBe('3')
   })
 })
 

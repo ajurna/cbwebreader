@@ -34,13 +34,12 @@
   <div class="navButtons">
     <div class="nav-item pager" role="group" aria-label="Position in this comic" v-if="pages">
       <input
-        type="number"
+        type="text"
+        inputmode="numeric"
         ref="page_jump"
         class="page-field"
         aria-label="Page"
         :value="page_position"
-        min="1"
-        :max="pages"
         @change="jump_to_page"
       />
       <span class="text-muted small-text">&nbsp;/ {{ pages }}</span>
@@ -469,18 +468,20 @@ export default {
         }
       }
     },
-    // The page field in the bar is where the reader says a page starts: Vue writes the
-    // field whenever the position changes, so the field only has to answer for a value the
-    // reader typed, which is any value that is not already the page being read. A value
-    // outside the comic's pages is not a page, so it is left alone and the field keeps
-    // showing where the reader is.
+    // The page field in the bar is where the reader says a page starts, and it is a text
+    // field rather than a number field: a number field draws its own up and down arrows
+    // in the browser, which is a second way of turning pages next to the arrows that page
+    // and the pane's own scroll. So what is typed is checked here instead, and anything
+    // that is not one of this comic's pages is not a jump. Vue writes the field
+    // whenever the position changes, so only a value that is not already the page being
+    // read counts as a request.
     jump_to_page () {
       const field = this.$refs.page_jump
       if (!field) {
         return
       }
       const asked = Number(field.value)
-      if (asked >= 1 && asked <= this.pages && asked !== this.current_page + 1) {
+      if (Number.isInteger(asked) && asked >= 1 && asked <= this.pages && asked !== this.current_page + 1) {
         this.setPage(asked)
       } else {
         // A page that is not one of this comic's is not a jump, and the field is put back
