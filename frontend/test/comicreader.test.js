@@ -515,6 +515,33 @@ describe('TheComicReader in continuous mode', () => {
     expect(api.put).toHaveBeenCalledWith('/api/read/a1/set_page/', { page: 5 })
   })
 
+  it('leaves the page a button moved to, rather than the one its numbers were taken from', async () => {
+    const wrapper = mountContinuous(30)
+    await flushPromises()
+    api.put.mockClear()
+
+    const observer = pageObserver()
+    const observed = vi.spyOn(observer, 'observe')
+    const rendered = wrapper.findAll('section[data-page]').length
+    const before = wrapper.vm.current_page
+    const target = wrapper.findAll('section[data-page]')[before + 1].element
+    const moved = vi.spyOn(target, 'scrollIntoView')
+
+    wrapper.vm.nextPage()
+    await flushPromises()
+
+    // A step names a page, so the view is placed at it rather than gliding there: the
+    // only smooth movement is the reader's own pan, which the browser runs.
+    expect(moved).toHaveBeenCalledWith({ behavior: 'instant', block: 'start' })
+    // A programmatic scroll changes no page's intersection, so the observer is never told
+    // about the view's new position by itself, and the page being left is still the one
+    // under the middle in the numbers it already holds. Asked again for every page, it
+    // measures from where the scroll ended, which is the page the reader asked for.
+    expect(observed).toHaveBeenCalledTimes(rendered)
+    expect(wrapper.vm.current_page).toBe(before + 1)
+    expect(wrapper.find('.page-field').attributes('value')).toBe(String(before + 2))
+  })
+
   it('writes once for a burst of scrolling rather than once per intersection', async () => {
     const wrapper = mountContinuous(30)
     await flushPromises()

@@ -355,8 +355,14 @@ export default {
       // Assigning scrollTop is the one form of programmatic scrolling every browser
       // supports, and it clamps to the content at both ends.
       pane.scrollTop = Math.max(0, (pane.scrollTop || 0) + Math.round(direction * height * PANE_SCROLL_STEP))
+      if (this.page_observer) {
+        // The pan moved the view without changing which pages the observer was told
+        // about, so its numbers are from before the pan: they are retaken here or the
+        // page it reports is the one the view was at when the pan started.
+        this.observe_pages()
+      }
     },
-    prevPage(behavior = 'smooth'){
+    prevPage(behavior = 'instant'){
       if (this.mode === 'scroll') {
         if (this.current_page <= 0) {
           this.prevComic()
@@ -395,7 +401,7 @@ export default {
         params: {selector: this.next_comic.selector}
       })
     },
-    nextPage(behavior = 'smooth'){
+    nextPage(behavior = 'instant'){
       if (this.mode === 'scroll') {
         if (this.current_page + 1 >= this.pages) {
           this.nextComic()
@@ -447,13 +453,27 @@ export default {
       // shows the middle of a tall page instead of its top.
       this.scroll_to_page(pageNum, 'instant')
     },
-    scroll_to_page (page, behavior = 'smooth') {
+    // Asking for a page is answered where it is asked for, so the scroll it names is
+    // ours to place: one request moves the view to the top of the page rather than
+    // walking the pages between, and a chosen page should not animate past the ones in
+    // between. Only the reader's own pan - the wheel, the scrollbar, a finger - is
+    // smooth, and that one the browser runs.
+    scroll_to_page (page, behavior = 'instant') {
       const section = this.$refs.slides.querySelector('section[data-page="' + page + '"]')
       if (!section) {
         return
       }
       this.show_page(page)
       section.scrollIntoView({behavior: behavior, block: 'start'})
+      // IntersectionObserver only reports a page when its intersection changes, so the
+      // pages that stayed in view during this scroll still carry the rectangles from
+      // before it, and the page being left is still the one under the middle in those
+      // stale numbers - which is what wrote the page back a moment after a button. Told
+      // about every page again, its view is measured from where the scroll ended, so the
+      // page the reader asked for is the page it reports.
+      if (this.page_observer) {
+        this.observe_pages()
+      }
     },
     // A page the reader asked for is looked at straight away, so it must not wait for the
     // browser to notice that it is near enough: every page in the pane is inserted while
