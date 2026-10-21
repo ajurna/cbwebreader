@@ -139,9 +139,8 @@ const PANE_PREFETCH_AHEAD = 4;
 // not change as pages load.
 const DEFAULT_PAGE_RATIO = 0.71;
 
-// A pane is a real scroll container, so panning within a page is ours rather than the
-// browser's: one press moves the page this much of the pane.
-const PANE_SCROLL_STEP = 0.4;
+// A pane is a real scroll container, so panning within a page is the browser's - the
+// wheel, the scrollbar, a finger - rather than a key of ours.
 const DEFAULT_PANE_HEIGHT = 1000;
 
 // Zoom is a percentage of the fitted size, in these steps, within these bounds.
@@ -176,7 +175,6 @@ export default {
       show_options: false,
       shortcuts: [
         { keys: '← / →', action: 'Previous / next page' },
-        { keys: '↑ / ↓', action: 'Pan within the page' },
         { keys: '− / +', action: 'Zoom out / in' },
         { keys: 'Space', action: 'Next page' },
         { keys: 'Shift + Space', action: 'Previous page' },
@@ -347,16 +345,6 @@ export default {
       const box = pane.getBoundingClientRect()
       return {top: box.top, height: box.height || DEFAULT_PANE_HEIGHT}
     },
-    scroll_within (direction) {
-      const pane = this.$refs.pane
-      if (!pane) {
-        return
-      }
-      const height = pane.clientHeight || DEFAULT_PANE_HEIGHT
-      // Assigning scrollTop is the one form of programmatic scrolling every browser
-      // supports, and it clamps to the content at both ends.
-      pane.scrollTop = Math.max(0, (pane.scrollTop || 0) + Math.round(direction * height * PANE_SCROLL_STEP))
-    },
     prevPage(behavior = 'smooth'){
       if (this.mode === 'scroll') {
         if (this.current_page <= 0) {
@@ -525,18 +513,13 @@ export default {
       this.key_locked = true
       this.key_timeout = setTimeout(() => { this.key_locked = false }, KEY_THROTTLE_MS)
 
-      // Left and Right change pages. Up and Down are only ours in the pane: the pane is
-      // a scroll container of its own, so the browser's default arrow scrolling would not
-      // reach it. In paged mode the document still scrolls the page, and intercepting it
-      // there doubled up with that scroll.
+      // Left and Right change pages; so do Space and n / p, which is what a keyboard
+      // reader uses when a button has focus. Up and Down are not the component's: the
+      // pane scrolls with the wheel, the scrollbar or a finger, and in one page at a
+      // time the document scrolls the page - intercepting those keys there doubled up
+      // with that scroll, and listing them next to the arrows for pages only read as
+      // two ways of doing one thing.
       switch (key) {
-        case 'arrowup':
-        case 'arrowdown':
-          if (this.mode === 'scroll') {
-            e.preventDefault?.()
-            this.scroll_within(key === 'arrowup' ? -1 : 1)
-          }
-          return
         case 'arrowright':
         case 'n':
           this.nextPage('auto')
