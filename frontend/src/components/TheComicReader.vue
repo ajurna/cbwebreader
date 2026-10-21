@@ -346,6 +346,72 @@ export default {
       const box = pane.getBoundingClientRect()
       return {top: box.top, height: box.height || DEFAULT_PANE_HEIGHT}
     },
+    // What is being read is worked out in one place, from the rectangles it is handed:
+    // the page under the middle of the pane is the page the reader is looking at. A page
+    // whose top has only reached the top of the pane is a strip at the far edge of the
+    // view and is not the page being read, and the page being left is only current for
+    // as long as it still holds the middle. Where no page covers the middle, in the gap
+    // between two sheets, the one whose own middle is nearer is the one in view.
+    page_in_view (box) {
+      if (this.visible.size < 1) {
+        return
+      }
+      const middle = box.top + box.height / 2
+      const covering = [...this.visible.entries()].filter(
+        ([, rect]) => rect.top <= middle && rect.top + rect.height > middle,
+      )
+      const in_view = covering.length
+        ? covering[0][0]
+        : [...this.visible.entries()].sort(
+          (a, b) => this.distance_from_middle(a[1], middle) - this.distance_from_middle(b[1], middle),
+        )[0][0]
+      const page = Number(in_view.dataset.page)
+      if (page && page !== this.current_page + 1) {
+        this.current_page = page - 1
+        this.queue_save(page - 1)
+      }
+    },
+    // A view this file moved by script changes no page's intersection, so the page
+    // observer is never told about it: its rectangles still describe the view it started
+    // at, and the page being left is still the one under the middle in them - which is
+    // what wrote the page back a moment after a button, and why only a pan the browser
+    // ran updated the number. Measured from where the pages really are, by the same rule,
+    // so a page asked for by button or by number is the page the number reports once the
+    // pane is looking at it. The observer still serves a pan the reader runs, which the
+    // browser does report on its own.
+    measure_view () {
+      if (this.mode !== 'scroll') {
+        // reveal decides which page is showing in the other reading.
+        return
+      }
+      const pane = this.$refs.pane
+      if (!pane) {
+        return
+      }
+      const box = pane.getBoundingClientRect()
+      const height = box.height || DEFAULT_PANE_HEIGHT
+      this.$refs.slides.querySelectorAll('section[data-page]').forEach((section) => {
+        const image = section.querySelector('img')
+        // A page that has decoded in the pane has reported its real size, so its box is
+        // reserved from that rather than from a guess.
+        if (image) {
+          this.record_size(Number(section.dataset.page), image)
+        }
+        if (this.page_observer) {
+          // A jump renders pages that were never watched for, so they are watched from
+          // here as well: a pan that starts inside a window of pages has to be reported
+          // by the observer to move the count.
+          this.page_observer.observe(section)
+        }
+        const rect = section.getBoundingClientRect()
+        if (rect.bottom > box.top && rect.top < box.top + height) {
+          this.visible.set(section, rect)
+        } else {
+          this.visible.delete(section)
+        }
+      })
+      this.page_in_view({top: box.top, height})
+    },
     scroll_within (direction) {
       const pane = this.$refs.pane
       if (!pane) {
@@ -355,20 +421,17 @@ export default {
       // Assigning scrollTop is the one form of programmatic scrolling every browser
       // supports, and it clamps to the content at both ends.
       pane.scrollTop = Math.max(0, (pane.scrollTop || 0) + Math.round(direction * height * PANE_SCROLL_STEP))
-      if (this.page_observer) {
-        // The pan moved the view without changing which pages the observer was told
-        // about, so its numbers are from before the pan: they are retaken here or the
-        // page it reports is the one the view was at when the pan started.
-        this.observe_pages()
-      }
+      this.measure_view()
     },
     prevPage(behavior = 'instant'){
       if (this.mode === 'scroll') {
         if (this.current_page <= 0) {
           this.prevComic()
         } else {
-          this.current_page -= 1
-          this.scroll_to_page(this.current_page + 1, behavior)
+          // A step asks for a view, not for a number: the page being read is the one
+          // under the middle of the view it moved to, which is measured rather than
+          // counted here, so a step cannot name a page the view has not reached.
+          this.scroll_to_page(this.current_page, behavior)
         }
         return
       }
@@ -406,8 +469,9 @@ export default {
         if (this.current_page + 1 >= this.pages) {
           this.nextComic()
         } else {
-          this.current_page += 1
-          this.scroll_to_page(this.current_page + 1, behavior)
+          // Same as for a step back: the view is asked for, and what it holds decides
+          // the page being read.
+          this.scroll_to_page(this.current_page + 2, behavior)
         }
         return
       }
@@ -434,7 +498,6 @@ export default {
         this.rendered = Math.min(this.pages, Math.max(this.rendered, page + WINDOW_SIZE))
         this.current_page = page - 1
         this.$nextTick(() => {
-          this.observe_pages()
           // A page chosen by number is what the reader wants to see, so the pane goes
           // to it rather than sliding through the pages between.
           this.scroll_to_page(page, 'instant')
@@ -465,15 +528,13 @@ export default {
       }
       this.show_page(page)
       section.scrollIntoView({behavior: behavior, block: 'start'})
-      // IntersectionObserver only reports a page when its intersection changes, so the
-      // pages that stayed in view during this scroll still carry the rectangles from
-      // before it, and the page being left is still the one under the middle in those
-      // stale numbers - which is what wrote the page back a moment after a button. Told
-      // about every page again, its view is measured from where the scroll ended, so the
-      // page the reader asked for is the page it reports.
-      if (this.page_observer) {
-        this.observe_pages()
-      }
+      // The page being read is measured from where the view ended, rather than from the
+      // rectangles the page observer holds: a scroll this file ran changes no page's
+      // intersection, so those rectangles still describe the view it started at, and the
+      // page being left is the one under the middle in them - which is what wrote the
+      // page back a moment after a button. The observer keeps watching for the reader's
+      // own pan, which the browser does report.
+      this.measure_view()
     },
     // A page the reader asked for is looked at straight away, so it must not wait for the
     // browser to notice that it is near enough: every page in the pane is inserted while
@@ -618,32 +679,9 @@ export default {
           }
         }
 
-        if (this.visible.size === 0) {
-          return
-        }
-
-        // The page being read is the one under the middle of the pane, which is where the
-        // reader's eye is: the page covering that point is the page they are looking at.
-        // A page's top reaching the top of the pane is not enough to make it current - at
-        // that point the new page is only a strip at the bottom of the view, and the page
-        // being left still holds the view - and a page that has not reached the middle yet
-        // is not being read either. Where no page covers the middle, between two sheets, the
-        // one whose own middle is nearer is the one in view.
-        const root = entries[0].rootBounds || this.pane_box()
-        const middle = root.top + root.height / 2
-        const covering = [...this.visible.entries()].filter(
-          ([, rect]) => rect.top <= middle && rect.top + rect.height > middle,
-        )
-        const in_view = covering.length
-          ? covering[0][0]
-          : [...this.visible.entries()].sort(
-            (a, b) => this.distance_from_middle(a[1], middle) - this.distance_from_middle(b[1], middle),
-          )[0][0]
-        const page = Number(in_view.dataset.page)
-        if (page && page !== this.current_page + 1) {
-          this.current_page = page - 1
-          this.queue_save(page - 1)
-        }
+        // What is being read is worked out in one place, from the rectangles it is
+        // given, so every way of moving agrees about it.
+        this.page_in_view(entries[0].rootBounds || this.pane_box())
       }, {threshold: 0, ...bounds})
 
       this.growth_observer = new IntersectionObserver((entries) => {

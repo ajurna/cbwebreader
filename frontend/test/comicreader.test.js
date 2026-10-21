@@ -515,14 +515,11 @@ describe('TheComicReader in continuous mode', () => {
     expect(api.put).toHaveBeenCalledWith('/api/read/a1/set_page/', { page: 5 })
   })
 
-  it('leaves the page a button moved to, rather than the one its numbers were taken from', async () => {
+  it('asks a step for a view rather than for a page, so the number is the page in view', async () => {
     const wrapper = mountContinuous(30)
     await flushPromises()
     api.put.mockClear()
 
-    const observer = pageObserver()
-    const observed = vi.spyOn(observer, 'observe')
-    const rendered = wrapper.findAll('section[data-page]').length
     const before = wrapper.vm.current_page
     const target = wrapper.findAll('section[data-page]')[before + 1].element
     const moved = vi.spyOn(target, 'scrollIntoView')
@@ -533,13 +530,27 @@ describe('TheComicReader in continuous mode', () => {
     // A step names a page, so the view is placed at it rather than gliding there: the
     // only smooth movement is the reader's own pan, which the browser runs.
     expect(moved).toHaveBeenCalledWith({ behavior: 'instant', block: 'start' })
-    // A programmatic scroll changes no page's intersection, so the observer is never told
-    // about the view's new position by itself, and the page being left is still the one
-    // under the middle in the numbers it already holds. Asked again for every page, it
-    // measures from where the scroll ended, which is the page the reader asked for.
-    expect(observed).toHaveBeenCalledTimes(rendered)
+    // The step only moves the pane. A scroll this file runs changes no page's
+    // intersection, so the page observer is never told the view moved, and its numbers
+    // still describe the page being left - writing a page from the step as well would
+    // write a number the view was asked for, not one the view holds.
+    expect(wrapper.vm.current_page).toBe(before)
+    expect(wrapper.find('.page-field').attributes('value')).toBe(String(before + 1))
+
+    // What the pane holds once it is there decides the page: the page stepped to covers
+    // the middle of the view and the page being left no longer does.
+    const observer = pageObserver()
+    const sections = wrapper.findAll('section[data-page]')
+    observer.fire([
+      { isIntersecting: false, target: sections[before].element },
+      { isIntersecting: true, target: sections[before + 1].element, boundingClientRect: { top: 0, height: 1400 } },
+    ])
+    await flushPromises()
     expect(wrapper.vm.current_page).toBe(before + 1)
     expect(wrapper.find('.page-field').attributes('value')).toBe(String(before + 2))
+    vi.advanceTimersByTime(500)
+    expect(api.put).toHaveBeenCalledTimes(1)
+    expect(api.put).toHaveBeenCalledWith('/api/read/a1/set_page/', { page: before + 1 })
   })
 
   it('writes once for a burst of scrolling rather than once per intersection', async () => {
