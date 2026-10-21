@@ -934,8 +934,10 @@ section {
 }
 
 /* The page field is part of the readout, not a control that stands on its own: it takes
-   the bar's colours so the position reads as one line, and it is wide enough that a
-   three digit page number does not push the count of pages along. */
+   the bar's colours so the position reads as one line. It is an input, so it is as wide
+   as the number typed in it, and this is only the least it will be - wide enough that
+   the highest page number a book can have is readable, and no wider, since it sits
+   inside the row of controls over the page it belongs to. */
 .page-field {
   border: 0;
   background: transparent;
@@ -943,8 +945,8 @@ section {
   color: inherit;
   font: inherit;
   padding: 0;
-  margin: 0 6px 0 0;
-  min-width: 2.5em;
+  margin: 0 4px 0 0;
+  min-width: 1.6em;
 }
 
 /* reveal.css is deliberately not loaded, so visibility is the `hidden` attribute and
