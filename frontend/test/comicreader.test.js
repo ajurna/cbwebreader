@@ -873,21 +873,30 @@ describe('TheComicReader in a pane', () => {
     expect(wrapper.findAll('.page-mark')).toHaveLength(wrapper.findAll('section[data-page]').length)
   })
 
-  it('does not take the arrow keys to pan within a page, which the pane\'s own scrollbar does', async () => {
+  it('pans within the page with the arrow keys, which the browser would not scroll', async () => {
     const wrapper = mountContinuous(45)
     await flushPromises()
     const scrolled = trackScrolling(wrapper)
 
     wrapper.vm.keyPress({ key: 'ArrowDown', preventDefault: vi.fn() })
     await flushPromises()
+    expect(scrolled).toEqual([400])
+
     vi.advanceTimersByTime(100)
     wrapper.vm.keyPress({ key: 'ArrowUp', preventDefault: vi.fn() })
     await flushPromises()
-    // Up and Down next to the arrows for pages read as two ways of doing one thing, so
-    // the pane scrolls with the wheel, the scrollbar or a finger instead, and the list
-    // of shortcuts only documents what changes a page.
+    expect(scrolled).toEqual([400, 0])
+  })
+
+  it('leaves the arrow keys alone when one page at a time is shown', async () => {
+    const wrapper = mountReader()
+    await flushPromises()
+    const scrolled = trackScrolling(wrapper)
+
+    wrapper.vm.keyPress({ key: 'ArrowDown', preventDefault: vi.fn() })
+    await flushPromises()
     expect(scrolled).toEqual([])
-    expect(wrapper.vm.page_position).toBe(3) // the fixture resumes at page 3, and it stays there
+    expect(wrapper.vm.$refs.pane.parentElement.getAttribute('class')).to.not.contain('continuous')
   })
 
   it('keeps the page size and the zoom out of the way until a pane is being scrolled', async () => {
