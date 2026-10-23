@@ -1,5 +1,4 @@
 import axios from "axios";
-import router from "@/router";
 import store from "@/store";
 
 // Authentication is cookie based: the browser sends the HttpOnly access token
@@ -35,14 +34,11 @@ axios_jwt.interceptors.response.use(
                 await store.dispatch('refreshToken');
                 return await axios_jwt.request(config);
             } catch {
-                store.commit('logOut');
-                router.push({
-                    name: 'login',
-                    query: {
-                        next: config.url,
-                        error: 'Your session has expired. Please log in again.'
-                    }
-                });
+                // refreshToken has already logged out and taken the reader to the login page,
+                // with the page they were on as where to go back to once they have logged in
+                // again. Doing that here as well would navigate twice, and the address of a
+                // request is not the address of a page - /api/read/../type/ has no page to
+                // show, so a second navigation there is a blank screen.
             }
         }
 

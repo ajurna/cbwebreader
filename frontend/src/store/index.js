@@ -124,6 +124,9 @@ export default createStore({
         .then(() => api.get('/api/account'))
         .then((response) => {
           context.commit('updateUser', response.data)
+          // Return to the page the session expired on. The guards put that page in the login
+          // route's query, and an API address is not a page, so a blank screen here means
+          // something put an API address there instead.
           if ('next' in router.currentRoute.value.query) {
             router.push(router.currentRoute.value.query.next)
           } else {

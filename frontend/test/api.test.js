@@ -89,20 +89,15 @@ describe('response interceptor', () => {
     expect(store.dispatch).not.toHaveBeenCalled()
   })
 
-  it('logs out and goes to the login page when the refresh fails', async () => {
+  it('leaves the logout and the login page to the store, which has the page to go back to', async () => {
     store.dispatch.mockRejectedValue(new Error('expired'))
     const error = error401('/api/browse/')
 
     await expect(errorHandler(error)).rejects.toBe(error)
 
-    expect(store.commit).toHaveBeenCalledWith('logOut')
-    expect(router.push).toHaveBeenCalledWith({
-      name: 'login',
-      query: {
-        next: '/api/browse/',
-        error: 'Your session has expired. Please log in again.',
-      },
-    })
+    expect(store.dispatch).toHaveBeenCalledWith('refreshToken')
+    expect(router.push).not.toHaveBeenCalled()
+    expect(store.commit).not.toHaveBeenCalled()
   })
 
   it('leaves other error statuses alone', async () => {

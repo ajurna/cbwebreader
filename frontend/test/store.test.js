@@ -143,7 +143,15 @@ describe('token handling', () => {
     await expect(store.dispatch('refreshToken')).rejects.toBeTruthy()
 
     expect(store.getters.isAuthenticated).toBe(false)
-    expect(router.push).toHaveBeenCalledWith(expect.objectContaining({ name: 'login' }))
+    // The page they were on, not the address of the API call that failed - an API address has
+    // no page to show, so going back to one after logging in is a blank screen.
+    expect(router.push).toHaveBeenCalledWith({
+      name: 'login',
+      query: {
+        next: '/account',
+        error: 'Your session has expired. Please log in again.',
+      },
+    })
   })
 
   it('does not call the API when there is no session', async () => {
