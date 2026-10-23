@@ -259,11 +259,24 @@ JWT_COOKIE_SECURE = os.getenv('JWT_COOKIE_SECURE', 'False') == 'True'
 # Lax blocks cross-site POSTs, which is the CSRF protection for cookie authentication.
 JWT_COOKIE_SAMESITE = os.getenv('JWT_COOKIE_SAMESITE', 'Lax')
 
+def lifetime_from_env(name: str, unit: str, default: int) -> timedelta:
+    """Read a number of `unit` from the environment, falling back to `default`."""
+    try:
+        return timedelta(**{unit: int(os.getenv(name))})
+    except (TypeError, ValueError):
+        return timedelta(**{unit: default})
+
+
+# The access token stays short so a session that should end ends quickly: a reader who
+# closes the tab is logged out within minutes of their last page. The refresh token is
+# the session - it is exchanged once (ROTATE_REFRESH_TOKENS plus BLACKLIST_AFTER_ROTATION
+# below), and its window is how long a reader may be away before signing in again.
+# Override with JWT_ACCESS_MINUTES / JWT_REFRESH_DAYS (see .env.example).
 SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': lifetime_from_env('JWT_ACCESS_MINUTES', 'minutes', 10),
+    'REFRESH_TOKEN_LIFETIME': lifetime_from_env('JWT_REFRESH_DAYS', 'days', 30),
     'LEEWAY': timedelta(seconds=30),
     'ALGORITHM': 'HS256',
     'AUDIENCE': 'cbwebreader-users',

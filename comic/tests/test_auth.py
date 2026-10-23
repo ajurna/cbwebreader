@@ -1,10 +1,13 @@
 """Tests for cookie based JWT authentication."""
 
 import json
+from datetime import timedelta
 
 import pytest
+from django.conf import settings
 from django.test import Client
 
+from cbreader.settings.base import lifetime_from_env
 from comic import auth
 
 CREDENTIALS = {'username': 'reader', 'password': 'password12345'}
@@ -85,3 +88,15 @@ def test_page_images_can_be_loaded_with_a_cookie(client: Client, book, reader_us
     """Browser initiated requests cannot send a header, so they rely on the cookie."""
     _store_cookies(client, client.post('/api/token/', CREDENTIALS))
     assert client.get(f'/api/read/{book.selector}/image/1/').status_code == 200
+
+
+def test_the_session_window_defaults_to_a_month() -> None:
+    """A reader away for a month is still reading the same session."""
+    assert settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'] == timedelta(days=30)
+    assert settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'] == timedelta(minutes=10)
+
+
+def test_an_unusable_window_setting_falls_back_to_the_default(monkeypatch) -> None:
+    monkeypatch.setenv('JWT_REFRESH_DAYS', 'thirty days')
+
+    assert lifetime_from_env('JWT_REFRESH_DAYS', 'days', 30) == timedelta(days=30)

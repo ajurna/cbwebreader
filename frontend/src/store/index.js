@@ -171,6 +171,12 @@ export default createStore({
       return api.get('/api/account')
         .then((response) => {
           this.commit('updateUser', response.data);
+          // A session that is being used should not age out while it is used. The
+          // refresh token is exchanged once (the backend blacklists the old one), so
+          // spending it here slides the whole window forward from this visit rather
+          // than waiting for some request to be rejected and renewed. A failed
+          // exchange logs out through refreshToken's own handler.
+          this.dispatch('refreshToken').catch(() => null);
           return response.data;
         })
         .catch((error) => {

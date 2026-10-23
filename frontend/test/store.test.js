@@ -133,6 +133,39 @@ describe('restoreSession', () => {
 
     expect(api.get).not.toHaveBeenCalled()
   })
+
+  it('slides the window while opening the app, so an idle tab is not a timeout', async () => {
+    store.commit('updateUser', { id: 1, is_superuser: false })
+    api.get.mockResolvedValue({ data: { id: 1, is_superuser: false } })
+    api.post.mockResolvedValue({ data: {} })
+
+    await store.dispatch('restoreSession')
+
+    expect(store.state.user).toEqual({ id: 1, is_superuser: false })
+    // The refresh token is single use on the server, so spending it here is what moves
+    // the session forward from this visit instead of leaving it to age until it ends.
+    expect(api.post).calledWith('/api/token/refresh/', {})
+    expect(api.post).toHaveBeenCalledTimes(1)
+  })
+
+  it('ends the session when the window cannot be slid', async () => {
+    store.commit('updateUser', { id: 1, is_superuser: false })
+    api.get.mockResolvedValue({ data: { id: 1, is_superuser: false } })
+    api.post.mockRejectedValue({ response: { status: 401 } })
+
+    await store.dispatch('restoreSession')
+
+    // The profile is still known, but the session is over, so the reader is sent to login
+    // rather than sitting on a page whose every request fails.
+    expect(store.getters.isAuthenticated).toBe(false)
+    expect(router.push).toHaveBeenCalledWith({
+      name: 'login',
+      query: {
+        next: '/account',
+        error: 'Your session has expired. Please log in again.',
+      },
+    })
+  })
 })
 
 describe('token handling', () => {
