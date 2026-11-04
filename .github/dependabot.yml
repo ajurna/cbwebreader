@@ -1,0 +1,35 @@
+# Dependabot configuration (v2). Replaces the legacy .dependabot/config.yml that
+# issue #15 flagged, and which is no longer read: recent Dependabot PRs carry the
+# default labels, not the default_labels listed in that file.
+#
+# Note: "security only" is not expressible in the v2 file format - allow.update-types
+# affects version updates only. Security updates are controlled by the "Automated
+# security updates" toggle in repository settings, and are not subject to a schedule
+# or cooldown. Version updates are the behaviour change this file introduces.
+version: 2
+
+updates:
+  # Python: pyproject.toml + uv.lock at the repository root.
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-type: "all"
+    open-pull-request-limit: 10
+
+  # Frontend: frontend/package.json + frontend/package-lock.json.
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-type: "all"
+    open-pull-request-limit: 10
+
+  # Base image for the container, which nothing currently watches.
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-request-limit: 5
