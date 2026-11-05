@@ -63,6 +63,16 @@ ignore = ["ANN001", "ANN002", "ANN003"]
 [tool.ruff.lint.isort]
 combine-as-imports = true
 
+[tool.coverage.run]
+source = ["comic", "cbreader"]
+# The test files are not code under test, and the migrations are data.
+omit = ["comic/tests/*", "comic/migrations/*"]
+
+[tool.coverage.report]
+show_missing = true
+# shortcut: just below the measured 85%; raise it as the uncovered view methods get tests.
+fail_under = 83
+
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "cbreader.settings.test"
 python_files = ["test_*.py"]

@@ -189,10 +189,11 @@ class ComicBook(models.Model):
             try:
                 archive = rarfile.RarFile(archive_path)
             except rarfile.NotRarFile:
-                # pylint: disable=consider-using-with
-                archive = zipfile.ZipFile(archive_path)
-            except zipfile.BadZipFile:
-                return False, False
+                try:
+                    # pylint: disable=consider-using-with
+                    archive = zipfile.ZipFile(archive_path)
+                except zipfile.BadZipFile:
+                    return False, False
 
             file_name, file_mime = get_archive_files(archive)[page]
             return archive.open(file_name), file_mime
