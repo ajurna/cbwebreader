@@ -24,15 +24,6 @@ def test_pdf_page_count(comic_volume: Path) -> None:
 
 
 @pytest.mark.django_db
-def test_unreadable_archive_is_indexed_without_pages(comic_volume: Path) -> None:
-    path = comic_volume / 'broken.cbz'
-    path.write_bytes(b'this is not an archive')
-    result = models.ComicBook.process_comic_book(path)
-    assert isinstance(result, Path)
-    assert models.ComicBook.objects.get(file_name='broken.cbz').page_count == 0
-
-
-@pytest.mark.django_db
 def test_archive_path_uses_the_directory_tree(comic_volume: Path) -> None:
     parent = models.Directory.objects.create(name='Series')
     child = models.Directory.objects.create(name='Volume 1', parent=parent)

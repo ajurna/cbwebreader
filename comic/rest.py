@@ -1,4 +1,3 @@
-import json
 from collections.abc import Iterable
 from http.client import HTTPResponse
 from pathlib import Path
@@ -8,11 +7,11 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.db.models import Case, F, FileField, PositiveSmallIntegerField, QuerySet, When
+from django.db.models import Case, F, FileField, QuerySet, When
 from django.http import FileResponse
 from django.utils.crypto import get_random_string
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, permissions, renderers, serializers, status, viewsets
+from rest_framework import mixins, permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
@@ -159,9 +158,6 @@ class BrowseViewSet(viewsets.GenericViewSet):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
     lookup_field = 'selector'
-
-    def get_queryset(self) -> None:
-        return
 
     def page(self, request: Request, directory: models.Directory | None = None) -> Response:
         """One page of a listing, so a folder with hundreds of entries is not all sent at once.
@@ -424,25 +420,8 @@ class ReadViewSet(viewsets.GenericViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class PassthroughRenderer(renderers.BaseRenderer):  # pylint: disable=too-few-public-methods
-    """
-        Return data as-is. View should supply a Response.
-    """
-    media_type = '*/*'
-    format = ''
-
-    def render(self, data: bytes, accepted_media_type: str | None = None, renderer_context: str | None = None) \
-            -> bytes:
-        if isinstance(data, (bytes, bytearray)):
-            return data
-        # Error responses still need to be serialised.
-        return json.dumps(data).encode()
-
-
 class ImageViewSet(viewsets.ViewSet):
-    queryset = models.ComicBook.objects.all()
     lookup_field = 'page'
-    renderer_classes = [PassthroughRenderer, renderers.JSONRenderer]
     permission_classes = [permissions.IsAuthenticated]
 
     @swagger_auto_schema(responses={status.HTTP_200_OK: "A Binary Image response",
@@ -455,7 +434,6 @@ class ImageViewSet(viewsets.ViewSet):
         img, content = book.get_image(int(page) - 1)
         if not img:
             return Response(status=status.HTTP_404_NOT_FOUND, data={'errors': 'Page could not be read.'})
-        self.renderer_classes[0].media_type = content
         return FileResponse(img, content_type=content)
 
 
@@ -490,11 +468,7 @@ class RecentComicsView(mixins.ListModelMixin, viewsets.GenericViewSet):
             unread=Case(When(comicstatus__user=user, then='comicstatus__unread')),
             finished=Case(When(comicstatus__user=user, then='comicstatus__finished')),
             last_read_page=Case(When(comicstatus__user=user, then='comicstatus__last_read_page')) + 1,
-            classification=Case(
-                When(directory__isnull=True, then=models.Directory.Classification.C_18),
-                default=F('directory__classification'),
-                output_field=PositiveSmallIntegerField(choices=models.Directory.Classification.choices)
-            )
+            classification=models.classification_annotation(models.Directory.Classification.C_18)
         )
 
         query = query.order_by('-date_added')
@@ -533,11 +507,7 @@ class HistoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             finished=Case(When(comicstatus__user=user, then='comicstatus__finished')),
             unread=Case(When(comicstatus__user=user, then='comicstatus__unread')),
             last_read_time=Case(When(comicstatus__user=user, then='comicstatus__updated')),
-            classification=Case(
-                When(directory__isnull=True, then=models.Directory.Classification.C_18),
-                default=F('directory__classification'),
-                output_field=PositiveSmallIntegerField(choices=models.Directory.Classification.choices)
-            )
+            classification=models.classification_annotation(models.Directory.Classification.C_18)
         )
         query = query.filter(comicstatus__unread=False)
         query = query.order_by('-comicstatus__updated')

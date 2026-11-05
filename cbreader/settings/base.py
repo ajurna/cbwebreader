@@ -99,8 +99,6 @@ TIME_ZONE = "UTC"
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
 
@@ -120,10 +118,6 @@ STATIC_ROOT = os.getenv('STATIC_ROOT', None)
 MEDIA_ROOT = os.getenv('MEDIA_ROOT', None)
 
 MEDIA_URL = '/media/'
-
-LOGIN_REDIRECT_URL = "/comic/"
-
-LOGIN_URL = "/login/"
 
 UNRAR_TOOL = os.getenv("DJANGO_UNRAR_TOOL", None)
 
@@ -184,23 +178,12 @@ LOGGING = {
     },
 }
 
-SILK_ENABLED = False
-
 USE_X_FORWARDED_HOST = os.getenv('USE_X_FORWARDED_HOST', False) == 'True'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-MYLAR_API_KEY = os.getenv('MYLAR_API_KEY', None)
-
-BOOTSTRAP4 = {
-    "javascript_url": {
-        "url": "https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js",
-        "integrity": "sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns",
-        "crossorigin": "anonymous",
-    },
-}
 CSP_DEFAULT_SRC = ("'none'",)
 CSP_STYLE_SRC = (
     "'self'",
@@ -208,8 +191,8 @@ CSP_STYLE_SRC = (
 )
 CSP_IMG_SRC = ("'self'", "data:")
 CSP_FONT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "'unsafe-eval'", "'unsafe-inline'", "localhost:8080")
-CSP_CONNECT_SRC = ("'self'", "ws://localhost:8080/ws")
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-eval'", "'unsafe-inline'", "localhost:8001")
+CSP_CONNECT_SRC = ("'self'", "ws://localhost:8001/ws")
 CSP_INCLUDE_NONCE_IN = ['script-src']
 CSP_SCRIPT_SRC_ATTR = ("'self'",)  # "'unsafe-inline'")
 

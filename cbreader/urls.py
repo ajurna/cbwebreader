@@ -24,7 +24,6 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 from rest_framework.routers import DefaultRouter
 
-# from rest_framework_extensions.routers import ExtendedDefaultRouter
 from comic import auth_views, feeds, rest
 
 schema_view = get_schema_view(
@@ -70,4 +69,3 @@ urlpatterns = [
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    # urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]

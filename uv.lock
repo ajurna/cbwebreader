@@ -94,7 +94,6 @@ dependencies = [
     { name = "django-filter" },
     { name = "django-imagekit" },
     { name = "django-permissions-policy" },
-    { name = "django-silk" },
     { name = "django-webpack-loader" },
     { name = "djangorestframework" },
     { name = "djangorestframework-simplejwt" },
@@ -134,7 +133,6 @@ requires-dist = [
     { name = "django-filter", specifier = ">=26.2" },
     { name = "django-imagekit", specifier = ">=6.1.1" },
     { name = "django-permissions-policy", specifier = ">=4.34.0" },
-    { name = "django-silk", specifier = ">=5.6.0" },
     { name = "django-webpack-loader", specifier = ">=3.2.4" },
     { name = "djangorestframework", specifier = ">=3.18.3" },
     { name = "djangorestframework-simplejwt", specifier = ">=5.5.1" },
@@ -458,20 +456,6 @@ wheels = [
 ]
 
 [[package]]
-name = "django-silk"
-version = "5.6.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "django" },
-    { name = "gprof2dot" },
-    { name = "sqlparse" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/d5/36/49ce4c5244dc3716b2c70919fb510eb4edc3fc0b36d2f4c096ca6f539949/django_silk-5.6.0.tar.gz", hash = "sha256:bb741fb8af45eba663e8ed832207d16ecd731496313311f6dfae5fe776bed38e", size = 4501978, upload-time = "2026-09-12T05:36:59.31Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/2f/c4/3593fe23bad8bdaef7ad6360fa88cfa70618fd40b0b0935db9130b438429/django_silk-5.6.0-py3-none-any.whl", hash = "sha256:761300bde25b8ce3c381dc0710e82c792c099c0ee6558fad3165dc560a06dd48", size = 1946405, upload-time = "2026-09-12T05:37:10.558Z" },
-]
-
-[[package]]
 name = "django-webpack-loader"
 version = "3.2.4"
 source = { registry = "https://pypi.org/simple" }
@@ -541,15 +525,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d8/28/3893324bcadf8f89b1616637468d766af3f625008c0735bf704fdfa86617/filelock-4.2.4.tar.gz", hash = "sha256:c6d8663535e1650ee430507b4ffbac7b464dd64b7647ea0112a9f406499d163d", size = 652444, upload-time = "2026-10-19T01:57:51.001Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e0/1b/5e74289a1878e666bb4b65fe5805a04cafcac2aa5f519ef1ead67ef91c56/filelock-4.2.4-py3-none-any.whl", hash = "sha256:301241438c57936ef93f4243a94f2559022268bfcf9b375a9a72eb0f8db8358e", size = 162475, upload-time = "2026-10-19T01:57:49.419Z" },
-]
-
-[[package]]
-name = "gprof2dot"
-version = "2025.4.14"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/bb/fd/cad13fa1f7a463a607176432c4affa33ea162f02f58cc36de1d40d3e6b48/gprof2dot-2025.4.14.tar.gz", hash = "sha256:35743e2d2ca027bf48fa7cba37021aaf4a27beeae1ae8e05a50b55f1f921a6ce", size = 39536, upload-time = "2025-04-14T07:21:45.76Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/ed/89d760cb25279109b89eb52975a7b5479700d3114a2421ce735bfb2e7513/gprof2dot-2025.4.14-py3-none-any.whl", hash = "sha256:0742e4c0b4409a5e8777e739388a11e1ed3750be86895655312ea7c20bd0090e", size = 37555, upload-time = "2025-04-14T07:21:43.319Z" },
 ]
 
 [[package]]

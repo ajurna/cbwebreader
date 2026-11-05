@@ -13,8 +13,8 @@ The following technologies will aid development by ensuring a consistent develop
 
 The primary frameworks and tool's are used within the application:
 
-- [Django 4.0](https://www.djangoproject.com/)
-- [python 3.9+](https://www.python.org/)
+- [Django 6.1](https://www.djangoproject.com/)
+- [python 3.14](https://www.python.org/)
 
 ## Getting started
 

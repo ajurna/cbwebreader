@@ -12,7 +12,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
-from django.db.models import UniqueConstraint
+from django.db.models import Case, F, PositiveSmallIntegerField, UniqueConstraint, When
 from django_boost.models.fields import AutoOneToOneField
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
@@ -104,6 +104,19 @@ class Directory(models.Model):
         return path_items
 
 
+def classification_annotation(root: Directory.Classification) -> Case:
+    """The rating that applies to a book, as a reusable annotation.
+
+    A book outside any directory has no parent rating, so the caller decides what to use
+    for it: the browse listing treats those as the lowest, the APIs as the highest.
+    """
+    return Case(
+        When(directory__isnull=True, then=root),
+        default=F('directory__classification'),
+        output_field=PositiveSmallIntegerField(choices=Directory.Classification.choices),
+    )
+
+
 class ComicBook(models.Model):
     file_name = models.TextField()
     date_added = models.DateTimeField(auto_now_add=True)
@@ -158,9 +171,8 @@ class ComicBook(models.Model):
     def get_image(self, page: int) -> tuple[IO[bytes], str] | tuple[bool, bool]:
         if self.file_name.lower().endswith('.pdf'):
             # noinspection PyUnresolvedReferences
-            doc = pymupdf.open(self.get_pdf())
-            page: pymupdf.Page = doc[page]
-            pix = page.get_pixmap()
+            document = pymupdf.open(self.get_pdf())
+            pix = document[page].get_pixmap()
             mode: Final = "RGBA" if pix.alpha else "RGB"
             # noinspection PyTypeChecker
             pil_data = Image.frombytes(mode, (pix.width, pix.height), pix.samples)
@@ -179,14 +191,14 @@ class ComicBook(models.Model):
             except rarfile.NotRarFile:
                 # pylint: disable=consider-using-with
                 archive = zipfile.ZipFile(archive_path)
-            except zipfile.BadZipfile:
+            except zipfile.BadZipFile:
                 return False, False
 
             file_name, file_mime = get_archive_files(archive)[page]
             return archive.open(file_name), file_mime
 
     def generate_thumbnail_pdf(self, page_index: int = 0) -> tuple[io.BytesIO, Image_type, str]:
-        img, pil_data = self._get_pdf_image(page_index if page_index else 0)
+        img, pil_data = self._get_pdf_image(page_index)
         return img, pil_data, 'Image/JPEG'
 
     def generate_thumbnail_archive(
@@ -236,31 +248,6 @@ class ComicBook(models.Model):
         img.seek(0)
         return img, pil_data
 
-    @staticmethod
-    def process_comic_book(comic_file_path: Path, directory: Directory = False) -> ComicBook | Path:
-        try:
-            book = ComicBook.objects.get(file_name=comic_file_path.name, version=0)
-            book.directory = directory
-            book.version = 1
-            book.save()
-            return book
-        except ComicBook.DoesNotExist:
-            pass
-
-        book = ComicBook(file_name=comic_file_path.name, directory=directory if directory else None)
-        book.save()
-        try:
-            archive, archive_type = book.get_archive()
-        except NotCompatibleArchive:
-            return comic_file_path
-
-        if archive_type == 'archive':
-            book.page_count = len(get_archive_files(archive))
-        elif archive_type == 'pdf':
-            book.page_count = archive.page_count
-
-        return book
-
     @property
     def get_archive_path(self) -> Path:
         if self.directory:
@@ -306,9 +293,6 @@ class ComicStatus(models.Model):
         constraints = [
             UniqueConstraint(fields=['user', 'comic'], name='one_per_user_per_comic')
         ]
-
-    def __str__(self) -> str:
-        return self.__repr__()
 
     def __repr__(self) -> str:
         return (

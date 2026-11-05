@@ -6,16 +6,13 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.db.models import (
     BooleanField,
-    Case,
     Count,
     ExpressionWrapper,
     F,
     IntegerField,
-    PositiveSmallIntegerField,
     Q,
     QuerySet,
     Value,
-    When,
 )
 from django.db.models.functions import Coalesce
 
@@ -61,11 +58,7 @@ def list_directory(user: AbstractBaseUser, directory: models.Directory | None = 
         finished=Coalesce(F('comicstatus__finished'), Value(False, output_field=BooleanField())),
         unread=Coalesce(F('comicstatus__unread'), Value(True, output_field=BooleanField())),
         user=F('comicstatus__user'),
-        classification=Case(
-            When(directory__isnull=True, then=models.Directory.Classification.C_G),
-            default=F('directory__classification'),
-            output_field=PositiveSmallIntegerField(choices=models.Directory.Classification.choices)
-        )
+        classification=models.classification_annotation(models.Directory.Classification.C_G)
     ).filter(Q(user__isnull=True) | Q(user=user.id))
 
     if search:

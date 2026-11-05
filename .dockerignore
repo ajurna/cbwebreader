@@ -9,8 +9,6 @@
 !uv.lock
 !entrypoint.sh
 !entrypoint-cron.sh
-!package-lock.json
-!package.json
 !frontend
 /frontend/node_modules
 /frontend/dist

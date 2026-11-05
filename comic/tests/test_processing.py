@@ -35,6 +35,20 @@ def test_clean_files_ignores_unsupported_extensions(comic_volume, reader_user) -
 
 
 @pytest.mark.django_db
+def test_clean_files_indexes_an_unreadable_archive_with_no_pages(comic_volume) -> None:
+    directory = models.Directory.objects.create(name='Series')
+    target = comic_volume / 'Series'
+    target.mkdir(parents=True)
+    (target / 'broken.cbz').write_bytes(b'this is not an archive')
+
+    clean_files(models.ComicBook.objects.filter(directory=directory), target, directory)
+
+    book = models.ComicBook.objects.get(directory=directory)
+    assert book.file_name == 'broken.cbz'
+    assert book.page_count == 0
+
+
+@pytest.mark.django_db
 def test_reconcile_indexes_the_directory_without_touching_the_database_on_a_second_run(
         comic_volume, reader_user) -> None:
     directory = models.Directory.objects.create(name='Series')

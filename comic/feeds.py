@@ -1,10 +1,10 @@
 from django.contrib.auth.models import User
 from django.contrib.syndication.views import Feed
-from django.db.models import Case, F, PositiveSmallIntegerField, QuerySet, When
+from django.db.models import QuerySet
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 
-from comic.models import ComicBook, Directory, UserMisc
+from comic.models import ComicBook, Directory, UserMisc, classification_annotation
 
 
 class RecentComicsAPI(Feed):
@@ -19,13 +19,8 @@ class RecentComicsAPI(Feed):
         return user_misc.user
 
     def items(self) -> QuerySet[ComicBook]:
-        comics = ComicBook.objects.order_by("-date_added")
-        comics = comics.annotate(
-            classification=Case(
-                When(directory__isnull=True, then=Directory.Classification.C_18),
-                default=F('directory__classification'),
-                output_field=PositiveSmallIntegerField(choices=Directory.Classification.choices)
-            )
+        comics = ComicBook.objects.order_by("-date_added").annotate(
+            classification=classification_annotation(Directory.Classification.C_18)
         )
         comics = comics.filter(classification__lte=self.user.usermisc.allowed_to_read)
         return comics[:10]
