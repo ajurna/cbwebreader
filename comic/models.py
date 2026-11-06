@@ -162,16 +162,16 @@ class ComicBook(models.Model):
     def total(self) -> int:
         return self.page_count
 
-    def get_pdf(self) -> Path:
-        base_dir = settings.COMIC_BOOK_VOLUME
-        if self.directory:
-            return Path(base_dir, self.directory.get_path(), self.file_name)
-        return Path(base_dir, self.file_name)
-
-    def get_image(self, page: int) -> tuple[IO[bytes], str] | tuple[bool, bool]:
+    def get_image(self, page: int, image_format: str = 'PNG') -> tuple[IO[bytes], str] | tuple[bool, bool]:
+        archive_path = self.get_archive_path
         if self.file_name.lower().endswith('.pdf'):
             # noinspection PyUnresolvedReferences
-            document = pymupdf.open(self.get_pdf())
+            try:
+                document = pymupdf.open(archive_path)
+            except RuntimeError:
+                return False, False
+            if page >= len(document):
+                return False, False
             pix = document[page].get_pixmap()
             mode: Final = "RGBA" if pix.alpha else "RGB"
             # noinspection PyTypeChecker
@@ -179,13 +179,8 @@ class ComicBook(models.Model):
             img = io.BytesIO()
             pil_data.save(img, format="PNG")
             img.seek(0)
-            return img, "Image/PNG"
+            return img, f"Image/{image_format}"
         else:
-            base_dir = settings.COMIC_BOOK_VOLUME
-            if self.directory:
-                archive_path = Path(base_dir, self.directory.path, self.file_name)
-            else:
-                archive_path = Path(base_dir, self.file_name)
             try:
                 archive = rarfile.RarFile(archive_path)
             except rarfile.NotRarFile:
@@ -195,12 +190,19 @@ class ComicBook(models.Model):
                 except zipfile.BadZipFile:
                     return False, False
 
-            file_name, file_mime = get_archive_files(archive)[page]
+            pages = get_archive_files(archive)
+            if page >= len(pages):
+                return False, False
+            file_name, file_mime = pages[page]
             return archive.open(file_name), file_mime
 
-    def generate_thumbnail_pdf(self, page_index: int = 0) -> tuple[io.BytesIO, Image_type, str]:
-        img, pil_data = self._get_pdf_image(page_index)
-        return img, pil_data, 'Image/JPEG'
+    def generate_thumbnail_pdf(
+            self, page_index: int = 0
+    ) -> tuple[io.BytesIO, Image_type, str] | tuple[bool, bool, bool]:
+        img, content_type = self.get_image(page_index, 'JPEG')
+        if not img:
+            return img, False, content_type
+        return img, Image.open(img), content_type
 
     def generate_thumbnail_archive(
             self, page_index: int = 0
@@ -208,11 +210,15 @@ class ComicBook(models.Model):
         img, content_type, pil_data = False, False, False
         if page_index:
             img, content_type = self.get_image(page_index)
+            if not img:
+                return img, pil_data, content_type
             pil_data = Image.open(img)
         else:
             for page_number in range(self.page_count):
                 try:
                     img, content_type = self.get_image(page_number)
+                    if not img:
+                        continue
                     pil_data = Image.open(img)
                     break
                 except UnidentifiedImageError:
@@ -236,18 +242,6 @@ class ComicBook(models.Model):
             None
         )
         self.save()
-
-    def _get_pdf_image(self, page_index: int) -> tuple[io.BytesIO, Image_type]:
-        doc = pymupdf.open(self.get_pdf())
-        page = doc[page_index]
-        pix = page.get_pixmap()
-        mode: Final = "RGBA" if pix.alpha else "RGB"
-        # noinspection PyTypeChecker
-        pil_data = Image.frombytes(mode, (pix.width, pix.height), pix.samples)
-        img = io.BytesIO()
-        pil_data.save(img, format="JPEG")
-        img.seek(0)
-        return img, pil_data
 
     @property
     def get_archive_path(self) -> Path:

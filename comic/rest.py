@@ -22,15 +22,20 @@ from comic import models, processing, tasks
 from comic.util import generate_breadcrumbs_from_path
 
 
+def user_allowance(user: models.User) -> int:
+    """The highest rating this user may read. A user with no UserMisc row gets the default."""
+    misc, _ = models.UserMisc.objects.get_or_create(user=user)
+    return misc.allowed_to_read
+
+
 def user_can_read(user: models.User, directory: models.Directory | None) -> bool:
     """Whether the user's classification allowance covers this book.
 
     Books that are not inside a directory are treated as the highest rating, which
     matches how the browse API reports them.
     """
-    misc, _ = models.UserMisc.objects.get_or_create(user=user)
     classification = directory.classification if directory else models.Directory.Classification.C_18
-    return classification <= misc.allowed_to_read
+    return classification <= user_allowance(user)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -392,7 +397,7 @@ class ReadViewSet(viewsets.GenericViewSet):
         book = get_object_or_404(models.ComicBook, selector=selector)
         if not user_can_read(request.user, book.directory):
             return Response(status=status.HTTP_403_FORBIDDEN, data={'errors': 'Not allowed to read.'})
-        pdf_path = book.get_pdf()
+        pdf_path = book.get_archive_path
         if not pdf_path.is_file():
             return Response(status=status.HTTP_404_NOT_FOUND, data={'errors': 'Comic file not found.'})
         return FileResponse(open(pdf_path, 'rb'), content_type='application/pdf')
@@ -470,6 +475,7 @@ class RecentComicsView(mixins.ListModelMixin, viewsets.GenericViewSet):
             last_read_page=Case(When(comicstatus__user=user, then='comicstatus__last_read_page')) + 1,
             classification=models.classification_annotation(models.Directory.Classification.C_18)
         )
+        query = query.filter(classification__lte=user_allowance(user))
 
         query = query.order_by('-date_added')
         return query
@@ -509,7 +515,7 @@ class HistoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             last_read_time=Case(When(comicstatus__user=user, then='comicstatus__updated')),
             classification=models.classification_annotation(models.Directory.Classification.C_18)
         )
-        query = query.filter(comicstatus__unread=False)
+        query = query.filter(comicstatus__unread=False, classification__lte=user_allowance(user))
         query = query.order_by('-comicstatus__updated')
         return query
 
@@ -536,7 +542,7 @@ class ActionViewSet(viewsets.GenericViewSet):
             comic_status = comic_status.annotate(total_pages=F('comic__page_count'))
             status_to_update = []
             for c_status in comic_status:
-                c_status.last_read_page = c_status.total_pages - 1
+                c_status.last_read_page = max(c_status.total_pages - 1, 0)
                 c_status.unread = False
                 c_status.finished = True
                 status_to_update.append(c_status)

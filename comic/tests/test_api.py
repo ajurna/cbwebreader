@@ -7,7 +7,7 @@ import pytest
 from django.utils import timezone
 
 from comic import models
-from comic.tests.factories import make_cbz
+from comic.tests.factories import make_cbz, make_pdf
 
 UNKNOWN = '00000000-0000-0000-0000-000000000000'
 
@@ -460,3 +460,420 @@ def test_browse_reports_metadata_for_books_and_nothing_for_folders(client, reade
     assert entry['title'] == 'The Test Title'
     assert entry['metadata'] == {'series': 'Test Series', 'issue': '12', 'writer': 'Test Writer',
                                  'artist': 'Test Artist', 'year': 2003}
+
+
+@pytest.mark.django_db
+def test_image_page_past_the_end_of_the_book_returns_404(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    assert client.get(f'/api/read/{book.selector}/image/{book.page_count + 1}/').status_code == 404
+
+
+@pytest.mark.django_db
+def test_image_of_a_file_that_is_not_a_real_pdf_returns_404(client, reader_user, comic_volume) -> None:
+    (comic_volume / 'broken.pdf').write_bytes(b'this is not a pdf')
+    broken = models.ComicBook.objects.create(file_name='broken.pdf')
+    client.force_login(reader_user)
+    assert client.get(f'/api/read/{broken.selector}/image/1/').status_code == 404
+
+
+@pytest.mark.django_db
+def test_generate_thumbnail_endpoint_generates_one_for_a_book(client, book, reader_user, media_root) -> None:
+    client.force_login(reader_user)
+    response = client.get(f'/api/generate_thumbnail/{book.selector}/')
+    assert response.status_code == 200
+    assert response.json()['thumbnail'].endswith('.jpg')
+
+
+@pytest.mark.django_db
+def test_generate_thumbnail_endpoint_reports_nothing_for_a_corrupt_archive(
+        client, reader_user, comic_volume, media_root) -> None:
+    (comic_volume / 'broken.cbz').write_bytes(b'this is not an archive')
+    broken = models.ComicBook.objects.create(file_name='broken.cbz', page_count=1)
+    client.force_login(reader_user)
+    response = client.get(f'/api/generate_thumbnail/{broken.selector}/')
+    assert response.status_code == 200
+    assert response.json()['thumbnail'] is None
+    assert list(media_root.glob('*')) == []
+
+
+@pytest.mark.django_db
+def test_generate_thumbnail_endpoint_returns_404_for_an_unknown_selector(client, reader_user) -> None:
+    client.force_login(reader_user)
+    assert client.get(f'/api/generate_thumbnail/{UNKNOWN}/').status_code == 404
+
+
+@pytest.mark.django_db
+def test_breadcrumbs_for_a_book_run_from_home_to_the_book(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    response = client.get(f'/api/browse/{book.selector}/breadcrumbs/')
+    assert [item['name'] for item in response.json()] == ['Home', 'Rated', 'issue.cbz']
+
+
+@pytest.mark.django_db
+def test_recent_search_only_matches_file_names(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    assert client.get('/api/recent/?search_text=issue').json()['count'] == 1
+    assert client.get('/api/recent/?search_text=writer').json()['count'] == 0
+
+
+@pytest.mark.django_db
+def test_history_lists_the_books_the_user_started_reading(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    models.ComicStatus.objects.create(comic=book, user=reader_user, unread=False, finished=True)
+    other = models.ComicBook.objects.create(file_name='other.cbz')
+    models.ComicStatus.objects.create(comic=other, user=reader_user, unread=True, finished=False)
+    assert [item['selector'] for item in client.get('/api/history/').json()['results']] == [str(book.selector)]
+
+
+@pytest.mark.django_db
+def test_recent_and_history_block_books_above_the_users_allowance(client, book, restricted_user) -> None:
+    client.force_login(restricted_user)
+    models.ComicStatus.objects.create(comic=book, user=restricted_user, unread=False, finished=True)
+    assert client.get('/api/recent/').json()['count'] == 0
+    assert client.get('/api/history/').json()['count'] == 0
+
+
+@pytest.mark.django_db
+def test_mark_read_updates_a_status_that_already_exists(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    status = models.ComicStatus.objects.create(comic=book, user=reader_user, last_read_page=1)
+    client.put('/api/action/mark_read/', data={'selectors': [str(book.selector)]}, content_type='application/json')
+    status.refresh_from_db()
+    assert status.last_read_page == book.page_count - 1
+    assert not status.unread and status.finished
+
+
+@pytest.mark.django_db
+def test_mark_read_accepts_a_folder_and_marks_the_books_below_it(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    parent = models.Directory.objects.create(name='Parent')
+    child = models.Directory.objects.create(name='Child', parent=parent)
+    models.ComicBook.objects.create(file_name='child.cbz', directory=child)
+    client.put('/api/action/mark_read/', data={'selectors': [str(parent.selector)]}, content_type='application/json')
+    assert models.ComicStatus.objects.filter(user=reader_user, finished=True).count() == 1
+
+
+@pytest.mark.django_db
+def test_mark_read_rejects_selectors_that_are_not_uuids(client, reader_user) -> None:
+    client.force_login(reader_user)
+    response = client.put('/api/action/mark_read/', data={'selectors': ['not-a-uuid']}, content_type='application/json')
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_mark_read_on_a_book_with_no_pages_stays_on_page_zero(client, reader_user) -> None:
+    client.force_login(reader_user)
+    book = models.ComicBook.objects.create(file_name='empty.cbz', page_count=0)
+    status = models.ComicStatus.objects.create(comic=book, user=reader_user)
+    client.put('/api/action/mark_read/', data={'selectors': [str(book.selector)]}, content_type='application/json')
+    status.refresh_from_db()
+    assert status.last_read_page == 0
+
+
+@pytest.mark.django_db
+def test_mark_unread_resets_a_status_that_already_exists(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    status = models.ComicStatus.objects.create(comic=book, user=reader_user, unread=False, finished=True,
+                                               last_read_page=2)
+    client.put('/api/action/mark_unread/', data={'selectors': [str(book.selector)]}, content_type='application/json')
+    status.refresh_from_db()
+    assert status.unread and not status.finished and status.last_read_page == 0
+
+
+@pytest.mark.django_db
+def test_mark_unread_creates_a_status_for_a_book_that_has_none(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    client.put('/api/action/mark_unread/', data={'selectors': [str(book.selector)]}, content_type='application/json')
+    status = models.ComicStatus.objects.get(comic=book, user=reader_user)
+    assert status.unread and not status.finished and status.last_read_page == 0
+
+
+@pytest.mark.django_db
+def test_continue_reading_falls_back_to_20_for_an_unreadable_limit(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    models.ComicStatus.objects.create(comic=book, user=reader_user, last_read_page=1)
+    assert client.get('/api/read/continue/?limit=abc').status_code == 200
+
+
+@pytest.mark.django_db
+def test_user_classification_update_sets_the_rating(client, admin_user) -> None:
+    client.force_login(admin_user)
+    response = client.patch(f'/api/users/{admin_user.id}/set_classification/', data={'classification': 2},
+                            content_type='application/json')
+    assert response.status_code == 200
+    assert models.UserMisc.objects.get(user=admin_user).allowed_to_read == 2
+
+
+@pytest.mark.django_db
+def test_user_classification_update_rejects_an_unknown_rating(client, admin_user) -> None:
+    client.force_login(admin_user)
+    response = client.patch(f'/api/users/{admin_user.id}/set_classification/', data={'classification': 9},
+                            content_type='application/json')
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_admin_password_reset_needs_the_matching_username(client, admin_user, reader_user) -> None:
+    client.force_login(admin_user)
+    response = client.patch(f'/api/users/{reader_user.id}/reset_password/', data={'username': 'someone-else'},
+                            content_type='application/json')
+    assert response.status_code == 400
+    assert reader_user.check_password('password12345')
+
+
+@pytest.mark.django_db
+def test_admin_password_reset_sets_a_new_password(client, admin_user, reader_user) -> None:
+    client.force_login(admin_user)
+    response = client.patch(f'/api/users/{reader_user.id}/reset_password/', data={'username': reader_user.username},
+                            content_type='application/json')
+    assert response.status_code == 200
+    reader_user.refresh_from_db()
+    assert reader_user.check_password(response.json()['password'])
+
+
+@pytest.mark.django_db
+def test_account_password_reset_changes_the_password(client, reader_user) -> None:
+    client.force_login(reader_user)
+    response = client.patch('/api/account/reset_password/', data={
+        'username': reader_user.username,
+        'old_password': 'password12345',
+        'new_password': 'a-new-longer-password',
+        'new_password_confirm': 'a-new-longer-password',
+    }, content_type='application/json')
+    assert response.status_code == 200
+    reader_user.refresh_from_db()
+    assert reader_user.check_password('a-new-longer-password')
+
+
+@pytest.mark.django_db
+def test_account_password_reset_rejects_the_wrong_old_password(client, reader_user) -> None:
+    client.force_login(reader_user)
+    response = client.patch('/api/account/reset_password/', data={
+        'username': reader_user.username,
+        'old_password': 'wrong',
+        'new_password': 'a-new-longer-password',
+        'new_password_confirm': 'a-new-longer-password',
+    }, content_type='application/json')
+    assert response.status_code == 400
+    assert 'Password Incorrect' in response.json()['errors']
+
+
+@pytest.mark.django_db
+def test_account_password_reset_rejects_passwords_that_do_not_match(client, reader_user) -> None:
+    client.force_login(reader_user)
+    response = client.patch('/api/account/reset_password/', data={
+        'username': reader_user.username,
+        'old_password': 'password12345',
+        'new_password': 'a-new-longer-password',
+        'new_password_confirm': 'something-else-long',
+    }, content_type='application/json')
+    assert response.status_code == 400
+    assert response.json()['errors']['non_field_errors'] == ['New passwords do not match']
+
+
+@pytest.mark.django_db
+def test_account_password_reset_rejects_a_weak_password(client, reader_user) -> None:
+    client.force_login(reader_user)
+    response = client.patch('/api/account/reset_password/', data={
+        'username': reader_user.username,
+        'old_password': 'password12345',
+        'new_password': 'short',
+        'new_password_confirm': 'short',
+    }, content_type='application/json')
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_account_email_update_needs_the_password(client, reader_user) -> None:
+    client.force_login(reader_user)
+    response = client.patch('/api/account/update_email/', data={
+        'username': reader_user.username,
+        'email': 'new@example.com',
+        'password': 'wrong',
+    }, content_type='application/json')
+    assert response.status_code == 400
+    assert reader_user.email == 'reader@example.com'
+
+
+@pytest.mark.django_db
+def test_account_email_update_changes_the_email(client, reader_user) -> None:
+    client.force_login(reader_user)
+    response = client.patch('/api/account/update_email/', data={
+        'username': reader_user.username,
+        'email': 'new@example.com',
+        'password': 'password12345',
+    }, content_type='application/json')
+    assert response.status_code == 200
+    assert response.json()['email'] == 'new@example.com'
+
+
+@pytest.mark.django_db
+def test_feed_id_returns_404_for_a_user_with_no_misc_row(client, reader_user) -> None:
+    client.force_login(reader_user)
+    assert client.get('/api/account/feed_id/').status_code == 404
+
+
+@pytest.mark.django_db
+def test_feed_id_returns_the_users_feed_id(client, restricted_user) -> None:
+    client.force_login(restricted_user)
+    response = client.get('/api/account/feed_id/')
+    assert response.status_code == 200
+    assert response.json()['feed_id'] == str(models.UserMisc.objects.get(user=restricted_user).feed_id)
+
+
+@pytest.mark.django_db
+def test_first_account_created_through_initial_setup_is_the_admin(client) -> None:
+    response = client.post('/api/initial_setup/create_user/', data={
+        'username': 'owner',
+        'email': 'owner@example.com',
+        'password': 'a-long-password',
+    }, content_type='application/json')
+    assert response.status_code == 201
+    user = models.User.objects.get(username='owner')
+    assert user.is_superuser and user.is_staff
+
+
+@pytest.mark.django_db
+def test_initial_setup_refuses_more_accounts(client, reader_user) -> None:
+    client.post('/api/initial_setup/create_user/', data={'username': 'owner', 'password': 'a-long-password'},
+                content_type='application/json')
+    response = client.post('/api/initial_setup/create_user/',
+                           data={'username': 'second', 'password': 'a-long-password'},
+                           content_type='application/json')
+    assert response.status_code == 400
+@pytest.mark.django_db
+def test_read_view_fixes_a_page_count_that_no_longer_matches_the_file(client, book, reader_user) -> None:
+    book.page_count = 1  # left by an earlier scan of a different file
+    book.save()
+    client.force_login(reader_user)
+    assert client.get(f'/api/read/{book.selector}/').json()['pages'] == 3
+    book.refresh_from_db()
+    assert book.page_count == 3
+
+
+@pytest.mark.django_db
+def test_pdf_action_serves_the_file(client, reader_user, comic_volume) -> None:
+    make_pdf(comic_volume / 'issue.pdf', pages=2)
+    book = models.ComicBook.objects.create(file_name='issue.pdf')
+    client.force_login(reader_user)
+    response = client.get(f'/api/read/{book.selector}/pdf/')
+    assert response.status_code == 200
+    assert response['Content-Type'] == 'application/pdf'
+
+
+@pytest.mark.django_db
+def test_pdf_action_returns_404_when_the_file_is_not_on_disk(client, reader_user, comic_volume) -> None:
+    book = models.ComicBook.objects.create(file_name='gone.pdf')
+    client.force_login(reader_user)
+    assert client.get(f'/api/read/{book.selector}/pdf/').status_code == 404
+
+
+@pytest.mark.django_db
+def test_type_action_reports_the_file_type(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    assert client.get(f'/api/read/{book.selector}/type/').json() == {'type': 'cbz'}
+
+
+@pytest.mark.django_db
+def test_set_page_rejects_a_page_that_is_not_a_number(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    response = client.put(f'/api/read/{book.selector}/set_page/', data={'page': 'x'}, content_type='application/json')
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_history_search_matches_file_names(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    models.ComicStatus.objects.create(comic=book, user=reader_user, unread=False)
+    assert client.get('/api/history/?search_text=issue').json()['count'] == 1
+    assert client.get('/api/history/?search_text=writer').json()['count'] == 0
+
+
+@pytest.mark.django_db
+def test_account_password_reset_needs_the_logged_in_username(client, reader_user) -> None:
+    client.force_login(reader_user)
+    response = client.patch('/api/account/reset_password/', data={
+        'username': 'someone-else',
+        'old_password': 'password12345',
+        'new_password': 'a-new-longer-password',
+        'new_password_confirm': 'a-new-longer-password',
+    }, content_type='application/json')
+    assert response.status_code == 400
+    assert response.json()['errors'] == 'Username does not match account'
+
+
+@pytest.mark.django_db
+def test_account_email_update_needs_the_logged_in_username(client, reader_user) -> None:
+    client.force_login(reader_user)
+    response = client.patch('/api/account/update_email/', data={
+        'username': 'someone-else',
+        'email': 'new@example.com',
+        'password': 'password12345',
+    }, content_type='application/json')
+    assert response.status_code == 400
+    assert response.json()['errors'] == 'Username does not match account'
+
+
+@pytest.mark.django_db
+def test_account_email_update_rejects_an_address_that_is_not_an_email(client, reader_user) -> None:
+    client.force_login(reader_user)
+    response = client.patch('/api/account/update_email/', data={
+        'username': reader_user.username,
+        'email': 'not-an-email',
+        'password': 'password12345',
+    }, content_type='application/json')
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_mark_unread_rejects_selectors_that_are_not_uuids(client, reader_user) -> None:
+    client.force_login(reader_user)
+    response = client.put('/api/action/mark_unread/', data={'selectors': ['not-a-uuid']},
+                          content_type='application/json')
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_directory_full_update_rejects_an_unknown_rating(client, admin_user) -> None:
+    client.force_login(admin_user)
+    directory = models.Directory.objects.create(name='Parent')
+    response = client.put(f'/api/directory/{directory.selector}/', data={'classification': 9},
+                          content_type='application/json')
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_scan_rejects_a_selector_that_is_not_a_uuid(client, reader_user) -> None:
+    client.force_login(reader_user)
+    response = client.post('/api/browse/scan/', data={'selector': 'not-a-uuid'}, content_type='application/json')
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_initial_setup_reports_that_setup_is_needed_while_no_user_exists(client) -> None:
+    assert client.get('/api/initial_setup/required/').json() == {'required': True}
+
+
+@pytest.mark.django_db
+def test_initial_setup_rejects_an_account_without_a_password(client) -> None:
+    response = client.post('/api/initial_setup/create_user/', data={'username': 'owner'},
+                           content_type='application/json')
+    assert response.status_code == 400
+@pytest.mark.django_db
+def test_continue_reading_skips_books_above_the_users_allowance(client, book, restricted_user) -> None:
+    client.force_login(restricted_user)
+    models.ComicStatus.objects.create(comic=book, user=restricted_user, last_read_page=1)
+    assert client.get('/api/read/continue/').json() == []
+
+
+@pytest.mark.django_db
+def test_continue_reading_skips_a_finished_book_that_is_the_last_issue_in_its_folder(client, book, reader_user) -> None:
+    client.force_login(reader_user)
+    models.ComicStatus.objects.create(comic=book, user=reader_user, last_read_page=2, unread=False, finished=True)
+    assert client.get('/api/read/continue/').json() == []
+
+
+@pytest.mark.django_db
+def test_pdf_action_is_blocked_for_a_user_below_the_rating(client, book, restricted_user) -> None:
+    client.force_login(restricted_user)
+    assert client.get(f'/api/read/{book.selector}/pdf/').status_code == 403

@@ -40,6 +40,7 @@ dev = [
     "pylint-django>=2.7.0",
     "pyopenssl>=26.2.0",
     "pytest>=8.4",
+    "pytest-cov>=7.1.0",
     "pytest-django>=4.8",
     "ruff>=0.17.0",
     "werkzeug>=3.1.9",

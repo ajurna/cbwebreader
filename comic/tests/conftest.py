@@ -16,6 +16,15 @@ def comic_volume(settings, tmp_path) -> Path:
 
 
 @pytest.fixture()
+def media_root(settings, comic_volume: Path) -> Path:
+    """Keep the generated thumbnails out of the real MEDIA_ROOT."""
+    root = comic_volume / 'media'
+    root.mkdir()
+    settings.MEDIA_ROOT = root
+    return root
+
+
+@pytest.fixture()
 def admin_user(db) -> models.User:
     return models.User.objects.create_superuser('admin', 'admin@example.com', 'password12345')
 
